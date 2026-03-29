@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     if (error) {
       console.error("Supabase error:", error)
       return NextResponse.json(
-        { error: "Lead kaydedilemedi" },
+        { error: `Supabase hatası: ${error.message || "Bilinmeyen hata"}` },
         { status: 500 }
       )
     }
