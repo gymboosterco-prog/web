@@ -15,7 +15,7 @@ export async function POST(request: Request) {
 
     const supabase = await createClient()
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("leads")
       .insert([
         {
@@ -27,8 +27,7 @@ export async function POST(request: Request) {
           source: "website"
         }
       ])
-      .select()
-      .single()
+
 
     if (error) {
       console.error("Supabase error:", error)
@@ -38,7 +37,8 @@ export async function POST(request: Request) {
       )
     }
 
-    return NextResponse.json({ success: true, data })
+    return NextResponse.json({ success: true })
+
   } catch (error: any) {
     console.error("API error:", error)
     
