@@ -71,7 +71,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.E
 
 const PRIMARY_NEON = "#CCFF00"
 
-export function LeadsDashboard({ initialLeads, userRole, serverUserId, profileError }: { initialLeads: Lead[], userRole: 'ADMIN' | 'STAFF', serverUserId?: string, profileError?: any }) {
+export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[], userRole: 'ADMIN' | 'STAFF' }) {
   const [leads, setLeads] = useState<Lead[]>(initialLeads)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
@@ -238,14 +238,6 @@ export function LeadsDashboard({ initialLeads, userRole, serverUserId, profileEr
     setIsMounted(true)
     const supabase = createClient()
     
-    // Debug: Log current user info to console
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      console.log("Current User Info:", {
-        id: user?.id,
-        email: user?.email,
-        role: userRole
-      });
-    });
     // Load template from localStorage safely
     try {
       const saved = localStorage.getItem("gymbooster_ws_template")
@@ -1153,22 +1145,6 @@ export function LeadsDashboard({ initialLeads, userRole, serverUserId, profileEr
             </div>
           </div>
         )}
-        {/* Debug Info (Temporary) */}
-        <div className="mt-8 p-4 bg-secondary/20 rounded-lg border border-border/50 text-[10px] text-muted-foreground/50 text-center">
-          <p className="font-mono">
-            Role: <span className="text-primary font-bold">{userRole}</span> | 
-            Count: {leads.length} | 
-            Server ID: <span className="text-primary">{serverUserId || 'NULL (Session Missing)'}</span>
-          </p>
-          {profileError && (
-            <p className="mt-1 text-red-500 font-mono">
-              DB Error: {JSON.stringify(profileError)}
-            </p>
-          )}
-          <p className="mt-1 opacity-50 italic">
-            Duyuru: Eğer ADMIN olmanız gerekiyorsa lütfen üstteki "Server ID" veya "DB Error" bilgisini benimle paylaşın.
-          </p>
-        </div>
       </main>
     </div>
   )
