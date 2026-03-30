@@ -7,26 +7,26 @@ import { PhoneInput } from "@/components/ui/phone-input"
 import { ArrowRight, CheckCircle2, Zap, Shield, Phone, Mail, User, Building2, Clock, Gift, AlertCircle, Instagram } from "lucide-react"
 
 export function Hero() {
-  const { 
-    formData, 
-    isSubmitting, 
-    isSubmitted, 
-    error, 
-    handleSubmit, 
-    updateField 
+  const {
+    formData,
+    isSubmitting,
+    isSubmitted,
+    error,
+    handleSubmit,
+    updateField
   } = useLeadSubmission()
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 pb-8 md:pt-24 md:pb-16">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-background" />
-      
+
       {/* Animated grid pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(34,197,94,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(34,197,94,0.03)_1px,transparent_1px)] bg-[size:40px_40px] md:bg-[size:60px_60px]" />
-      
+
       <div className="container relative z-10 px-4">
         <div className="flex flex-col lg:grid lg:grid-cols-2 gap-8 lg:gap-12 items-center max-w-7xl mx-auto" suppressHydrationWarning>
-          
+
           {/* Mobile: Headline First, Desktop: Headline Left */}
           <div className="order-1 text-center lg:text-left w-full" suppressHydrationWarning>
             {/* Badge */}
@@ -39,14 +39,14 @@ export function Hero() {
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4 md:mb-6 text-balance">
               <span className="text-foreground">Spor Salonunuza</span>
               <br />
-              <span className="text-primary">Her Ay 30+ Nitelikli Lead</span>
+              <span className="text-primary">Her Ay 30+ Nitelikli Potansiyel Müşteri</span>
               <br />
               <span className="text-foreground">Garantisi Veriyoruz</span>
             </h1>
 
             {/* Sub-headline */}
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-4 md:mb-6 text-pretty">
-              Yapay zeka destekli pazarlama stratejilerimiz ile üye sayınızı katlamak için çalışıyoruz. 
+              Yapay zeka destekli pazarlama stratejilerimiz ile üye sayınızı katlamak için çalışıyoruz.
               <strong className="text-foreground"> Sonuç almazsanız, ödeme yapmazsınız.</strong>
             </p>
 
@@ -91,7 +91,7 @@ export function Hero() {
           <div className="order-2 relative w-full max-w-md mx-auto lg:max-w-none" suppressHydrationWarning>
             {/* Glow effect */}
             <div className="absolute -inset-1 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 md:from-primary/20 md:via-primary/10 md:to-primary/20 rounded-2xl blur-xl" />
-            
+
             <div className="relative bg-card border border-border rounded-2xl p-5 sm:p-6 md:p-8 shadow-2xl">
               {!isSubmitted ? (
                 <>
@@ -165,21 +165,21 @@ export function Hero() {
                     </div>
 
                     <div className="space-y-2">
-              <label className="text-sm font-medium text-muted-foreground mr-1">Instagram Profil Adresi</label>
-              <div className="relative group">
-                <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                <Input
-                  type="text"
-                  placeholder="https://instagram.com/salonunuz"
-                  value={formData.instagramUrl}
-                  onChange={(e) => updateField("instagramUrl", e.target.value)}
-                  className="pl-10 h-12 bg-secondary/50 border-white/10 text-white focus:border-primary/50 transition-all"
-                />
-              </div>
-            </div>
+                      <label className="text-sm font-medium text-muted-foreground mr-1">Instagram Profil Adresi</label>
+                      <div className="relative group">
+                        <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                        <Input
+                          type="text"
+                          placeholder="https://instagram.com/salonunuz"
+                          value={formData.instagramUrl}
+                          onChange={(e) => updateField("instagramUrl", e.target.value)}
+                          className="pl-10 h-12 bg-secondary/50 border-white/10 text-white focus:border-primary/50 transition-all"
+                        />
+                      </div>
+                    </div>
 
-            <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       size="lg"
                       disabled={isSubmitting}
                       className="w-full h-12 md:h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base md:text-lg"
@@ -201,7 +201,7 @@ export function Hero() {
                       <Shield className="w-4 h-4 text-primary" />
                       <span>Bilgileriniz %100 güvende. Asla paylaşılmaz.</span>
                     </div>
-                    
+
                     <div className="grid grid-cols-3 gap-2 text-center">
                       <div className="p-2 rounded-lg bg-secondary/50">
                         <div className="text-base md:text-lg font-bold text-foreground">24 Saat</div>
