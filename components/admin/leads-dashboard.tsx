@@ -63,21 +63,30 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.E
   new: { label: "Yeni", color: "bg-blue-500/10 text-blue-500 border-blue-500/20", icon: Clock },
   called: { label: "Arandı (Ulaşılamadı)", color: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20", icon: Phone },
   meeting_done: { label: "Görüşme Yapıldı", color: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20", icon: CheckCircle2 },
-  demo_planned: { label: "Demo Planlandı", color: "bg-purple-500/10 text-purple-500 border-purple-500/20", icon: Calendar },
+  meeting_planned: { label: "Toplantı Planlandı", color: "bg-purple-500/10 text-purple-500 border-purple-500/20", icon: Calendar },
   proposal: { label: "Teklif Verildi", color: "bg-orange-500/10 text-orange-500 border-orange-500/20", icon: MessageSquare },
-  won: { label: "Ödeme Alındı", color: "bg-[#CCFF00]/10 text-[#CCFF00] border-[#CCFF00]/20", icon: TrendingUp },
+  won: { label: "Ödeme Alındı (Won)", color: "bg-[#CCFF00]/10 text-[#CCFF00] border-[#CCFF00]/20", icon: TrendingUp },
   lost: { label: "Olumsuz", color: "bg-red-500/10 text-red-500 border-red-500/20", icon: XCircle },
 }
 
 const PRIMARY_NEON = "#CCFF00"
 
-export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
+export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[], userRole: 'ADMIN' | 'STAFF' }) {
   const [leads, setLeads] = useState<Lead[]>(initialLeads)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [editingNotes, setEditingNotes] = useState<string | null>(null)
   const [noteText, setNoteText] = useState("")
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
+  const [isMounted, setIsMounted] = useState(false)
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false)
+  const [wsTemplate, setWsTemplate] = useState("Merhaba {name}, Gymbooster'dan görüşüyoruz. Salonunuz ({gym}) için yaptığımız reklam çalışması hakkında görüşmek isteriz.")
+  const [isEditingTemplate, setIsEditingTemplate] = useState(false)
+  const [isFollowUpModalOpen, setIsFollowUpModalOpen] = useState(false)
+  const [selectedTaskLead, setSelectedTaskLead] = useState<Lead | null>(null)
+  const [nextActionDate, setNextActionDate] = useState("")
+  const [nextActionType, setNextActionType] = useState<Lead['next_action_type']>(null)
+
   const router = useRouter()
   const supabase = createClient()
 
@@ -88,6 +97,11 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
   }
 
   const updateLead = async (leadId: string, updates: Partial<Lead>) => {
+    // Hand-off logic: When status changes to meeting_planned, assign to Admin
+    if (updates.status === 'meeting_planned') {
+      updates.assigned_to = 'Admin'
+    }
+
     const response = await fetch(`/api/leads/${leadId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -100,6 +114,14 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
       ))
       if (selectedLead?.id === leadId) {
         setSelectedLead({ ...selectedLead, ...updates })
+      }
+      
+      // If it's a meeting planned, notify
+      if (updates.status === 'meeting_planned' && Notification.permission === "granted") {
+        new Notification("Yeni Toplantı Planlandı! 📅", {
+          body: "Bir lead Admin'e devredildi.",
+          icon: "/icon-192.png"
+        })
       }
     }
   }
@@ -163,6 +185,7 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
     document.body.removeChild(link)
   }
 
+  // Visibility logic based on Role
   const filteredLeads = leads.filter(lead => {
     const matchesSearch = 
       lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -170,19 +193,28 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
       lead.gym_name.toLowerCase().includes(searchQuery.toLowerCase())
     
     const matchesStatus = statusFilter === "all" || lead.status === statusFilter
-    
+
+    if (userRole === 'STAFF') {
+      const isAllowedStatus = ['new', 'called', 'meeting_done'].includes(lead.status)
+      return matchesSearch && matchesStatus && isAllowedStatus
+    }
+
     return matchesSearch && matchesStatus
   })
 
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false)
-  const [wsTemplate, setWsTemplate] = useState("Merhaba {name}, Gymbooster'dan görüşüyoruz. Salonunuz ({gym}) için yaptığımız reklam çalışması hakkında görüşmek isteriz.")
-  const [isEditingTemplate, setIsEditingTemplate] = useState(false)
-  const [isFollowUpModalOpen, setIsFollowUpModalOpen] = useState(false)
-  const [selectedTaskLead, setSelectedTaskLead] = useState<Lead | null>(null)
-  const [nextActionDate, setNextActionDate] = useState("")
-  const [nextActionType, setNextActionType] = useState<Lead['next_action_type']>(null)
+  // Admin Priority Sections
+  const adminPriority = React.useMemo(() => {
+    if (userRole !== 'ADMIN' || !isMounted) return { meetingsToday: [], proposalsPending: [] }
+    const today = new Date().toISOString().split('T')[0]
+    return {
+      meetingsToday: leads.filter(l => {
+        if (l.status !== 'meeting_planned' || !l.meeting_date) return false
+        return l.meeting_date.split('T')[0] === today
+      }),
+      proposalsPending: leads.filter(l => l.status === 'proposal')
+    }
+  }, [leads, userRole, isMounted])
 
-  const [isMounted, setIsMounted] = useState(false)
 
   const requestNotificationPermission = async () => {
     if (typeof window === "undefined" || !("Notification" in window)) return
@@ -487,6 +519,48 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
           </section>
         )}
 
+        {/* ADMIN PRIORITY SECTIONS */}
+        {userRole === 'ADMIN' && (adminPriority.meetingsToday.length > 0 || adminPriority.proposalsPending.length > 0) && (
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {adminPriority.meetingsToday.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-bold flex items-center gap-2 text-primary">
+                  <Calendar className="w-5 h-5" /> Bugünkü Toplantılar
+                </h3>
+                <div className="space-y-3">
+                  {adminPriority.meetingsToday.map(lead => (
+                    <div key={lead.id} className="p-4 rounded-xl bg-primary/5 border border-primary/20 flex items-center justify-between">
+                      <div>
+                        <p className="font-bold text-sm">{lead.gym_name}</p>
+                        <p className="text-xs text-muted-foreground">{lead.name}</p>
+                      </div>
+                      <Button size="sm" onClick={() => setSelectedLead(lead)}>Detay</Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {adminPriority.proposalsPending.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-bold flex items-center gap-2 text-orange-500">
+                  <MessageSquare className="w-5 h-5" /> Bekleyen Teklifler
+                </h3>
+                <div className="space-y-3">
+                  {adminPriority.proposalsPending.map(lead => (
+                    <div key={lead.id} className="p-4 rounded-xl bg-orange-500/5 border border-orange-500/20 flex items-center justify-between">
+                      <div>
+                        <p className="font-bold text-sm">{lead.gym_name}</p>
+                        <p className="text-xs text-muted-foreground">{lead.name}</p>
+                      </div>
+                      <Button size="sm" variant="outline" className="border-orange-500/20" onClick={() => setSelectedLead(lead)}>Takip Et</Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
         {/* Stats */}
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -499,24 +573,30 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
             </div>
             <p className="text-2xl font-bold">{leads.length}</p>
           </div>
-          <div className="p-4 rounded-xl bg-card border border-border">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-[#CCFF00]/10 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-[#CCFF00]" />
+          
+          {userRole === 'ADMIN' && (
+            <>
+              <div className="p-4 rounded-xl bg-card border border-border outline outline-1 outline-[#CCFF00]/20">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-lg bg-[#CCFF00]/10 flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-[#CCFF00]" />
+                  </div>
+                  <span className="text-sm text-muted-foreground">Toplam Ciro</span>
+                </div>
+                <p className="text-2xl font-bold text-[#CCFF00]">{leads.filter(l => l.status === "won").reduce((acc, curr) => acc + (curr.value || 0), 0).toLocaleString('tr-TR')} ₺</p>
               </div>
-              <span className="text-sm text-muted-foreground">Toplam Ciro</span>
-            </div>
-            <p className="text-2xl font-bold text-[#CCFF00]">{leads.filter(l => l.status === "won").reduce((acc, curr) => acc + (curr.value || 0), 0).toLocaleString('tr-TR')} ₺</p>
-          </div>
-          <div className="p-4 rounded-xl bg-card border border-border">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                <Shield className="w-5 h-5 text-blue-500" />
+              <div className="p-4 rounded-xl bg-card border border-border">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <Shield className="w-5 h-5 text-blue-500" />
+                  </div>
+                  <span className="text-sm text-muted-foreground">Pipeline Değeri</span>
+                </div>
+                <p className="text-2xl font-bold">{leads.filter(l => l.status !== "lost" && l.status !== "won").reduce((acc, curr) => acc + (curr.value || 0), 0).toLocaleString('tr-TR')} ₺</p>
               </div>
-              <span className="text-sm text-muted-foreground">Pipeline Değeri</span>
-            </div>
-            <p className="text-2xl font-bold">{leads.filter(l => l.status !== "lost" && l.status !== "won").reduce((acc, curr) => acc + (curr.value || 0), 0).toLocaleString('tr-TR')} ₺</p>
-          </div>
+            </>
+          )}
+
           <div className="p-4 rounded-xl bg-card border border-border">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-yellow-500/10 flex items-center justify-center">
@@ -589,7 +669,9 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
             >
               Tümü
             </Button>
-            {Object.entries(statusConfig).map(([key, config]) => (
+            {Object.entries(statusConfig)
+              .filter(([key]) => userRole === 'ADMIN' || ['new', 'called', 'meeting_done'].includes(key))
+              .map(([key, config]) => (
               <Button
                 key={key}
                 variant={statusFilter === key ? "default" : "outline"}
@@ -609,7 +691,7 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-secondary/50">
-                  <th className="text-left p-4 text-sm font-medium text-muted-foreground whitespace-nowrap">Gym Name / Branch</th>
+                  <th className="text-left p-4 text-sm font-medium text-muted-foreground whitespace-nowrap">Lead / Salon</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Hizli Eylem</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Durum</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Tarih</th>
@@ -635,40 +717,47 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
                       <tr key={lead.id} className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors">
                         <td className="p-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                               <span className="text-primary font-semibold">
                                 {lead.name.charAt(0).toUpperCase()}
                               </span>
                             </div>
-                            <span className="font-medium">{lead.name}</span>
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-sm">
-                              <Mail className="w-4 h-4 text-muted-foreground" />
-                              <a href={`mailto:${lead.email}`} className="hover:text-primary transition-colors">
-                                {lead.email}
-                              </a>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Phone className="w-4 h-4" />
-                              <a href={`tel:${lead.phone}`} className="hover:text-primary transition-colors">
-                                {lead.phone}
-                              </a>
+                            <div className="min-w-0">
+                              <p className="font-bold text-sm text-foreground truncate">{lead.gym_name}</p>
+                              <p className="text-xs text-muted-foreground truncate">{lead.name}</p>
+                              <div className="flex gap-2 mt-1">
+                                <a href={`tel:${lead.phone}`} className="text-[10px] text-primary hover:underline">{lead.phone}</a>
+                                <a href={`mailto:${lead.email}`} className="text-[10px] text-muted-foreground hover:underline truncate max-w-[100px]">{lead.email}</a>
+                              </div>
                             </div>
                           </div>
                         </td>
                         <td className="p-4">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="bg-green-500/10 hover:bg-green-500/20 text-green-500 border-green-500/20 text-xs font-bold"
-                            onClick={() => openWhatsApp(lead)}
-                          >
-                            <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
-                            WhatsApp
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="bg-green-500/10 hover:bg-green-500/20 text-green-500 border-green-500/20 text-[10px] md:text-xs font-bold"
+                              onClick={() => openWhatsApp(lead)}
+                            >
+                              <MessageSquare className="w-3.5 h-3.5 mr-1" />
+                              WhatsApp
+                            </Button>
+                            {userRole === 'STAFF' && (
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="border-purple-500/30 text-purple-500 hover:bg-purple-500/10 text-[10px] md:text-xs font-bold"
+                                onClick={() => {
+                                  setSelectedLead(lead)
+                                  setNoteText(lead.notes || "")
+                                }}
+                              >
+                                <Calendar className="w-3.5 h-3.5 mr-1" />
+                                Toplantı Set Et
+                              </Button>
+                            )}
+                          </div>
                         </td>
                         <td className="p-4">
                           <DropdownMenu>
@@ -845,49 +934,53 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
-                  <div className="space-y-2">
-                    <span className="text-xs font-medium text-muted-foreground uppercase block">Aylık Lead Hedefi</span>
-                    <Input
-                      type="number"
-                      value={selectedLead.lead_goal || 0}
-                      onChange={(e) => updateLead(selectedLead.id, { lead_goal: parseInt(e.target.value) || 0 })}
-                      className="h-10 bg-secondary/50 border-border"
-                    />
+                {userRole === 'ADMIN' && (
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
+                    <div className="space-y-2">
+                      <span className="text-xs font-medium text-muted-foreground uppercase block">Aylık Lead Hedefi</span>
+                      <Input
+                        type="number"
+                        value={selectedLead.lead_goal || 0}
+                        onChange={(e) => updateLead(selectedLead.id, { lead_goal: parseInt(e.target.value) || 0 })}
+                        className="h-10 bg-secondary/50 border-border"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <span className="text-xs font-medium text-muted-foreground uppercase block">Aylık Reklam Harcaması (₺)</span>
+                      <Input
+                        type="number"
+                        value={selectedLead.ad_spend || 0}
+                        onChange={(e) => updateLead(selectedLead.id, { ad_spend: parseFloat(e.target.value) || 0 })}
+                        className="h-10 bg-secondary/50 border-border"
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <span className="text-xs font-medium text-muted-foreground uppercase block">Aylık Reklam Harcaması (₺)</span>
-                    <Input
-                      type="number"
-                      value={selectedLead.ad_spend || 0}
-                      onChange={(e) => updateLead(selectedLead.id, { ad_spend: parseFloat(e.target.value) || 0 })}
-                      className="h-10 bg-secondary/50 border-border"
-                    />
-                  </div>
-                </div>
+                )}
 
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
-                  <div className="space-y-2">
-                    <span className="text-xs font-medium text-muted-foreground uppercase block">Satış Değeri</span>
-                    <Input
-                      type="number"
-                      value={selectedLead.value || 0}
-                      onChange={(e) => updateLead(selectedLead.id, { value: parseFloat(e.target.value) || 0 })}
-                      className="h-10 bg-secondary/50 border-border border-[#CCFF00]/30"
-                      placeholder="0.00"
-                    />
+                {userRole === 'ADMIN' && (
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
+                    <div className="space-y-2">
+                      <span className="text-xs font-medium text-muted-foreground uppercase block">Satış Değeri</span>
+                      <Input
+                        type="number"
+                        value={selectedLead.value || 0}
+                        onChange={(e) => updateLead(selectedLead.id, { value: parseFloat(e.target.value) || 0 })}
+                        className="h-10 bg-secondary/50 border-border border-[#CCFF00]/30"
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <span className="text-xs font-medium text-muted-foreground uppercase block">Sorumlu Kişi</span>
+                      <Input
+                        type="text"
+                        value={selectedLead.assigned_to || ""}
+                        onChange={(e) => updateLead(selectedLead.id, { assigned_to: e.target.value })}
+                        className="h-10 bg-secondary/50 border-border"
+                        placeholder="İsim yazın..."
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <span className="text-xs font-medium text-muted-foreground uppercase block">Sorumlu Kişi</span>
-                    <Input
-                      type="text"
-                      value={selectedLead.assigned_to || ""}
-                      onChange={(e) => updateLead(selectedLead.id, { assigned_to: e.target.value })}
-                      className="h-10 bg-secondary/50 border-border"
-                      placeholder="İsim yazın..."
-                    />
-                  </div>
-                </div>
+                )}
 
                 <div className="pt-4 border-t border-border">
                   <span className="text-xs font-medium text-muted-foreground uppercase block mb-2">Toplantı Tarihi</span>
@@ -902,7 +995,9 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
                 <div className="pt-4 border-t border-border">
                   <span className="text-xs font-medium text-muted-foreground uppercase mb-3 block">Huni Durumu</span>
                   <div className="grid grid-cols-3 gap-2">
-                    {Object.entries(statusConfig).map(([key, config]) => (
+                    {Object.entries(statusConfig)
+                      .filter(([key]) => userRole === 'ADMIN' || ['new', 'called', 'meeting_done', 'meeting_planned'].includes(key))
+                      .map(([key, config]) => (
                       <button
                         key={key}
                         onClick={() => updateLeadStatus(selectedLead.id, key)}
