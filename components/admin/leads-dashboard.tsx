@@ -6,21 +6,23 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { 
-  Dumbbell, 
-  LogOut, 
-  Search, 
   Users, 
   Clock, 
+  TrendingUp, 
   CheckCircle2, 
+  Phone, 
+  MessageSquare, 
+  Calendar, 
+  Search, 
+  LogOut, 
+  Dumbbell, 
+  MoreVertical, 
+  Trash2, 
+  Mail, 
+  Building2, 
   XCircle,
-  Phone,
-  Mail,
-  Building2,
-  Calendar,
-  MoreVertical,
-  Trash2,
-  MessageSquare,
-  TrendingUp
+  Shield,
+  Instagram
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -42,19 +44,26 @@ type Lead = {
   meeting_date: string | null
   value: number
   assigned_to: string | null
+  instagram_url: string | null
+  member_count: number
+  lead_goal: number
+  call_count: number
+  ad_spend: number
   created_at: string
   updated_at: string
 }
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
-  new: { label: "Yeni Lead", color: "bg-blue-500/10 text-blue-500 border-blue-500/20", icon: Clock },
-  called: { label: "Arama Yapıldı", color: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20", icon: Phone },
-  meeting_set: { label: "Toplantı Ayarlandı", color: "bg-purple-500/10 text-purple-500 border-purple-500/20", icon: Calendar },
-  meeting_done: { label: "Toplantı Yapıldı", color: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20", icon: CheckCircle2 },
+  new: { label: "Yeni", color: "bg-blue-500/10 text-blue-500 border-blue-500/20", icon: Clock },
+  called: { label: "Arandı (Ulaşılamadı)", color: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20", icon: Phone },
+  meeting_done: { label: "Görüşme Yapıldı", color: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20", icon: CheckCircle2 },
+  demo_planned: { label: "Demo Planlandı", color: "bg-purple-500/10 text-purple-500 border-purple-500/20", icon: Calendar },
   proposal: { label: "Teklif Verildi", color: "bg-orange-500/10 text-orange-500 border-orange-500/20", icon: MessageSquare },
-  won: { label: "Satış Kapatıldı", color: "bg-primary/10 text-primary border-primary/20", icon: TrendingUp },
+  won: { label: "Ödeme Alındı", color: "bg-[#CCFF00]/10 text-[#CCFF00] border-[#CCFF00]/20", icon: TrendingUp },
   lost: { label: "Olumsuz", color: "bg-red-500/10 text-red-500 border-red-500/20", icon: XCircle },
 }
+
+const PRIMARY_NEON = "#CCFF00"
 
 export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
   const [leads, setLeads] = useState<Lead[]>(initialLeads)
@@ -163,17 +172,32 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
     totalCount: leads.length,
     pipelineValue: leads.filter(l => l.status !== "lost" && l.status !== "won").reduce((acc, curr) => acc + (curr.value || 0), 0),
     wonRevenue: leads.filter(l => l.status === "won").reduce((acc, curr) => acc + (curr.value || 0), 0),
+    totalAdSpend: leads.reduce((acc, curr) => acc + (curr.ad_spend || 0), 0),
+    avgROAS: leads.filter(l => l.status === "won" && l.ad_spend > 0).length > 0
+      ? (leads.filter(l => l.status === "won").reduce((acc, curr) => acc + (curr.value || 0), 0) / 
+         leads.reduce((acc, curr) => acc + (curr.ad_spend || 0), 0)).toFixed(2)
+      : "0",
     conversionRate: leads.length > 0 
       ? ((leads.filter(l => l.status === "won").length / leads.length) * 100).toFixed(1) 
       : "0",
   }
 
+  const openWhatsApp = (lead: Lead) => {
+    const message = `Merhaba ${lead.name}, Gymbooster'dan görüşüyoruz. Salonunuz (${lead.gym_name}) için yaptığımız reklam çalışması hakkında görüşmek isteriz.`
+    const encoded = encodeURIComponent(message)
+    window.open(`https://wa.me/${lead.phone.replace(/\D/g, "")}?text=${encoded}`, '_blank')
+  }
+
+  const incrementCallCount = (leadId: string, currentCount: number) => {
+    updateLead(leadId, { call_count: currentCount + 1, status: 'called' })
+  }
+
   const funnelData = [
-    { label: "Yeni", count: leads.length, color: "#3b82f6" }, // Blue
-    { label: "Arama", count: leads.filter(l => !["new"].includes(l.status)).length, color: "#eab308" }, // Yellow
-    { label: "Toplantı", count: leads.filter(l => ["meeting_set", "meeting_done", "proposal", "won"].includes(l.status)).length, color: "#a855f7" }, // Purple
-    { label: "Teklif", count: leads.filter(l => ["proposal", "won"].includes(l.status)).length, color: "#f97316" }, // Orange
-    { label: "Satış", count: leads.filter(l => l.status === "won").length, color: "#00ae2a" }, // Primary Green
+    { label: "Yeni", count: leads.length, color: "#3b82f6" },
+    { label: "Arandı", count: leads.filter(l => l.status !== "new").length, color: "#eab308" },
+    { label: "Görüşme", count: leads.filter(l => ["meeting_done", "demo_planned", "proposal", "won"].includes(l.status)).length, color: "#a855f7" },
+    { label: "Teklif", count: leads.filter(l => ["proposal", "won"].includes(l.status)).length, color: "#f97316" },
+    { label: "Satış", count: leads.filter(l => l.status === "won").length, color: PRIMARY_NEON },
   ]
 
   return (
@@ -182,13 +206,13 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
       <header className="border-b border-border bg-card">
         <div className="container px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Dumbbell className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="font-bold text-lg">Gymbooster</h1>
-              <p className="text-sm text-muted-foreground">Lead Yönetimi</p>
-            </div>
+              <div className="w-10 h-10 rounded-xl bg-[#CCFF00]/10 flex items-center justify-center">
+                <Dumbbell className="w-5 h-5 text-[#CCFF00]" />
+              </div>
+              <div>
+                <h1 className="font-bold text-lg">Gymbooster <span className="text-[#CCFF00] text-xs ml-1 border border-[#CCFF00]/30 px-1.5 py-0.5 rounded">PRO</span></h1>
+                <p className="text-sm text-muted-foreground">Gym Name / Branch</p>
+              </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -228,12 +252,21 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
           </div>
           <div className="p-4 rounded-xl bg-card border border-border">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-green-500" />
+              <div className="w-10 h-10 rounded-lg bg-[#CCFF00]/10 flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-[#CCFF00]" />
               </div>
-              <span className="text-sm text-muted-foreground">Kazanılan Ciro</span>
+              <span className="text-sm text-muted-foreground">Toplam Ciro</span>
             </div>
-            <p className="text-2xl font-bold text-primary">{stats.wonRevenue.toLocaleString('tr-TR')} ₺</p>
+            <p className="text-2xl font-bold text-[#CCFF00]">{stats.wonRevenue.toLocaleString('tr-TR')} ₺</p>
+          </div>
+          <div className="p-4 rounded-xl bg-card border border-border">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                <Shield className="w-5 h-5 text-orange-500" />
+              </div>
+              <span className="text-sm text-muted-foreground">Ortalama ROAS</span>
+            </div>
+            <p className="text-2xl font-bold">{stats.avgROAS}x</p>
           </div>
           <div className="p-4 rounded-xl bg-card border border-border">
             <div className="flex items-center gap-3 mb-2">
@@ -327,9 +360,8 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-secondary/50">
-                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">Lead</th>
-                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">İletişim</th>
-                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">Salon</th>
+                  <th className="text-left p-4 text-sm font-medium text-muted-foreground whitespace-nowrap">Gym Name / Branch</th>
+                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">Hizli Eylem</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Durum</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Tarih</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Notlar</th>
@@ -379,24 +411,40 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
                           </div>
                         </td>
                         <td className="p-4">
-                          <div className="flex items-center gap-2">
-                            <Building2 className="w-4 h-4 text-muted-foreground" />
-                            <span>{lead.gym_name}</span>
-                          </div>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="bg-green-500/10 hover:bg-green-500/20 text-green-500 border-green-500/20 text-xs font-bold"
+                            onClick={() => openWhatsApp(lead)}
+                          >
+                            <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
+                            WhatsApp
+                          </Button>
                         </td>
                         <td className="p-4">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <button className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border ${status.color} cursor-pointer hover:opacity-80 transition-opacity`}>
-                                <StatusIcon className="w-3 h-3" />
-                                {status.label}
-                              </button>
+                              <div className="flex flex-col items-start gap-1">
+                                <button className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border ${status.color} cursor-pointer hover:opacity-80 transition-opacity`}>
+                                  <StatusIcon className="w-3 h-3" />
+                                  {status.label}
+                                </button>
+                                {lead.status === 'called' && lead.call_count > 0 && (
+                                  <span className="text-[10px] text-muted-foreground ml-2">Arandı: {lead.call_count}x</span>
+                                )}
+                              </div>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="start">
                               {Object.entries(statusConfig).map(([key, config]) => (
                                 <DropdownMenuItem
                                   key={key}
-                                  onClick={() => updateLeadStatus(lead.id, key)}
+                                  onClick={() => {
+                                    if (key === 'called') {
+                                      incrementCallCount(lead.id, lead.call_count || 0)
+                                    } else {
+                                      updateLeadStatus(lead.id, key)
+                                    }
+                                  }}
                                   className="cursor-pointer"
                                 >
                                   <config.icon className="w-4 h-4 mr-2" />
@@ -516,24 +564,80 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
 
                 <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
                   <div className="space-y-2">
-                    <span className="text-xs font-medium text-muted-foreground uppercase block">Satış Değeri (₺)</span>
+                    <span className="text-xs font-medium text-muted-foreground uppercase block">Instagram Profili</span>
+                    <div className="flex gap-2">
+                      <Input
+                        type="text"
+                        value={selectedLead.instagram_url || ""}
+                        onChange={(e) => updateLead(selectedLead.id, { instagram_url: e.target.value })}
+                        className="h-10 bg-secondary/50 border-border"
+                        placeholder="https://instagram.com/..."
+                      />
+                      {selectedLead.instagram_url && (
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          onClick={() => window.open(selectedLead.instagram_url!, '_blank')}
+                          className="shrink-0 text-pink-500 border-pink-500/20 bg-pink-500/10"
+                        >
+                          <Instagram className="w-5 h-5" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <span className="text-xs font-medium text-muted-foreground uppercase block">Mevcut Üye Sayısı</span>
+                    <Input
+                      type="number"
+                      value={selectedLead.member_count || 0}
+                      onChange={(e) => updateLead(selectedLead.id, { member_count: parseInt(e.target.value) || 0 })}
+                      className="h-10 bg-secondary/50 border-border"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
+                  <div className="space-y-2">
+                    <span className="text-xs font-medium text-muted-foreground uppercase block">Aylık Lead Hedefi</span>
+                    <Input
+                      type="number"
+                      value={selectedLead.lead_goal || 0}
+                      onChange={(e) => updateLead(selectedLead.id, { lead_goal: parseInt(e.target.value) || 0 })}
+                      className="h-10 bg-secondary/50 border-border"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <span className="text-xs font-medium text-muted-foreground uppercase block">Aylık Reklam Harcaması (₺)</span>
+                    <Input
+                      type="number"
+                      value={selectedLead.ad_spend || 0}
+                      onChange={(e) => updateLead(selectedLead.id, { ad_spend: parseFloat(e.target.value) || 0 })}
+                      className="h-10 bg-secondary/50 border-border"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground uppercase block">Satış Değeri</span>
+                      {selectedLead.value > 0 && (
+                        <span className="text-[10px] font-bold text-[#CCFF00]">ROAS: {(selectedLead.value / (selectedLead.ad_spend || 1)).toFixed(1)}x</span>
+                      )}
+                    </div>
                     <Input
                       type="number"
                       value={selectedLead.value || 0}
                       onChange={(e) => updateLead(selectedLead.id, { value: parseFloat(e.target.value) || 0 })}
-                      className="h-10 bg-secondary/50 border-border"
+                      className="h-10 bg-secondary/50 border-border border-[#CCFF00]/30"
                       placeholder="0.00"
                     />
                   </div>
                   <div className="space-y-2">
-                    <span className="text-xs font-medium text-muted-foreground uppercase block">Sorumlu Kişi</span>
-                    <Input
-                      type="text"
-                      value={selectedLead.assigned_to || ""}
-                      onChange={(e) => updateLead(selectedLead.id, { assigned_to: e.target.value })}
-                      className="h-10 bg-secondary/50 border-border"
-                      placeholder="İsim yazın..."
-                    />
+                    <span className="text-xs font-medium text-muted-foreground uppercase block">6-Aylık Tahmini LTV</span>
+                    <div className="h-10 bg-[#CCFF00]/10 border border-[#CCFF00]/20 rounded-md flex items-center px-3 font-bold text-[#CCFF00]">
+                      {(selectedLead.value * 6).toLocaleString('tr-TR')} ₺
+                    </div>
                   </div>
                 </div>
 

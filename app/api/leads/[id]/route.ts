@@ -8,7 +8,7 @@ export async function PATCH(
   try {
     const { id } = await params
     const body = await request.json()
-    const { status, notes, meeting_date, value, assigned_to } = body
+    const { status, notes, meeting_date, value, assigned_to, instagram_url, member_count, lead_goal, call_count, ad_spend } = body
 
     const supabase = await createClient()
     
@@ -31,6 +31,11 @@ export async function PATCH(
     if (meeting_date !== undefined) updateData.meeting_date = meeting_date
     if (value !== undefined) updateData.value = value
     if (assigned_to !== undefined) updateData.assigned_to = assigned_to
+    if (instagram_url !== undefined) updateData.instagram_url = instagram_url
+    if (member_count !== undefined) updateData.member_count = member_count
+    if (lead_goal !== undefined) updateData.lead_goal = lead_goal
+    if (call_count !== undefined) updateData.call_count = call_count
+    if (ad_spend !== undefined) updateData.ad_spend = ad_spend
 
     const { data, error } = await supabase
       .from("leads")
