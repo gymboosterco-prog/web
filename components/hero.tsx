@@ -168,7 +168,7 @@ export function Hero() {
                         <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-white/30 group-focus-within:text-primary transition-colors" />
                         <Input
                           type="text"
-                          placeholder="Instagram Profil Adresi (Link)"
+                          placeholder="Instagram Kullanıcı Adı"
                           value={formData.instagramUrl}
                           onChange={(e) => updateField("instagramUrl", e.target.value)}
                           className="pl-10 h-11 md:h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 text-sm md:text-base focus:border-primary/50 transition-all"
