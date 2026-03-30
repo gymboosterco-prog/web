@@ -55,6 +55,7 @@ type Lead = {
   next_action_at: string | null
   next_action_type: 'CALL' | 'MEETING' | 'WHATSAPP' | 'PROPOSAL_FOLLOWUP' | null
   last_contact_at: string | null
+  rejection_reason: string | null
   created_at: string
   updated_at: string
 }
@@ -69,6 +70,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.E
   lost: { label: "Olumsuz", color: "bg-red-500/10 text-red-500 border-red-500/20", icon: XCircle },
 }
 
+const REJECTION_REASONS = ["Fiyat", "Konum", "İlgisiz", "Bütçe Yok", "Ulaşılamadı", "Vazgeçti"]
 const PRIMARY_NEON = "#CCFF00"
 
 export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[], userRole: 'ADMIN' | 'STAFF' }) {
@@ -126,7 +128,26 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
     }
   }
 
-  const updateLeadStatus = (leadId: string, newStatus: string) => {
+  const updateLeadStatus = async (leadId: string, newStatus: string) => {
+    const lead = leads.find(l => l.id === leadId)
+    if (!lead) return
+
+    // Guard: Meeting Done requires next_action_at
+    if (newStatus === 'meeting_done' && !lead.next_action_at) {
+      alert("Lütfen 'Görüşme Yapıldı' aşamasına geçmeden önce bir sonraki aksiyon tarihini (Takip Randevusu) belirleyin.")
+      return
+    }
+
+    // Hand-off: Lost requires rejection_reason (Handled by showing a select in UI)
+    if (newStatus === 'lost' && !lead.rejection_reason) {
+      // We will handle this by showing a special section in the modal
+      // but if called from outside modal, we prompt
+      const reason = prompt("Lütfen olumsuz sonuçlanma sebebini yazın (Fiyat, Konum, İlgisiz, Bütçe Yok):")
+      if (!reason) return
+      updateLead(leadId, { status: newStatus, rejection_reason: reason })
+      return
+    }
+
     updateLead(leadId, { status: newStatus })
   }
 
@@ -767,8 +788,10 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
                                   <StatusIcon className="w-3 h-3" />
                                   {status.label}
                                 </button>
-                                {lead.status === 'called' && lead.call_count > 0 && (
-                                  <span className="text-[10px] text-muted-foreground ml-2">Arandı: {lead.call_count}x</span>
+                                {['new', 'called'].includes(lead.status) && lead.call_count > 0 && (
+                                  <span className="text-[10px] text-yellow-500 font-bold ml-2 bg-yellow-500/10 px-1.5 py-0.5 rounded border border-yellow-500/20">
+                                    {lead.call_count}x Arandı
+                                  </span>
                                 )}
                               </div>
                             </DropdownMenuTrigger>
@@ -1034,6 +1057,22 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
                     ))}
                   </div>
                 </div>
+                {selectedLead.status === 'lost' && (
+                  <div className="pt-4 border-t border-border animate-in slide-in-from-top-2 duration-300">
+                    <span className="text-xs font-bold text-red-500 uppercase block mb-2 px-1 flex items-center gap-2">
+                       <AlertCircle className="w-3 h-3" /> Olumsuz Sonuçlanma Sebebi
+                    </span>
+                    <select
+                      value={selectedLead.rejection_reason || ""}
+                      onChange={(e) => updateLead(selectedLead.id, { rejection_reason: e.target.value })}
+                      disabled={userRole === 'STAFF' && selectedLead.assigned_to === 'Admin'}
+                      className="w-full h-11 bg-red-500/5 border border-red-500/20 rounded-xl px-4 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-all appearance-none cursor-pointer disabled:opacity-50"
+                    >
+                      <option value="" disabled className="bg-card">Lütfen sebep seçin...</option>
+                      {REJECTION_REASONS.map(r => <option key={r} value={r} className="bg-card">{r}</option>)}
+                    </select>
+                  </div>
+                )}
 
                 <div className="pt-4 border-t border-border space-y-3">
                   <span className="text-xs font-medium text-muted-foreground uppercase block">Görüşme Notları</span>
