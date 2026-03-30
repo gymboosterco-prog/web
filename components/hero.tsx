@@ -129,7 +129,7 @@ export function Hero() {
                     </div>
                   )}
 
-                  {/* Form */}
+                  {/* {/* Form */}
                   <form onSubmit={handleSubmit} className="space-y-4 pt-4 md:pt-6">
                     <div className="space-y-3">
                       <Input
@@ -162,18 +162,16 @@ export function Hero() {
                         required
                         className="h-11 md:h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 text-sm md:text-base focus:border-primary/50 transition-colors"
                       />
-                    </div>
 
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-muted-foreground mr-1">Instagram Profil Adresi</label>
+                      {/* Instagram Kısmı - Diğerleriyle Aynı Yapıda */}
                       <div className="relative group">
-                        <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                        <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-white/30 group-focus-within:text-primary transition-colors" />
                         <Input
                           type="text"
-                          placeholder="https://instagram.com/salonunuz"
+                          placeholder="Instagram Profil Adresi (Link)"
                           value={formData.instagramUrl}
                           onChange={(e) => updateField("instagramUrl", e.target.value)}
-                          className="pl-10 h-12 bg-secondary/50 border-white/10 text-white focus:border-primary/50 transition-all"
+                          className="pl-10 h-11 md:h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 text-sm md:text-base focus:border-primary/50 transition-all"
                         />
                       </div>
                     </div>
@@ -194,7 +192,6 @@ export function Hero() {
                       )}
                     </Button>
                   </form>
-
                   {/* Trust Elements */}
                   <div className="mt-5 md:mt-6 pt-5 md:pt-6 border-t border-border">
                     <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-4">
