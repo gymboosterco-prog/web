@@ -8,7 +8,7 @@ export async function PATCH(
   try {
     const { id } = await params
     const body = await request.json()
-    const { status, notes } = body
+    const { status, notes, meeting_date, value, assigned_to } = body
 
     const supabase = await createClient()
     
@@ -22,12 +22,15 @@ export async function PATCH(
     }
 
 
-    const updateData: { status?: string; notes?: string; updated_at: string } = {
+    const updateData: any = {
       updated_at: new Date().toISOString()
     }
 
     if (status) updateData.status = status
     if (notes !== undefined) updateData.notes = notes
+    if (meeting_date !== undefined) updateData.meeting_date = meeting_date
+    if (value !== undefined) updateData.value = value
+    if (assigned_to !== undefined) updateData.assigned_to = assigned_to
 
     const { data, error } = await supabase
       .from("leads")

@@ -39,17 +39,21 @@ type Lead = {
   status: string
   notes: string | null
   source: string
+  meeting_date: string | null
+  value: number
+  assigned_to: string | null
   created_at: string
   updated_at: string
 }
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
-  new: { label: "Yeni", color: "bg-blue-500/10 text-blue-500 border-blue-500/20", icon: Clock },
-  contacted: { label: "İletişime Geçildi", color: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20", icon: Phone },
-  qualified: { label: "Nitelikli", color: "bg-purple-500/10 text-purple-500 border-purple-500/20", icon: CheckCircle2 },
-  proposal: { label: "Teklif Gönderildi", color: "bg-orange-500/10 text-orange-500 border-orange-500/20", icon: MessageSquare },
-  won: { label: "Kazanıldı", color: "bg-primary/10 text-primary border-primary/20", icon: TrendingUp },
-  lost: { label: "Kaybedildi", color: "bg-red-500/10 text-red-500 border-red-500/20", icon: XCircle },
+  new: { label: "Yeni Lead", color: "bg-blue-500/10 text-blue-500 border-blue-500/20", icon: Clock },
+  called: { label: "Arama Yapıldı", color: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20", icon: Phone },
+  meeting_set: { label: "Toplantı Ayarlandı", color: "bg-purple-500/10 text-purple-500 border-purple-500/20", icon: Calendar },
+  meeting_done: { label: "Toplantı Yapıldı", color: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20", icon: CheckCircle2 },
+  proposal: { label: "Teklif Verildi", color: "bg-orange-500/10 text-orange-500 border-orange-500/20", icon: MessageSquare },
+  won: { label: "Satış Kapatıldı", color: "bg-primary/10 text-primary border-primary/20", icon: TrendingUp },
+  lost: { label: "Olumsuz", color: "bg-red-500/10 text-red-500 border-red-500/20", icon: XCircle },
 }
 
 export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
@@ -68,18 +72,25 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
     router.refresh()
   }
 
-  const updateLeadStatus = async (leadId: string, newStatus: string) => {
+  const updateLead = async (leadId: string, updates: Partial<Lead>) => {
     const response = await fetch(`/api/leads/${leadId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: newStatus })
+      body: JSON.stringify(updates)
     })
 
     if (response.ok) {
       setLeads(leads.map(lead => 
-        lead.id === leadId ? { ...lead, status: newStatus } : lead
+        lead.id === leadId ? { ...lead, ...updates } : lead
       ))
+      if (selectedLead?.id === leadId) {
+        setSelectedLead({ ...selectedLead, ...updates })
+      }
     }
+  }
+
+  const updateLeadStatus = (leadId: string, newStatus: string) => {
+    updateLead(leadId, { status: newStatus })
   }
 
   const updateLeadNotes = async (leadId: string) => {
@@ -149,14 +160,21 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
   })
 
   const stats = {
-    total: leads.length,
-    new: leads.filter(l => l.status === "new").length,
-    contacted: leads.filter(l => l.status === "contacted").length,
-    won: leads.filter(l => l.status === "won").length,
+    totalCount: leads.length,
+    pipelineValue: leads.filter(l => l.status !== "lost" && l.status !== "won").reduce((acc, curr) => acc + (curr.value || 0), 0),
+    wonRevenue: leads.filter(l => l.status === "won").reduce((acc, curr) => acc + (curr.value || 0), 0),
     conversionRate: leads.length > 0 
       ? ((leads.filter(l => l.status === "won").length / leads.length) * 100).toFixed(1) 
       : "0",
   }
+
+  const funnelData = [
+    { label: "Yeni", count: leads.length, color: "bg-blue-500" },
+    { label: "Arama", count: leads.filter(l => !["new"].includes(l.status)).length, color: "bg-yellow-500" },
+    { label: "Toplantı", count: leads.filter(l => ["meeting_set", "meeting_done", "proposal", "won"].includes(l.status)).length, color: "bg-purple-500" },
+    { label: "Teklif", count: leads.filter(l => ["proposal", "won"].includes(l.status)).length, color: "bg-orange-500" },
+    { label: "Satış", count: leads.filter(l => l.status === "won").length, color: "bg-primary" },
+  ]
 
   return (
     <div className="min-h-screen bg-background">
@@ -188,6 +206,7 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
 
       <main className="container px-4 py-8">
         {/* Stats */}
+        {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="p-4 rounded-xl bg-card border border-border">
             <div className="flex items-center gap-3 mb-2">
@@ -196,34 +215,64 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
               </div>
               <span className="text-sm text-muted-foreground">Toplam Lead</span>
             </div>
-            <p className="text-3xl font-bold">{stats.total}</p>
+            <p className="text-2xl font-bold">{stats.totalCount}</p>
           </div>
           <div className="p-4 rounded-xl bg-card border border-border">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
                 <Clock className="w-5 h-5 text-blue-500" />
               </div>
-              <span className="text-sm text-muted-foreground">Yeni</span>
+              <span className="text-sm text-muted-foreground">Pipeline Değeri</span>
             </div>
-            <p className="text-3xl font-bold">{stats.new}</p>
-          </div>
-          <div className="p-4 rounded-xl bg-card border border-border">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-yellow-500/10 flex items-center justify-center">
-                <Phone className="w-5 h-5 text-yellow-500" />
-              </div>
-              <span className="text-sm text-muted-foreground">İletişime Geçildi</span>
-            </div>
-            <p className="text-3xl font-bold">{stats.contacted}</p>
+            <p className="text-2xl font-bold">{stats.pipelineValue.toLocaleString('tr-TR')} ₺</p>
           </div>
           <div className="p-4 rounded-xl bg-card border border-border">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
                 <TrendingUp className="w-5 h-5 text-green-500" />
               </div>
-              <span className="text-sm text-muted-foreground">Dönüşüm Oranı</span>
+              <span className="text-sm text-muted-foreground">Kazanılan Ciro</span>
             </div>
-            <p className="text-3xl font-bold">%{stats.conversionRate}</p>
+            <p className="text-2xl font-bold text-primary">{stats.wonRevenue.toLocaleString('tr-TR')} ₺</p>
+          </div>
+          <div className="p-4 rounded-xl bg-card border border-border">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-yellow-500/10 flex items-center justify-center">
+                <CheckCircle2 className="w-5 h-5 text-yellow-500" />
+              </div>
+              <span className="text-sm text-muted-foreground">Satış Oranı</span>
+            </div>
+            <p className="text-2xl font-bold">%{stats.conversionRate}</p>
+          </div>
+        </div>
+
+        {/* Funnel Visualization */}
+        <div className="mb-8 p-6 rounded-2xl bg-card border border-border overflow-hidden">
+          <h3 className="font-bold mb-6 flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-primary" />
+            Satış Hunisi Görünümü
+          </h3>
+          <div className="relative flex items-end justify-between gap-2 h-48 md:h-64">
+            {funnelData.map((stage, idx) => {
+              const heightPercent = stats.totalCount > 0 ? (stage.count / stats.totalCount) * 100 : 0
+              return (
+                <div key={stage.label} className="flex-1 flex flex-col items-center group">
+                  <div className="w-full relative flex flex-col items-center justify-end h-full mb-3">
+                    <div 
+                      className={`w-full max-w-[80px] ${stage.color} rounded-t-lg transition-all duration-500 group-hover:opacity-80`}
+                      style={{ height: `${heightPercent}%` }}
+                    >
+                      <div className="absolute -top-7 left-1/2 -translate-x-1/2 font-bold text-sm">
+                        {stage.count}
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] md:text-xs font-medium text-muted-foreground whitespace-nowrap">
+                    {stage.label}
+                  </span>
+                </div>
+              )
+            })}
           </div>
         </div>
 
@@ -437,7 +486,7 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
                 </Button>
               </div>
               
-              <div className="p-6 space-y-6">
+              <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <span className="text-xs font-medium text-muted-foreground uppercase">E-posta</span>
@@ -455,16 +504,46 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
                   </div>
                 </div>
 
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
+                  <div className="space-y-2">
+                    <span className="text-xs font-medium text-muted-foreground uppercase block">Satış Değeri (₺)</span>
+                    <Input
+                      type="number"
+                      value={selectedLead.value || 0}
+                      onChange={(e) => updateLead(selectedLead.id, { value: parseFloat(e.target.value) || 0 })}
+                      className="h-10 bg-secondary/50 border-border"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <span className="text-xs font-medium text-muted-foreground uppercase block">Sorumlu Kişi</span>
+                    <Input
+                      type="text"
+                      value={selectedLead.assigned_to || ""}
+                      onChange={(e) => updateLead(selectedLead.id, { assigned_to: e.target.value })}
+                      className="h-10 bg-secondary/50 border-border"
+                      placeholder="İsim yazın..."
+                    />
+                  </div>
+                </div>
+
                 <div className="pt-4 border-t border-border">
-                  <span className="text-xs font-medium text-muted-foreground uppercase mb-3 block">Durum Güncelle</span>
+                  <span className="text-xs font-medium text-muted-foreground uppercase block mb-2">Toplantı Tarihi</span>
+                  <Input
+                    type="datetime-local"
+                    value={selectedLead.meeting_date ? new Date(selectedLead.meeting_date).toISOString().slice(0, 16) : ""}
+                    onChange={(e) => updateLead(selectedLead.id, { meeting_date: e.target.value || null })}
+                    className="h-10 bg-secondary/50 border-border"
+                  />
+                </div>
+
+                <div className="pt-4 border-t border-border">
+                  <span className="text-xs font-medium text-muted-foreground uppercase mb-3 block">Huni Durumu</span>
                   <div className="grid grid-cols-3 gap-2">
                     {Object.entries(statusConfig).map(([key, config]) => (
                       <button
                         key={key}
-                        onClick={() => {
-                          updateLeadStatus(selectedLead.id, key)
-                          setSelectedLead({ ...selectedLead, status: key })
-                        }}
+                        onClick={() => updateLeadStatus(selectedLead.id, key)}
                         className={`flex flex-col items-center gap-1.5 p-2 rounded-xl border transition-all ${
                           selectedLead.status === key 
                             ? "bg-primary/10 border-primary text-primary" 
@@ -472,14 +551,14 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
                         }`}
                       >
                         <config.icon className="w-4 h-4" />
-                        <span className="text-[10px] font-medium">{config.label}</span>
+                        <span className="text-[10px] font-medium text-center leading-tight">{config.label}</span>
                       </button>
                     ))}
                   </div>
                 </div>
 
                 <div className="pt-4 border-t border-border space-y-3">
-                  <span className="text-xs font-medium text-muted-foreground uppercase block">Notlar</span>
+                  <span className="text-xs font-medium text-muted-foreground uppercase block">Görüşme Notları</span>
                   <textarea
                     value={noteText}
                     onChange={(e) => setNoteText(e.target.value)}
