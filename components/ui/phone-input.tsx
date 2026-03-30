@@ -12,11 +12,26 @@ export interface PhoneInputProps
 const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
   ({ className, value, onChange, onValueChange, ...props }, ref) => {
     const formatTurkishPhoneNumber = (input: string) => {
-      // Get numbers
-      let numbers = input.replace(/\D/g, "")
+      // Handle deletion nicely: if the input is just the prefix or part of it, clear it
+      if (input === "+90 " || input === "+90" || input === "+9" || input === "+") {
+        return { formatted: "", cleaned: "" }
+      }
+
+      let cleanInput = input
+      if (cleanInput.startsWith("+90 ")) {
+        cleanInput = cleanInput.substring(4)
+      } else if (cleanInput.startsWith("+90")) {
+        cleanInput = cleanInput.substring(3)
+      } else if (cleanInput.startsWith("+9")) {
+        cleanInput = cleanInput.substring(2)
+      } else if (cleanInput.startsWith("+")) {
+        cleanInput = cleanInput.substring(1)
+      }
       
-      // If starts with 90, strip it to avoid duplication during typing
-      if (numbers.startsWith("90") && numbers.length > 2) {
+      let numbers = cleanInput.replace(/\D/g, "")
+      
+      // If starts with 90, strip it to avoid duplication during pasting
+      if (numbers.startsWith("90")) {
         numbers = numbers.substring(2)
       } else if (numbers.startsWith("0")) {
         numbers = numbers.substring(1)
