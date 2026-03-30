@@ -22,7 +22,8 @@ import {
   Building2, 
   XCircle,
   Shield,
-  Instagram
+  Instagram,
+  Bell
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -168,13 +169,63 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
     return matchesSearch && matchesStatus
   })
 
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false)
   const [wsTemplate, setWsTemplate] = useState("Merhaba {name}, Gymbooster'dan görüşüyoruz. Salonunuz ({gym}) için yaptığımız reklam çalışması hakkında görüşmek isteriz.")
   const [isEditingTemplate, setIsEditingTemplate] = useState(false)
 
-  // Load template from localStorage
+  const requestNotificationPermission = async () => {
+    if (!("Notification" in window)) return
+    
+    const permission = await Notification.requestPermission()
+    if (permission === "granted") {
+      setNotificationsEnabled(true)
+      new Notification("Bildirimler Açıldı! 🚀", {
+        body: "Yeni lead geldiğinde anlık bildirim alacaksınız.",
+        icon: "/icon-192.png"
+      })
+    }
+  }
+
+  // Real-time listener for new leads
   useEffect(() => {
+    const supabase = createClient()
+    
+    // Load template from localStorage
     const saved = localStorage.getItem("gymbooster_ws_template")
     if (saved) setWsTemplate(saved)
+
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'leads',
+        },
+        (payload) => {
+          const newLead = payload.new as Lead
+          // Show browser notification if permitted
+          if (Notification.permission === "granted") {
+            new Notification(`Yeni Lead: ${newLead.name} 🚀`, {
+              body: `${newLead.gym_name} için yeni bir başvuru geldi.`,
+              icon: "/icon-192.png"
+            })
+          }
+          // Refresh list
+          setLeads(prev => [newLead, ...prev])
+        }
+      )
+      .subscribe()
+
+    // Check permission on load
+    if (Notification.permission === "granted") {
+      setNotificationsEnabled(true)
+    }
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   const saveTemplate = (newTemplate: string) => {
@@ -219,6 +270,17 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
           </div>
 
           <div className="flex items-center gap-2">
+            {!notificationsEnabled && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={requestNotificationPermission}
+                className="border-primary/30 text-primary hover:bg-primary/10 animate-pulse"
+              >
+                <Bell className="w-4 h-4 mr-2" />
+                Bildirimleri Aç
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={() => setIsEditingTemplate(true)} className="border-[#CCFF00]/30 text-[#CCFF00] hover:bg-[#CCFF00]/10">
               <MessageSquare className="w-4 h-4 mr-2" />
               Mesaj Taslağı Düzenle

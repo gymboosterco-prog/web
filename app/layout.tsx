@@ -3,6 +3,7 @@ import { Inter, Space_Grotesk } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import { MetaPixelEvents } from '@/components/meta-pixel-events'
+import { PwaHandler } from '@/components/pwa-handler'
 import Script from 'next/script'
 import './globals.css'
 
@@ -28,8 +29,15 @@ export const metadata: Metadata = {
         type: 'image/svg+xml',
       },
     ],
-    apple: '/apple-icon.png',
+    apple: '/apple-touch-icon.png',
   },
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'GymCRM',
+  },
+  themeColor: '#CCFF00',
 }
 
 export default function RootLayout({
@@ -47,6 +55,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          <PwaHandler />
           <MetaPixelEvents />
           <Analytics />
           <Script
