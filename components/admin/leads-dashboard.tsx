@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -56,6 +56,9 @@ type Lead = {
   next_action_type: 'CALL' | 'MEETING' | 'WHATSAPP' | 'PROPOSAL_FOLLOWUP' | null
   last_contact_at: string | null
   rejection_reason: string | null
+  called_at: string | null
+  meeting_planned_at: string | null
+  won_at: string | null
   created_at: string
   updated_at: string
 }
@@ -138,17 +141,46 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
       return
     }
 
-    // Hand-off: Lost requires rejection_reason (Handled by showing a select in UI)
+    // Hand-off: Lost requires rejection_reason
     if (newStatus === 'lost' && !lead.rejection_reason) {
-      // We will handle this by showing a special section in the modal
-      // but if called from outside modal, we prompt
       const reason = prompt("Lütfen olumsuz sonuçlanma sebebini yazın (Fiyat, Konum, İlgisiz, Bütçe Yok):")
       if (!reason) return
       updateLead(leadId, { status: newStatus, rejection_reason: reason })
       return
     }
 
-    updateLead(leadId, { status: newStatus })
+    // Track performance timestamps
+    const updates: Partial<Lead> = { status: newStatus }
+    if (newStatus === 'called') updates.called_at = new Date().toISOString()
+    if (newStatus === 'meeting_planned') updates.meeting_planned_at = new Date().toISOString()
+    if (newStatus === 'won') updates.won_at = new Date().toISOString()
+
+    updateLead(leadId, updates)
+  }
+
+  // Calculate daily stats for the badge
+  const dailyStats = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0]
+    return {
+      newCount: leads.filter(l => l.created_at.startsWith(today)).length,
+      calledCount: leads.filter(l => l.called_at?.startsWith(today)).length,
+      meetingCount: leads.filter(l => l.meeting_planned_at?.startsWith(today)).length,
+      wonCount: leads.filter(l => l.won_at?.startsWith(today)).length
+    }
+  }, [leads])
+
+  const sendDailySummarySummary = () => {
+    const message = `📊 Günün Özeti: Bugün ${dailyStats.newCount} yeni lead geldi. ${dailyStats.calledCount} kişi arandı. ${dailyStats.meetingCount} toplantı set edildi. ${dailyStats.wonCount} satış kapatıldı. 🚀`
+    
+    if (Notification.permission === "granted") {
+      new Notification("Günün Performans Özeti! 📈", {
+        body: message,
+        icon: "/icon-192.png"
+      })
+      alert("Test bildirimi gönderildi: \n\n" + message)
+    } else {
+      alert("Lütfen bildirimleri açın. \n\n" + message)
+    }
   }
 
   const updateLeadNotes = async (leadId: string) => {
@@ -425,6 +457,45 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
       </header>
 
       <main className="container px-4 py-8 space-y-8">
+        {/* Günün Skoru - Daily Performance Summary (19:00 TRT Simulation) */}
+        {isMounted && (
+          <section className="animate-in fade-in slide-in-from-top duration-500">
+            <div className="bg-gradient-to-r from-[#CCFF00]/20 via-[#CCFF00]/5 to-transparent p-1 rounded-2xl border border-[#CCFF00]/10 overflow-hidden">
+               <div className="bg-background/80 backdrop-blur-md p-4 rounded-xl flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-[#CCFF00] flex items-center justify-center text-black">
+                      <TrendingUp className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        Günün Performans Skoru 📈
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#CCFF00]/20 text-[#CCFF00] border border-[#CCFF00]/30">LIVE</span>
+                      </h3>
+                      <p className="text-xs text-muted-foreground">Bugünün anlık satış ve takip verileri</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 md:gap-6">
+                    <div className="text-center">
+                      <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Yeni</p>
+                      <p className="text-xl font-bold text-white">{dailyStats.newCount}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Aranan</p>
+                      <p className="text-xl font-bold text-blue-500">{dailyStats.calledCount}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Toplantı</p>
+                      <p className="text-xl font-bold text-purple-500">{dailyStats.meetingCount}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Satış</p>
+                      <p className="text-xl font-bold text-[#CCFF00]">{dailyStats.wonCount}</p>
+                    </div>
+                  </div>
+               </div>
+            </div>
+          </section>
+        )}
         {/* THE RADAR - Daily Grind Widget */}
         {isMounted && (dailyGrind.slaBreaches.length > 0 || dailyGrind.dueToday.length > 0 || dailyGrind.orphans.length > 0) && (
           <section className="space-y-4">
@@ -1191,7 +1262,14 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
 
               <div className="flex gap-3 pt-2">
                 <Button 
-                  className="flex-1 bg-[#CCFF00] hover:bg-[#CCFF00]/90 text-black font-bold"
+                  className="flex-1 bg-primary hover:bg-primary/90 text-black font-bold h-12"
+                  onClick={sendDailySummarySummary}
+                >
+                  <TrendingUp className="w-4 h-4 mr-2" />
+                  Şimdi Özet Gönder (Test)
+                </Button>
+                <Button 
+                  className="flex-[2] bg-[#CCFF00] hover:bg-[#CCFF00]/90 text-black font-bold"
                   onClick={() => saveTemplate(wsTemplate)}
                 >
                   Kaydet
