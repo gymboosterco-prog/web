@@ -247,36 +247,42 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
         </div>
 
         {/* Funnel Visualization */}
-        <div className="mb-8 p-6 rounded-2xl bg-card border border-border overflow-hidden">
-          <h3 className="font-bold mb-6 flex items-center gap-2">
+        <div className="mb-8 p-6 rounded-2xl bg-card border border-border shadow-sm">
+          <h3 className="font-bold mb-8 flex items-center gap-2 text-foreground">
             <TrendingUp className="w-5 h-5 text-primary" />
-            Satış Hunisi Görünümü
+            Satış Hunisi Analizi
           </h3>
-          <div className="relative flex items-end justify-between gap-2 h-48 md:h-64">
-            {funnelData.map((stage, idx) => {
-              const heightPercent = stats.totalCount > 0 ? (stage.count / stats.totalCount) * 100 : 0
-              return (
-                <div key={stage.label} className="flex-1 flex flex-col items-center group">
-                  <div className="w-full relative flex flex-col items-center justify-end h-full mb-3">
-                    <div 
-                      className={`w-full max-w-[60px] md:max-w-[80px] rounded-t-lg transition-all duration-500 group-hover:brightness-110 shadow-[0_0_15px_-3px_rgba(0,0,0,0.3)]`}
-                      style={{ 
-                        height: `${Math.max(heightPercent, 2)}%`,
-                        backgroundColor: stage.color,
-                        boxShadow: `0 0 20px ${stage.color}20` 
-                      }}
-                    >
-                      <div className="absolute -top-7 left-1/2 -translate-x-1/2 font-bold text-sm text-foreground">
-                        {stage.count}
+          <div className="relative flex items-end justify-between gap-2 h-48 md:h-64 px-2">
+            {(() => {
+              const maxCount = Math.max(...funnelData.map(d => d.count), 1)
+              return funnelData.map((stage) => {
+                const heightPercent = (stage.count / maxCount) * 100
+                return (
+                  <div key={stage.label} className="flex-1 flex flex-col items-center group relative h-full">
+                    <div className="flex-1 w-full flex flex-col items-center justify-end pb-2">
+                      <div 
+                        className="w-full max-w-[40px] md:max-w-[70px] rounded-t-lg transition-all duration-500 relative group-hover:brightness-125"
+                        style={{ 
+                          height: `${Math.max(heightPercent, 5)}%`,
+                          backgroundColor: stage.color,
+                          border: `1px solid ${stage.color}`,
+                          boxShadow: `0 4px 20px ${stage.color}40`
+                        }}
+                      >
+                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 font-bold text-sm md:text-base text-foreground bg-background/50 px-1.5 py-0.5 rounded backdrop-blur-sm">
+                          {stage.count}
+                        </div>
                       </div>
                     </div>
+                    <div className="h-10 flex flex-col items-center justify-center border-t border-border w-full mt-2">
+                      <span className="text-[10px] md:text-xs font-semibold text-muted-foreground text-center line-clamp-1">
+                        {stage.label}
+                      </span>
+                    </div>
                   </div>
-                  <span className="text-[10px] md:text-xs font-medium text-muted-foreground whitespace-nowrap">
-                    {stage.label}
-                  </span>
-                </div>
-              )
-            })}
+                )
+              })
+            })()}
           </div>
         </div>
 
