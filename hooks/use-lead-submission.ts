@@ -37,7 +37,9 @@ export function useLeadSubmission() {
         if (typeof window !== 'undefined' && (window as any).fbq) {
           (window as any).fbq('track', 'Lead', {
             content_name: 'Gymbooster Lead Form',
-            content_category: 'Consultation Request'
+            content_category: 'Consultation Request',
+            value: 0.00,
+            currency: 'TRY'
           });
         }
       } else {
