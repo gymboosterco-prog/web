@@ -75,10 +75,18 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.E
   proposal: { label: "Teklif Verildi", color: "bg-orange-500/10 text-orange-500 border-orange-500/20", icon: MessageSquare },
   won: { label: "Ödeme Alındı (Won)", color: "bg-[#CCFF00]/10 text-[#CCFF00] border-[#CCFF00]/20", icon: TrendingUp },
   lost: { label: "Olumsuz", color: "bg-red-500/10 text-red-500 border-red-500/20", icon: XCircle },
+  cool_off: { label: "Beklemede (Cool-off)", color: "bg-purple-500/10 text-purple-500 border-purple-500/20", icon: Clock },
 }
 
 const REJECTION_REASONS = ["Fiyat", "Konum", "İlgisiz", "Bütçe Yok", "Ulaşılamadı", "Vazgeçti"]
 const PRIMARY_NEON = "#CCFF00"
+
+const suggestNextCallTime = (lastContactAt: string | null) => {
+  if (!lastContactAt) return "10:00 AM"
+  const hour = new Date(lastContactAt).getHours()
+  if (hour >= 9 && hour <= 15) return "18:30"
+  return "10:00 AM"
+}
 
 export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[], userRole: 'ADMIN' | 'STAFF' }) {
   const [leads, setLeads] = useState<Lead[]>(initialLeads)
@@ -167,11 +175,13 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
   // Calculate daily stats for the badge
   const dailyStats = useMemo(() => {
     const today = new Date().toISOString().split('T')[0]
+    const ulasilamayanCount = leads.filter(l => l.call_count >= 3).length
     return {
       newCount: leads.filter(l => l.created_at.startsWith(today)).length,
       calledCount: leads.filter(l => l.called_at?.startsWith(today)).length,
       meetingCount: leads.filter(l => l.meeting_planned_at?.startsWith(today)).length,
-      wonCount: leads.filter(l => l.won_at?.startsWith(today)).length
+      wonCount: leads.filter(l => l.won_at?.startsWith(today)).length,
+      strikeRate: ((ulasilamayanCount / (leads.length || 1)) * 100).toFixed(1)
     }
   }, [leads])
 
@@ -209,10 +219,15 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
   }
 
   const handleQuickCall = (lead: Lead) => {
+    const nextCount = (lead.call_count || 0) + 1
     incrementCallCount(lead.id, lead.call_count || 0)
-    toast.success(`${lead.name} arandı olarak işaretlendi 📞`, {
-      description: "Call counter güncellendi."
-    })
+    
+    // Solo mostramos este toast si no es un strike (3 o 4+) porque incrementCallCount ya tiene sus propios toasts
+    if (nextCount < 3) {
+      toast.success(`${lead.name} arandı olarak işaretlendi 📞`, {
+        description: `Bu kişinin ${nextCount}. aranması.`
+      })
+    }
   }
 
   const deleteLead = async (leadId: string) => {
@@ -418,8 +433,38 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
     window.open(`https://wa.me/${lead.phone.replace(/\D/g, "")}?text=${encoded}`, '_blank')
   }
 
-  const incrementCallCount = (leadId: string, currentCount: number) => {
-    updateLead(leadId, { call_count: currentCount + 1, status: 'called' })
+  const incrementCallCount = async (leadId: string, currentCount: number) => {
+    const nextCount = currentCount + 1
+    const updates: Partial<Lead> = { 
+      call_count: nextCount, 
+      status: 'called', 
+      called_at: new Date().toISOString(),
+      last_contact_at: new Date().toISOString()
+    }
+
+    if (nextCount === 3) {
+      const hint = suggestNextCallTime(updates.last_contact_at!)
+      toast.warning("3. Deneme Başarısız! 🥊", {
+        description: `Strateji Değiştir: Bir sonraki aramayı ${hint} saatinde yapın.`
+      })
+    }
+
+    if (nextCount >= 4) {
+      updates.status = 'cool_off'
+      toast.error("Strike 4! 🛑", {
+        description: "Lead 'Beklemede' klasörüne alındı. Lütfen Last Chance WhatsApp mesajı gönderin."
+      })
+      
+      const lead = leads.find(l => l.id === leadId)
+      if (lead) {
+        const waMsg = `Selam ${lead.name} hocam, size birkaç kez ulaşmaya çalıştık ama sanırım çok yoğunsunuz. İletişim için uygun olduğunuz saati yazarsanız sevinirim.`
+        // Using openWhatsApp helper logic
+        const encoded = encodeURIComponent(waMsg)
+        window.open(`https://wa.me/${lead.phone.replace(/\D/g, "")}?text=${encoded}`, '_blank')
+      }
+    }
+
+    updateLead(leadId, updates)
   }
 
   const funnelData = [
@@ -508,6 +553,12 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
                       <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Satış</p>
                       <p className="text-xl font-bold text-[#CCFF00]">{dailyStats.wonCount}</p>
                     </div>
+                    {userRole === 'ADMIN' && (
+                      <div className="text-center pl-4 border-l border-border">
+                        <p className="text-[10px] uppercase font-bold text-red-500 mb-1">Ulaşılamayan %</p>
+                        <p className="text-xl font-bold text-red-500">{dailyStats.strikeRate}%</p>
+                      </div>
+                    )}
                   </div>
                </div>
             </div>
@@ -830,19 +881,8 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.95 }}
-                          whileHover={!isReadOnly ? { boxShadow: "0 0 15px rgba(204, 255, 0, 0.05)", backgroundColor: "rgba(204, 255, 0, 0.02)" } : {}}
-                          drag="x"
-                          dragConstraints={{ left: -100, right: 100 }}
-                          dragElastic={0.1}
-                          onDragEnd={(_, info) => {
-                            if (isReadOnly) return
-                            if (info.offset.x > 80) handleQuickCall(lead)
-                            if (info.offset.x < -80) {
-                              setInlineEditingId(lead.id)
-                              setInlineNoteValue(lead.notes || "")
-                            }
-                          }}
-                          className={`group relative border-b border-border last:border-0 transition-colors ${inlineEditingId === lead.id ? 'bg-[#CCFF00]/5 ring-1 ring-[#CCFF00]/20' : ''}`}
+                          whileHover={!isReadOnly ? { boxShadow: lead.call_count >= 3 ? "0 0 15px rgba(168, 85, 247, 0.2)" : "0 0 15px rgba(204, 255, 0, 0.05)" } : {}}
+                          className={`group relative border-b border-border last:border-0 transition-all ${lead.call_count >= 3 ? 'border-l-4 border-l-purple-500' : ''} ${inlineEditingId === lead.id ? 'bg-[#CCFF00]/5 ring-1 ring-[#CCFF00]/20' : ''}`}
                         >
                           <td className="p-4 relative">
                             {/* Hover Actions (Desktop Only) */}
@@ -935,10 +975,18 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
                                     {status.label}
                                     {isReadOnly && <Shield className="w-2.5 h-2.5 ml-1" />}
                                   </button>
-                                  {['new', 'called'].includes(lead.status) && lead.call_count > 0 && (
-                                    <span className="text-[10px] text-yellow-500 font-bold ml-2 bg-yellow-500/10 px-1.5 py-0.5 rounded border border-yellow-500/20">
-                                      {lead.call_count}x Arandı
-                                    </span>
+                                  {['new', 'called', 'cool_off'].includes(lead.status) && lead.call_count > 0 && (
+                                    <div className="flex flex-col gap-1">
+                                      <span className={`text-[10px] font-bold ml-2 px-1.5 py-0.5 rounded border ${lead.call_count >= 3 ? 'text-purple-400 bg-purple-500/10 border-purple-500/20' : 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20'}`}>
+                                        {lead.call_count}x Arandı
+                                        {lead.call_count === 3 && " 🥊 Strike 3!"}
+                                      </span>
+                                      {lead.call_count === 3 && (
+                                        <span className="text-[9px] text-purple-400/80 ml-2 italic">
+                                          ⏰ Hint: {suggestNextCallTime(lead.last_contact_at)}'da ara
+                                        </span>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
                               </DropdownMenuTrigger>
