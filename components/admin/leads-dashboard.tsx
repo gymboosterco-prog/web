@@ -58,6 +58,7 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [editingNotes, setEditingNotes] = useState<string | null>(null)
   const [noteText, setNoteText] = useState("")
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -109,6 +110,33 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
     }
   }
 
+  const exportToCSV = () => {
+    const headers = ["Ad Soyad", "Email", "Telefon", "Salon", "Durum", "Kaynak", "Tarih", "Notlar"]
+    const csvContent = [
+      headers.join(","),
+      ...leads.map(lead => [
+        `"${lead.name}"`,
+        `"${lead.email}"`,
+        `"${lead.phone}"`,
+        `"${lead.gym_name}"`,
+        `"${statusConfig[lead.status]?.label || lead.status}"`,
+        `"${lead.source}"`,
+        `"${new Date(lead.created_at).toLocaleDateString('tr-TR')}"`,
+        `"${(lead.notes || "").replace(/"/g, '""')}"`
+      ].join(","))
+    ].join("\n")
+
+    const blob = new Blob(["\ufeff" + csvContent], { type: "text/csv;charset=utf-8;" })
+    const link = document.createElement("a")
+    const url = URL.createObjectURL(blob)
+    link.setAttribute("href", url)
+    link.setAttribute("download", `gymbooster-leads-${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   const filteredLeads = leads.filter(lead => {
     const matchesSearch = 
       lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -125,6 +153,9 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
     new: leads.filter(l => l.status === "new").length,
     contacted: leads.filter(l => l.status === "contacted").length,
     won: leads.filter(l => l.status === "won").length,
+    conversionRate: leads.length > 0 
+      ? ((leads.filter(l => l.status === "won").length / leads.length) * 100).toFixed(1) 
+      : "0",
   }
 
   return (
@@ -142,10 +173,16 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
             </div>
           </div>
 
-          <Button variant="outline" size="sm" onClick={handleLogout}>
-            <LogOut className="w-4 h-4 mr-2" />
-            Çıkış
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={exportToCSV}>
+              <Search className="w-4 h-4 mr-2" />
+              CSV İndir
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleLogout}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Çıkış
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -181,12 +218,12 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
           </div>
           <div className="p-4 rounded-xl bg-card border border-border">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-primary" />
+              <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-green-500" />
               </div>
-              <span className="text-sm text-muted-foreground">Kazanılan</span>
+              <span className="text-sm text-muted-foreground">Dönüşüm Oranı</span>
             </div>
-            <p className="text-3xl font-bold">{stats.won}</p>
+            <p className="text-3xl font-bold">%{stats.conversionRate}</p>
           </div>
         </div>
 
@@ -354,6 +391,16 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedLead(lead)
+                                  setNoteText(lead.notes || "")
+                                }}
+                                className="cursor-pointer"
+                              >
+                                <Search className="w-4 h-4 mr-2" />
+                                Detayları Gör
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
                                 onClick={() => deleteLead(lead.id)}
                                 className="text-destructive cursor-pointer"
                               >
@@ -371,6 +418,87 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
             </table>
           </div>
         </div>
+        {/* Lead Details Modal */}
+        {selectedLead && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+            <div className="bg-card border border-border rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+              <div className="p-6 border-b border-border flex items-center justify-between bg-secondary/30">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-xl font-bold text-primary">
+                    {selectedLead.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-xl">{selectedLead.name}</h3>
+                    <p className="text-sm text-muted-foreground">{selectedLead.gym_name}</p>
+                  </div>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => setSelectedLead(null)}>
+                  <XCircle className="w-6 h-6" />
+                </Button>
+              </div>
+              
+              <div className="p-6 space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <span className="text-xs font-medium text-muted-foreground uppercase">E-posta</span>
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-primary" />
+                      <a href={`mailto:${selectedLead.email}`} className="text-sm hover:underline">{selectedLead.email}</a>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-xs font-medium text-muted-foreground uppercase">Telefon</span>
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-primary" />
+                      <a href={`tel:${selectedLead.phone}`} className="text-sm hover:underline">{selectedLead.phone}</a>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-border">
+                  <span className="text-xs font-medium text-muted-foreground uppercase mb-3 block">Durum Güncelle</span>
+                  <div className="grid grid-cols-3 gap-2">
+                    {Object.entries(statusConfig).map(([key, config]) => (
+                      <button
+                        key={key}
+                        onClick={() => {
+                          updateLeadStatus(selectedLead.id, key)
+                          setSelectedLead({ ...selectedLead, status: key })
+                        }}
+                        className={`flex flex-col items-center gap-1.5 p-2 rounded-xl border transition-all ${
+                          selectedLead.status === key 
+                            ? "bg-primary/10 border-primary text-primary" 
+                            : "bg-secondary/50 border-transparent hover:border-border text-muted-foreground"
+                        }`}
+                      >
+                        <config.icon className="w-4 h-4" />
+                        <span className="text-[10px] font-medium">{config.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-border space-y-3">
+                  <span className="text-xs font-medium text-muted-foreground uppercase block">Notlar</span>
+                  <textarea
+                    value={noteText}
+                    onChange={(e) => setNoteText(e.target.value)}
+                    placeholder="Görüşme notlarını buraya yazın..."
+                    className="w-full h-32 bg-secondary/50 border border-border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button 
+                      onClick={() => updateLeadNotes(selectedLead.id)}
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                    >
+                      Notu Kaydet
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )

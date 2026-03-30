@@ -3,6 +3,7 @@
 import { useLeadSubmission } from "@/hooks/use-lead-submission"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { PhoneInput } from "@/components/ui/phone-input"
 import { ArrowRight, CheckCircle2, Zap, Shield, Phone, Mail, User, Building2, Clock, Gift, AlertCircle } from "lucide-react"
 
 export function Hero() {
@@ -129,52 +130,37 @@ export function Hero() {
                   )}
 
                   {/* Form */}
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="relative">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <form onSubmit={handleSubmit} className="space-y-4 pt-4 md:pt-6">
+                    <div className="space-y-3">
                       <Input
                         type="text"
                         placeholder="Adınız Soyadınız"
                         value={formData.name}
                         onChange={(e) => updateField('name', e.target.value)}
                         required
-                        className="h-12 md:h-14 pl-12 pr-4 bg-secondary border-border text-foreground placeholder:text-muted-foreground text-base"
+                        className="h-11 md:h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 text-sm md:text-base focus:border-primary/50 transition-colors"
                       />
-                    </div>
-                    
-                    <div className="relative">
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                      <Input
-                        type="tel"
-                        placeholder="Telefon (05XX XXX XX XX)"
+                      <PhoneInput
                         value={formData.phone}
                         onChange={(e) => updateField('phone', e.target.value)}
                         required
-                        className="h-12 md:h-14 pl-12 pr-4 bg-secondary border-border text-foreground placeholder:text-muted-foreground text-base"
+                        className="h-11 md:h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 text-sm md:text-base focus:border-primary/50 transition-colors"
                       />
-                    </div>
-                    
-                    <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                       <Input
                         type="email"
                         placeholder="E-posta Adresiniz"
                         value={formData.email}
                         onChange={(e) => updateField('email', e.target.value)}
                         required
-                        className="h-12 md:h-14 pl-12 pr-4 bg-secondary border-border text-foreground placeholder:text-muted-foreground text-base"
+                        className="h-11 md:h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 text-sm md:text-base focus:border-primary/50 transition-colors"
                       />
-                    </div>
-                    
-                    <div className="relative">
-                      <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                       <Input
                         type="text"
                         placeholder="Spor Salonu Adı"
                         value={formData.gymName}
                         onChange={(e) => updateField('gymName', e.target.value)}
                         required
-                        className="h-12 md:h-14 pl-12 pr-4 bg-secondary border-border text-foreground placeholder:text-muted-foreground text-base"
+                        className="h-11 md:h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 text-sm md:text-base focus:border-primary/50 transition-colors"
                       />
                     </div>
 
