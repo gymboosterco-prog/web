@@ -21,7 +21,11 @@ export async function PATCH(
       ad_spend,
       next_action_at,
       next_action_type,
-      last_contact_at
+      last_contact_at,
+      called_at,
+      won_at,
+      meeting_planned_at,
+      rejection_reason
     } = body
 
     const supabase = await createClient()
@@ -40,7 +44,7 @@ export async function PATCH(
       updated_at: new Date().toISOString()
     }
 
-    if (status) updateData.status = status
+    if (status !== undefined) updateData.status = status
     if (notes !== undefined) updateData.notes = notes
     if (meeting_date !== undefined) updateData.meeting_date = meeting_date
     if (value !== undefined) updateData.value = value
@@ -53,6 +57,10 @@ export async function PATCH(
     if (next_action_at !== undefined) updateData.next_action_at = next_action_at
     if (next_action_type !== undefined) updateData.next_action_type = next_action_type
     if (last_contact_at !== undefined) updateData.last_contact_at = last_contact_at
+    if (called_at !== undefined) updateData.called_at = called_at
+    if (won_at !== undefined) updateData.won_at = won_at
+    if (meeting_planned_at !== undefined) updateData.meeting_planned_at = meeting_planned_at
+    if (rejection_reason !== undefined) updateData.rejection_reason = rejection_reason
 
     const { data, error } = await supabase
       .from("leads")

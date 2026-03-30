@@ -393,13 +393,16 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
   }
 
   const snoozeTask = async (leadId: string, hours: number) => {
+    console.log("Snoozing lead:", leadId, "for", hours, "hours")
     const nextDate = new Date()
     nextDate.setHours(nextDate.getHours() + hours)
+    console.log("Snoozed to:", nextDate.toISOString())
     await updateLead(leadId, { next_action_at: nextDate.toISOString() })
     toast.success(`${hours} saat ertelendi ⏰`)
   }
 
   const snoozeToNextMonday = async (leadId: string) => {
+    console.log("Snoozing to next Monday:", leadId)
     const now = new Date()
     const nextMonday = new Date()
     // Find next monday
@@ -408,6 +411,7 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
     
     nextMonday.setDate(now.getDate() + daysUntilMonday)
     nextMonday.setHours(9, 0, 0, 0)
+    console.log("Next Monday date:", nextMonday.toISOString())
     
     await updateLead(leadId, { next_action_at: nextMonday.toISOString() })
     toast.success("Pazartesi sabahına ertelendi 🗓️")
