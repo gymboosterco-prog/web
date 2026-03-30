@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter, Space_Grotesk } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
+import { MetaPixelEvents } from '@/components/meta-pixel-events'
 import Script from 'next/script'
 import './globals.css'
 
@@ -46,6 +47,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          <MetaPixelEvents />
           <Analytics />
           <Script
             id="fb-pixel"
