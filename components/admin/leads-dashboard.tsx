@@ -396,13 +396,21 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
     const nextDate = new Date()
     nextDate.setHours(nextDate.getHours() + hours)
     await updateLead(leadId, { next_action_at: nextDate.toISOString() })
+    toast.success(`${hours} saat ertelendi ⏰`)
   }
 
   const snoozeToNextMonday = async (leadId: string) => {
+    const now = new Date()
     const nextMonday = new Date()
-    nextMonday.setDate(nextMonday.getDate() + (1 + 7 - nextMonday.getDay()) % 7)
+    // Find next monday
+    let daysUntilMonday = (1 + 7 - now.getDay()) % 7
+    if (daysUntilMonday === 0) daysUntilMonday = 7 // If today is Monday, move to next week
+    
+    nextMonday.setDate(now.getDate() + daysUntilMonday)
     nextMonday.setHours(9, 0, 0, 0)
+    
     await updateLead(leadId, { next_action_at: nextMonday.toISOString() })
+    toast.success("Pazartesi sabahına ertelendi 🗓️")
   }
 
   const completeTask = (lead: Lead) => {
@@ -607,9 +615,9 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-card border-border">
-                        <DropdownMenuItem onClick={() => snoozeTask(lead.id, 2)}>+2 Saat Ertele</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => snoozeTask(lead.id, 24)}>+24 Saat Ertele</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => snoozeToNextMonday(lead.id)}>Pazartesiye Ertele</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => snoozeTask(lead.id, 2)}>+2 Saat Ertele</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => snoozeTask(lead.id, 24)}>+24 Saat Ertele</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => snoozeToNextMonday(lead.id)}>Pazartesiye Ertele</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -648,9 +656,9 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="bg-card border-border">
-                          <DropdownMenuItem onClick={() => snoozeTask(lead.id, 2)}>+2 Saat Ertele</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => snoozeTask(lead.id, 24)}>+24 Saat Ertele</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => snoozeToNextMonday(lead.id)}>Pazartesiye Ertele</DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => snoozeTask(lead.id, 2)}>+2 Saat Ertele</DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => snoozeTask(lead.id, 24)}>+24 Saat Ertele</DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => snoozeToNextMonday(lead.id)}>Pazartesiye Ertele</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
