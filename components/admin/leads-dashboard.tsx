@@ -182,26 +182,35 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
   const [nextActionDate, setNextActionDate] = useState("")
   const [nextActionType, setNextActionType] = useState<Lead['next_action_type']>(null)
 
+  const [isMounted, setIsMounted] = useState(false)
+
   const requestNotificationPermission = async () => {
-    if (!("Notification" in window)) return
+    if (typeof window === "undefined" || !("Notification" in window)) return
     
-    const permission = await Notification.requestPermission()
-    if (permission === "granted") {
-      setNotificationsEnabled(true)
-      new Notification("Bildirimler Açıldı! 🚀", {
-        body: "Yeni lead geldiğinde anlık bildirim alacaksınız.",
-        icon: "/icon-192.png"
-      })
+    try {
+      const permission = await Notification.requestPermission()
+      if (permission === "granted") {
+        setNotificationsEnabled(true)
+        new Notification("Bildirimler Açıldı! 🚀", {
+          body: "Yeni lead geldiğinde anlık bildirim alacaksınız.",
+          icon: "/icon-192.png"
+        })
+      }
+    } catch (error) {
+      console.error("Notification permission error:", error)
     }
   }
 
   // Real-time listener for new leads & Data Fetching
   useEffect(() => {
+    setIsMounted(true)
     const supabase = createClient()
     
-    // Load template from localStorage
-    const saved = localStorage.getItem("gymbooster_ws_template")
-    if (saved) setWsTemplate(saved)
+    // Load template from localStorage safely
+    try {
+      const saved = localStorage.getItem("gymbooster_ws_template")
+      if (saved) setWsTemplate(saved)
+    } catch (e) {}
 
     const channel = supabase
       .channel('schema-db-changes')
@@ -214,7 +223,7 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
         },
         (payload) => {
           const newLead = payload.new as Lead
-          if (Notification.permission === "granted") {
+          if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
             new Notification(`Yeni Lead: ${newLead.name} 🚀`, {
               body: `${newLead.gym_name} için yeni bir başvuru geldi.`,
               icon: "/icon-192.png"
@@ -225,7 +234,7 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
       )
       .subscribe()
 
-    if (Notification.permission === "granted") {
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
       setNotificationsEnabled(true)
     }
 
@@ -234,21 +243,31 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
     }
   }, [])
 
-  // Daily Grind Logic
-  const dailyGrind = {
-    slaBreaches: leads.filter(l => {
-      const hoursSinceCreation = (new Date().getTime() - new Date(l.created_at).getTime()) / (1000 * 60 * 60)
-      return l.status === 'new' && hoursSinceCreation > 2
-    }),
-    dueToday: leads.filter(l => {
-      if (!l.next_action_at) return false
-      const isDue = new Date(l.next_action_at) <= new Date()
-      return isDue && !['won', 'lost', 'negative'].includes(l.status)
-    }),
-    orphans: leads.filter(l => {
-      return !l.next_action_at && !['won', 'lost', 'negative'].includes(l.status)
-    })
-  }
+  // Daily Grind Logic - Move to useMemo to avoid hydration mismatch and save performance
+  const dailyGrind = React.useMemo(() => {
+    if (!isMounted) return { slaBreaches: [], dueToday: [], orphans: [] }
+
+    const now = new Date()
+    return {
+      slaBreaches: leads.filter(l => {
+        if (!l.created_at) return false
+        const createdDate = new Date(l.created_at)
+        if (isNaN(createdDate.getTime())) return false
+        const hoursSinceCreation = (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60)
+        return l.status === 'new' && hoursSinceCreation > 2
+      }),
+      dueToday: leads.filter(l => {
+        if (!l.next_action_at) return false
+        const nextDate = new Date(l.next_action_at)
+        if (isNaN(nextDate.getTime())) return false
+        const isDue = nextDate <= now
+        return isDue && !['won', 'lost', 'negative'].includes(l.status)
+      }),
+      orphans: leads.filter(l => {
+        return !l.next_action_at && !['won', 'lost', 'negative'].includes(l.status)
+      })
+    }
+  }, [leads, isMounted])
 
   const saveTemplate = (newTemplate: string) => {
     setWsTemplate(newTemplate)
@@ -354,7 +373,7 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
 
       <main className="container px-4 py-8 space-y-8">
         {/* THE RADAR - Daily Grind Widget */}
-        {(dailyGrind.slaBreaches.length > 0 || dailyGrind.dueToday.length > 0 || dailyGrind.orphans.length > 0) && (
+        {isMounted && (dailyGrind.slaBreaches.length > 0 || dailyGrind.dueToday.length > 0 || dailyGrind.orphans.length > 0) && (
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold flex items-center gap-2 text-white">
