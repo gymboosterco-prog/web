@@ -238,6 +238,14 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
     setIsMounted(true)
     const supabase = createClient()
     
+    // Debug: Log current user info to console
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      console.log("Current User Info:", {
+        id: user?.id,
+        email: user?.email,
+        role: userRole
+      });
+    });
     // Load template from localStorage safely
     try {
       const saved = localStorage.getItem("gymbooster_ws_template")
@@ -1146,8 +1154,15 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
           </div>
         )}
         {/* Debug Info (Temporary) */}
-        <div className="mt-8 text-[10px] text-muted-foreground/30 text-center">
-          Active Role: {userRole} | Lead Count: {leads.length} | ID: {isMounted ? 'Mounted' : 'Server'}
+        <div className="mt-8 p-4 bg-secondary/20 rounded-lg border border-border/50 text-[10px] text-muted-foreground/50 text-center">
+          <p className="font-mono">
+            Role: <span className="text-primary font-bold">{userRole}</span> | 
+            Count: {leads.length} | 
+            Email: {leads[0]?.email ? 'Data Loaded' : 'No Data'}
+          </p>
+          <p className="mt-1 opacity-50">
+            Duyuru: Eğer ADMIN olmanız gerekiyorsa lütfen tarayıcı konsoluna (F12) bakıp ID bilgisini paylaşın.
+          </p>
         </div>
       </main>
     </div>
