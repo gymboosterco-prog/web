@@ -877,12 +877,29 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
                     <p className="text-sm text-muted-foreground">{selectedLead.gym_name}</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => setSelectedLead(null)}>
-                  <XCircle className="w-6 h-6" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  {selectedLead.assigned_to === 'Admin' && userRole === 'STAFF' && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 rounded-lg text-xs font-medium">
+                      <Shield className="w-4 h-4" />
+                      Salt Okunur (Admin Kontrolünde)
+                    </div>
+                  )}
+                  <Button variant="ghost" size="icon" onClick={() => setSelectedLead(null)}>
+                    <XCircle className="w-6 h-6" />
+                  </Button>
+                </div>
               </div>
               
               <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+                {userRole === 'STAFF' && selectedLead.assigned_to === 'Admin' && (
+                  <div className="p-4 rounded-xl bg-yellow-500/5 border border-yellow-500/10 flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
+                    <div className="text-sm text-yellow-500/80">
+                      <p className="font-bold mb-0.5">Dikkat: Bu lead Admin'e devredilmiştir.</p>
+                      <p>SDR süreci tamamlandığı için bu lead üzerinde değişiklik yapamazsınız. Sadece okuma yetkiniz bulunmaktadır.</p>
+                    </div>
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <span className="text-xs font-medium text-muted-foreground uppercase">E-posta</span>
@@ -908,7 +925,8 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
                         type="text"
                         value={selectedLead.instagram_url || ""}
                         onChange={(e) => updateLead(selectedLead.id, { instagram_url: e.target.value })}
-                        className="h-10 bg-secondary/50 border-border"
+                        disabled={userRole === 'STAFF' && selectedLead.assigned_to === 'Admin'}
+                        className="h-10 bg-secondary/50 border-border disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder="https://instagram.com/..."
                       />
                       {selectedLead.instagram_url && (
@@ -929,7 +947,8 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
                       type="number"
                       value={selectedLead.member_count || 0}
                       onChange={(e) => updateLead(selectedLead.id, { member_count: parseInt(e.target.value) || 0 })}
-                      className="h-10 bg-secondary/50 border-border"
+                      disabled={userRole === 'STAFF' && selectedLead.assigned_to === 'Admin'}
+                      className="h-10 bg-secondary/50 border-border disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -988,7 +1007,8 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
                     type="datetime-local"
                     value={selectedLead.meeting_date ? new Date(selectedLead.meeting_date).toISOString().slice(0, 16) : ""}
                     onChange={(e) => updateLead(selectedLead.id, { meeting_date: e.target.value || null })}
-                    className="h-10 bg-secondary/50 border-border"
+                    disabled={userRole === 'STAFF' && selectedLead.assigned_to === 'Admin'}
+                    className="h-10 bg-secondary/50 border-border disabled:opacity-50"
                   />
                 </div>
 
@@ -998,38 +1018,41 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
                     {Object.entries(statusConfig)
                       .filter(([key]) => userRole === 'ADMIN' || ['new', 'called', 'meeting_done', 'meeting_planned'].includes(key))
                       .map(([key, config]) => (
-                      <button
-                        key={key}
-                        onClick={() => updateLeadStatus(selectedLead.id, key)}
-                        className={`flex flex-col items-center gap-1.5 p-2 rounded-xl border transition-all ${
-                          selectedLead.status === key 
-                            ? "bg-primary/10 border-primary text-primary" 
-                            : "bg-secondary/50 border-transparent hover:border-border text-muted-foreground"
-                        }`}
-                      >
-                        <config.icon className="w-4 h-4" />
-                        <span className="text-[10px] font-medium text-center leading-tight">{config.label}</span>
-                      </button>
+                        <button
+                          key={key}
+                          onClick={() => updateLeadStatus(selectedLead.id, key)}
+                          disabled={userRole === 'STAFF' && selectedLead.assigned_to === 'Admin'}
+                          className={`flex flex-col items-center gap-1.5 p-2 rounded-xl border transition-all ${
+                            selectedLead.status === key 
+                              ? "bg-primary/10 border-primary text-primary" 
+                              : "bg-secondary/50 border-transparent hover:border-border text-muted-foreground"
+                          } ${userRole === 'STAFF' && selectedLead.assigned_to === 'Admin' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          <config.icon className="w-4 h-4" />
+                          <span className="text-[10px] font-medium text-center leading-tight">{config.label}</span>
+                        </button>
                     ))}
                   </div>
                 </div>
 
                 <div className="pt-4 border-t border-border space-y-3">
                   <span className="text-xs font-medium text-muted-foreground uppercase block">Görüşme Notları</span>
-                  <textarea
-                    value={noteText}
-                    onChange={(e) => setNoteText(e.target.value)}
-                    placeholder="Görüşme notlarını buraya yazın..."
-                    className="w-full h-32 bg-secondary/50 border border-border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"
-                  />
-                  <div className="flex justify-end gap-2">
-                    <Button 
-                      onClick={() => updateLeadNotes(selectedLead.id)}
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                    >
-                      Notu Kaydet
-                    </Button>
-                  </div>
+                    <textarea
+                      value={noteText}
+                      onChange={(e) => setNoteText(e.target.value)}
+                      disabled={userRole === 'STAFF' && selectedLead.assigned_to === 'Admin'}
+                      placeholder={userRole === 'STAFF' && selectedLead.assigned_to === 'Admin' ? "Admin kontrolündeki lead'lere not eklenemez." : "Görüşme notlarını buraya yazın..."}
+                      className="w-full h-32 bg-secondary/50 border border-border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none disabled:opacity-50"
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button 
+                        onClick={() => updateLeadNotes(selectedLead.id)}
+                        disabled={userRole === 'STAFF' && selectedLead.assigned_to === 'Admin'}
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50"
+                      >
+                        Notu Kaydet
+                      </Button>
+                    </div>
                 </div>
               </div>
             </div>
