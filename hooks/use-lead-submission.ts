@@ -32,6 +32,14 @@ export function useLeadSubmission() {
       
       if (response.ok) {
         setIsSubmitted(true)
+        
+        // Meta Pixel Lead tracking
+        if (typeof window !== 'undefined' && (window as any).fbq) {
+          (window as any).fbq('track', 'Lead', {
+            content_name: 'Gymbooster Lead Form',
+            content_category: 'Consultation Request'
+          });
+        }
       } else {
         const data = await response.json()
         setError(data.error || "Bir hata oluştu. Lütfen tekrar deneyin.")
