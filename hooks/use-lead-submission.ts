@@ -33,13 +33,22 @@ export function useLeadSubmission() {
       if (response.ok) {
         setIsSubmitted(true)
         
-        // Meta Pixel Lead tracking
+        // Meta Pixel Lead tracking with Advanced Matching
         if (typeof window !== 'undefined' && (window as any).fbq) {
+          const nameParts = formData.name.trim().split(/\s+/);
+          const firstName = nameParts[0] || "";
+          const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
+
           (window as any).fbq('track', 'Lead', {
             content_name: 'Gymbooster Lead Form',
             content_category: 'Consultation Request',
             value: 0.00,
-            currency: 'TRY'
+            currency: 'TRY',
+            // Advanced Matching Parameters
+            em: formData.email.toLowerCase().trim(),
+            ph: formData.phone.replace(/\D/g, ''),
+            fn: firstName.toLowerCase().trim(),
+            ln: lastName.toLowerCase().trim()
           });
         }
       } else {
