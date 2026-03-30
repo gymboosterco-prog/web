@@ -1145,6 +1145,10 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
             </div>
           </div>
         )}
+        {/* Debug Info (Temporary) */}
+        <div className="mt-8 text-[10px] text-muted-foreground/30 text-center">
+          Active Role: {userRole} | Lead Count: {leads.length} | ID: {isMounted ? 'Mounted' : 'Server'}
+        </div>
       </main>
     </div>
   )
