@@ -71,7 +71,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.E
 
 const PRIMARY_NEON = "#CCFF00"
 
-export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[], userRole: 'ADMIN' | 'STAFF' }) {
+export function LeadsDashboard({ initialLeads, userRole, serverUserId }: { initialLeads: Lead[], userRole: 'ADMIN' | 'STAFF', serverUserId?: string }) {
   const [leads, setLeads] = useState<Lead[]>(initialLeads)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
@@ -1158,10 +1158,10 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
           <p className="font-mono">
             Role: <span className="text-primary font-bold">{userRole}</span> | 
             Count: {leads.length} | 
-            Email: {leads[0]?.email ? 'Data Loaded' : 'No Data'}
+            Server ID: <span className="text-primary">{serverUserId || 'NULL (Session Missing)'}</span>
           </p>
-          <p className="mt-1 opacity-50">
-            Duyuru: Eğer ADMIN olmanız gerekiyorsa lütfen tarayıcı konsoluna (F12) bakıp ID bilgisini paylaşın.
+          <p className="mt-1 opacity-50 italic">
+            Duyuru: Eğer ADMIN olmanız gerekiyorsa lütfen üstteki "Server ID" değerini benimle paylaşın.
           </p>
         </div>
       </main>
