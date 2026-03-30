@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 
 const MONTHS_TR = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"]
 
-export function ClientDate({ dateString }: { dateString: string }) {
+export function ClientDate({ dateString, className }: { dateString: string; className?: string }) {
   const [formattedDate, setFormattedDate] = useState<string | null>(null)
 
   useEffect(() => {
@@ -23,8 +23,8 @@ export function ClientDate({ dateString }: { dateString: string }) {
 
   // Return null during SSR to prevent hydration mismatch
   if (formattedDate === null) {
-    return <span suppressHydrationWarning>-</span>
+    return <span className={className} suppressHydrationWarning>-</span>
   }
 
-  return <span suppressHydrationWarning>{formattedDate}</span>
+  return <span className={className} suppressHydrationWarning>{formattedDate}</span>
 }

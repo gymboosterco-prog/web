@@ -23,7 +23,9 @@ import {
   XCircle,
   Shield,
   Instagram,
-  Bell
+  Bell,
+  Zap,
+  AlertCircle
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -50,6 +52,9 @@ type Lead = {
   lead_goal: number
   call_count: number
   ad_spend: number
+  next_action_at: string | null
+  next_action_type: 'CALL' | 'MEETING' | 'WHATSAPP' | 'PROPOSAL_FOLLOWUP' | null
+  last_contact_at: string | null
   created_at: string
   updated_at: string
 }
@@ -172,6 +177,10 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false)
   const [wsTemplate, setWsTemplate] = useState("Merhaba {name}, Gymbooster'dan görüşüyoruz. Salonunuz ({gym}) için yaptığımız reklam çalışması hakkında görüşmek isteriz.")
   const [isEditingTemplate, setIsEditingTemplate] = useState(false)
+  const [isFollowUpModalOpen, setIsFollowUpModalOpen] = useState(false)
+  const [selectedTaskLead, setSelectedTaskLead] = useState<Lead | null>(null)
+  const [nextActionDate, setNextActionDate] = useState("")
+  const [nextActionType, setNextActionType] = useState<Lead['next_action_type']>(null)
 
   const requestNotificationPermission = async () => {
     if (!("Notification" in window)) return
@@ -186,7 +195,7 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
     }
   }
 
-  // Real-time listener for new leads
+  // Real-time listener for new leads & Data Fetching
   useEffect(() => {
     const supabase = createClient()
     
@@ -205,20 +214,17 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
         },
         (payload) => {
           const newLead = payload.new as Lead
-          // Show browser notification if permitted
           if (Notification.permission === "granted") {
             new Notification(`Yeni Lead: ${newLead.name} 🚀`, {
               body: `${newLead.gym_name} için yeni bir başvuru geldi.`,
               icon: "/icon-192.png"
             })
           }
-          // Refresh list
           setLeads(prev => [newLead, ...prev])
         }
       )
       .subscribe()
 
-    // Check permission on load
     if (Notification.permission === "granted") {
       setNotificationsEnabled(true)
     }
@@ -228,10 +234,59 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
     }
   }, [])
 
+  // Daily Grind Logic
+  const dailyGrind = {
+    slaBreaches: leads.filter(l => {
+      const hoursSinceCreation = (new Date().getTime() - new Date(l.created_at).getTime()) / (1000 * 60 * 60)
+      return l.status === 'new' && hoursSinceCreation > 2
+    }),
+    dueToday: leads.filter(l => {
+      if (!l.next_action_at) return false
+      const isDue = new Date(l.next_action_at) <= new Date()
+      return isDue && !['won', 'lost', 'negative'].includes(l.status)
+    }),
+    orphans: leads.filter(l => {
+      return !l.next_action_at && !['won', 'lost', 'negative'].includes(l.status)
+    })
+  }
+
   const saveTemplate = (newTemplate: string) => {
     setWsTemplate(newTemplate)
     localStorage.setItem("gymbooster_ws_template", newTemplate)
     setIsEditingTemplate(false)
+  }
+
+  const snoozeTask = async (leadId: string, hours: number) => {
+    const nextDate = new Date()
+    nextDate.setHours(nextDate.getHours() + hours)
+    await updateLead(leadId, { next_action_at: nextDate.toISOString() })
+  }
+
+  const snoozeToNextMonday = async (leadId: string) => {
+    const nextMonday = new Date()
+    nextMonday.setDate(nextMonday.getDate() + (1 + 7 - nextMonday.getDay()) % 7)
+    nextMonday.setHours(9, 0, 0, 0)
+    await updateLead(leadId, { next_action_at: nextMonday.toISOString() })
+  }
+
+  const completeTask = (lead: Lead) => {
+    setSelectedTaskLead(lead)
+    setIsFollowUpModalOpen(true)
+  }
+
+  const handleFollowUpSubmit = async () => {
+    if (!selectedTaskLead || !nextActionDate || !nextActionType) return
+
+    await updateLead(selectedTaskLead.id, {
+      next_action_at: nextActionDate,
+      next_action_type: nextActionType,
+      last_contact_at: new Date().toISOString()
+    })
+
+    setIsFollowUpModalOpen(false)
+    setSelectedTaskLead(null)
+    setNextActionDate("")
+    setNextActionType(null)
   }
 
   const openWhatsApp = (lead: Lead) => {
@@ -297,7 +352,122 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
         </div>
       </header>
 
-      <main className="container px-4 py-8">
+      <main className="container px-4 py-8 space-y-8">
+        {/* THE RADAR - Daily Grind Widget */}
+        {(dailyGrind.slaBreaches.length > 0 || dailyGrind.dueToday.length > 0 || dailyGrind.orphans.length > 0) && (
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold flex items-center gap-2 text-white">
+                <Zap className="w-5 h-5 text-[#CCFF00]" />
+                The Radar: Günlük İş Akışı
+              </h2>
+              <div className="flex gap-2">
+                <span className="px-2 py-1 rounded-md bg-red-500/10 text-red-500 text-xs font-bold border border-red-500/20">
+                  {dailyGrind.slaBreaches.length} Kritik
+                </span>
+                <span className="px-2 py-1 rounded-md bg-[#CCFF00]/10 text-[#CCFF00] text-xs font-bold border border-[#CCFF00]/20">
+                  {dailyGrind.dueToday.length} Bugün
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* SLA Breaches */}
+              {dailyGrind.slaBreaches.map(lead => (
+                <div key={lead.id} className="p-4 rounded-xl bg-red-500/5 border border-red-500/20 flex flex-col justify-between hover:bg-red-500/10 transition-colors">
+                  <div>
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-[10px] uppercase font-bold text-red-500 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" /> SLA İhlali (2s+)
+                      </span>
+                      <ClientDate dateString={lead.created_at} className="text-[10px] text-muted-foreground" />
+                    </div>
+                    <h3 className="font-bold text-sm text-white">{lead.gym_name}</h3>
+                    <p className="text-xs text-muted-foreground mb-3">{lead.name}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" className="flex-1 bg-red-500 hover:bg-red-600 text-white text-xs font-bold" onClick={() => completeTask(lead)}>
+                      Hemen Ara
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="sm" variant="outline" className="px-2 border-red-500/20 text-red-500 hover:bg-red-500/10">
+                          <Clock className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-card border-border">
+                        <DropdownMenuItem onClick={() => snoozeTask(lead.id, 2)}>+2 Saat Ertele</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => snoozeTask(lead.id, 24)}>+24 Saat Ertele</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => snoozeToNextMonday(lead.id)}>Pazartesiye Ertele</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              ))}
+
+              {/* Due Today */}
+              {dailyGrind.dueToday.map(lead => {
+                const actionTypeIcons: Record<string, React.ElementType> = {
+                  CALL: Phone,
+                  MEETING: Calendar,
+                  WHATSAPP: MessageSquare,
+                  PROPOSAL_FOLLOWUP: Mail
+                }
+                const Icon = actionTypeIcons[lead.next_action_type || 'CALL'] || Phone
+                return (
+                  <div key={lead.id} className="p-4 rounded-xl bg-[#CCFF00]/5 border border-[#CCFF00]/20 flex flex-col justify-between hover:bg-[#CCFF00]/10 transition-colors">
+                    <div>
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="text-[10px] uppercase font-bold text-[#CCFF00] flex items-center gap-1">
+                          <Icon className="w-3 h-3" /> {lead.next_action_type || 'AKSİYON'}
+                        </span>
+                        <span className="text-[10px] text-[#CCFF00] font-medium">Bugün Bekleniyor</span>
+                      </div>
+                      <h3 className="font-bold text-sm text-white">{lead.gym_name}</h3>
+                      <p className="text-xs text-muted-foreground mb-3">{lead.name}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" className="flex-1 bg-[#CCFF00] hover:bg-[#CCFF00]/90 text-black font-bold text-xs" onClick={() => completeTask(lead)}>
+                        Tamamla
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="sm" variant="outline" className="px-2 border-[#CCFF00]/20 text-[#CCFF00] hover:bg-[#CCFF00]/10">
+                            <Clock className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="bg-card border-border">
+                          <DropdownMenuItem onClick={() => snoozeTask(lead.id, 2)}>+2 Saat Ertele</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => snoozeTask(lead.id, 24)}>+24 Saat Ertele</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => snoozeToNextMonday(lead.id)}>Pazartesiye Ertele</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                )
+              })}
+
+              {/* Orphans */}
+              {dailyGrind.orphans.slice(0, 3).map(lead => (
+                <div key={lead.id} className="p-4 rounded-xl bg-orange-500/5 border border-orange-500/20 flex flex-col justify-between hover:bg-orange-500/10 transition-colors">
+                  <div>
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-[10px] uppercase font-bold text-orange-500 flex items-center gap-1">
+                        <Shield className="w-3 h-3" /> Takipsiz Lead
+                      </span>
+                    </div>
+                    <h3 className="font-bold text-sm text-white">{lead.gym_name}</h3>
+                    <p className="text-xs text-muted-foreground mb-3">{lead.name}</p>
+                  </div>
+                  <Button size="sm" variant="outline" className="w-full border-orange-500/20 text-orange-500 hover:bg-orange-500/10 text-xs font-bold" onClick={() => completeTask(lead)}>
+                    Aksiyon Planla
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Stats */}
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -747,6 +917,73 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
                     </Button>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Follow-Up Action Modal */}
+        {isFollowUpModalOpen && selectedTaskLead && (
+          <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-background/95 backdrop-blur-md">
+            <div className="bg-card border border-primary/30 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden p-6 space-y-6">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <h3 className="font-bold text-xl text-primary">Sonraki Aksiyonu Planla</h3>
+                  <p className="text-xs text-muted-foreground">{selectedTaskLead.gym_name} - {selectedTaskLead.name}</p>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => setIsFollowUpModalOpen(false)}>
+                  <XCircle className="w-6 h-6" />
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase text-muted-foreground">AKSİYON TİPİ</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: 'CALL', label: 'Arama', icon: Phone },
+                      { id: 'MEETING', label: 'Toplantı', icon: Calendar },
+                      { id: 'WHATSAPP', label: 'WhatsApp', icon: MessageSquare },
+                      { id: 'PROPOSAL_FOLLOWUP', label: 'Teklif Takibi', icon: Mail }
+                    ].map(type => (
+                      <Button
+                        key={type.id}
+                        variant={nextActionType === type.id ? 'default' : 'outline'}
+                        className={`h-12 flex items-center justify-start gap-3 ${nextActionType === type.id ? 'bg-primary text-black font-bold' : 'border-border'}`}
+                        onClick={() => setNextActionType(type.id as any)}
+                      >
+                        <type.icon className="w-4 h-4" />
+                        <span className="text-xs">{type.label}</span>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase text-muted-foreground">AKSİYON TARİHİ</label>
+                  <Input
+                    type="datetime-local"
+                    value={nextActionDate}
+                    onChange={(e) => setNextActionDate(e.target.value)}
+                    className="h-12 bg-secondary/50 border-border"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <Button 
+                  className="flex-1 bg-primary hover:bg-primary/90 text-black font-bold h-12"
+                  onClick={handleFollowUpSubmit}
+                  disabled={!nextActionDate || !nextActionType}
+                >
+                  Planla ve Kapat
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="flex-1 h-12"
+                  onClick={() => setIsFollowUpModalOpen(false)}
+                >
+                  Vazgeç
+                </Button>
               </div>
             </div>
           </div>
