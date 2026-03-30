@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -168,22 +168,25 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
     return matchesSearch && matchesStatus
   })
 
-  const stats = {
-    totalCount: leads.length,
-    pipelineValue: leads.filter(l => l.status !== "lost" && l.status !== "won").reduce((acc, curr) => acc + (curr.value || 0), 0),
-    wonRevenue: leads.filter(l => l.status === "won").reduce((acc, curr) => acc + (curr.value || 0), 0),
-    totalAdSpend: leads.reduce((acc, curr) => acc + (curr.ad_spend || 0), 0),
-    avgROAS: leads.filter(l => l.status === "won" && l.ad_spend > 0).length > 0
-      ? (leads.filter(l => l.status === "won").reduce((acc, curr) => acc + (curr.value || 0), 0) / 
-         leads.reduce((acc, curr) => acc + (curr.ad_spend || 0), 0)).toFixed(2)
-      : "0",
-    conversionRate: leads.length > 0 
-      ? ((leads.filter(l => l.status === "won").length / leads.length) * 100).toFixed(1) 
-      : "0",
+  const [wsTemplate, setWsTemplate] = useState("Merhaba {name}, Gymbooster'dan görüşüyoruz. Salonunuz ({gym}) için yaptığımız reklam çalışması hakkında görüşmek isteriz.")
+  const [isEditingTemplate, setIsEditingTemplate] = useState(false)
+
+  // Load template from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("gymbooster_ws_template")
+    if (saved) setWsTemplate(saved)
+  }, [])
+
+  const saveTemplate = (newTemplate: string) => {
+    setWsTemplate(newTemplate)
+    localStorage.setItem("gymbooster_ws_template", newTemplate)
+    setIsEditingTemplate(false)
   }
 
   const openWhatsApp = (lead: Lead) => {
-    const message = `Merhaba ${lead.name}, Gymbooster'dan görüşüyoruz. Salonunuz (${lead.gym_name}) için yaptığımız reklam çalışması hakkında görüşmek isteriz.`
+    const message = wsTemplate
+      .replace("{name}", lead.name)
+      .replace("{gym}", lead.gym_name)
     const encoded = encodeURIComponent(message)
     window.open(`https://wa.me/${lead.phone.replace(/\D/g, "")}?text=${encoded}`, '_blank')
   }
@@ -216,6 +219,10 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
           </div>
 
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setIsEditingTemplate(true)} className="border-[#CCFF00]/30 text-[#CCFF00] hover:bg-[#CCFF00]/10">
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Mesaj Taslağı Düzenle
+            </Button>
             <Button variant="outline" size="sm" onClick={exportToCSV}>
               <Search className="w-4 h-4 mr-2" />
               CSV İndir
@@ -239,16 +246,7 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
               </div>
               <span className="text-sm text-muted-foreground">Toplam Lead</span>
             </div>
-            <p className="text-2xl font-bold">{stats.totalCount}</p>
-          </div>
-          <div className="p-4 rounded-xl bg-card border border-border">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                <Clock className="w-5 h-5 text-blue-500" />
-              </div>
-              <span className="text-sm text-muted-foreground">Pipeline Değeri</span>
-            </div>
-            <p className="text-2xl font-bold">{stats.pipelineValue.toLocaleString('tr-TR')} ₺</p>
+            <p className="text-2xl font-bold">{leads.length}</p>
           </div>
           <div className="p-4 rounded-xl bg-card border border-border">
             <div className="flex items-center gap-3 mb-2">
@@ -257,16 +255,16 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
               </div>
               <span className="text-sm text-muted-foreground">Toplam Ciro</span>
             </div>
-            <p className="text-2xl font-bold text-[#CCFF00]">{stats.wonRevenue.toLocaleString('tr-TR')} ₺</p>
+            <p className="text-2xl font-bold text-[#CCFF00]">{leads.filter(l => l.status === "won").reduce((acc, curr) => acc + (curr.value || 0), 0).toLocaleString('tr-TR')} ₺</p>
           </div>
           <div className="p-4 rounded-xl bg-card border border-border">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                <Shield className="w-5 h-5 text-orange-500" />
+              <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                <Shield className="w-5 h-5 text-blue-500" />
               </div>
-              <span className="text-sm text-muted-foreground">Ortalama ROAS</span>
+              <span className="text-sm text-muted-foreground">Pipeline Değeri</span>
             </div>
-            <p className="text-2xl font-bold">{stats.avgROAS}x</p>
+            <p className="text-2xl font-bold">{leads.filter(l => l.status !== "lost" && l.status !== "won").reduce((acc, curr) => acc + (curr.value || 0), 0).toLocaleString('tr-TR')} ₺</p>
           </div>
           <div className="p-4 rounded-xl bg-card border border-border">
             <div className="flex items-center gap-3 mb-2">
@@ -275,7 +273,7 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
               </div>
               <span className="text-sm text-muted-foreground">Satış Oranı</span>
             </div>
-            <p className="text-2xl font-bold">%{stats.conversionRate}</p>
+            <p className="text-2xl font-bold">%{leads.length > 0 ? ((leads.filter(l => l.status === "won").length / leads.length) * 100).toFixed(1) : 0}</p>
           </div>
         </div>
 
@@ -619,12 +617,7 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
 
                 <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-muted-foreground uppercase block">Satış Değeri</span>
-                      {selectedLead.value > 0 && (
-                        <span className="text-[10px] font-bold text-[#CCFF00]">ROAS: {(selectedLead.value / (selectedLead.ad_spend || 1)).toFixed(1)}x</span>
-                      )}
-                    </div>
+                    <span className="text-xs font-medium text-muted-foreground uppercase block">Satış Değeri</span>
                     <Input
                       type="number"
                       value={selectedLead.value || 0}
@@ -634,10 +627,14 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
                     />
                   </div>
                   <div className="space-y-2">
-                    <span className="text-xs font-medium text-muted-foreground uppercase block">6-Aylık Tahmini LTV</span>
-                    <div className="h-10 bg-[#CCFF00]/10 border border-[#CCFF00]/20 rounded-md flex items-center px-3 font-bold text-[#CCFF00]">
-                      {(selectedLead.value * 6).toLocaleString('tr-TR')} ₺
-                    </div>
+                    <span className="text-xs font-medium text-muted-foreground uppercase block">Sorumlu Kişi</span>
+                    <Input
+                      type="text"
+                      value={selectedLead.assigned_to || ""}
+                      onChange={(e) => updateLead(selectedLead.id, { assigned_to: e.target.value })}
+                      className="h-10 bg-secondary/50 border-border"
+                      placeholder="İsim yazın..."
+                    />
                   </div>
                 </div>
 
@@ -688,6 +685,49 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
                     </Button>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* WhatsApp Template Modal */}
+        {isEditingTemplate && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-background/90 backdrop-blur-md">
+            <div className="bg-card border border-[#CCFF00]/30 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden p-6 space-y-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-xl text-[#CCFF00]">Mesaj Taslağı Düzenle</h3>
+                <Button variant="ghost" size="icon" onClick={() => setIsEditingTemplate(false)}>
+                  <XCircle className="w-6 h-6" />
+                </Button>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Kullanabileceğiniz etiketler: <br/>
+                  <code className="bg-secondary px-1 text-primary">{`{name}`}</code> - Müşteri İsmi <br/>
+                  <code className="bg-secondary px-1 text-primary">{`{gym}`}</code> - Salon Adı
+                </p>
+                <textarea
+                  value={wsTemplate}
+                  onChange={(e) => setWsTemplate(e.target.value)}
+                  className="w-full h-48 bg-secondary/50 border border-border rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#CCFF00]/20 transition-all resize-none"
+                  placeholder="WhatsApp mesajınızı buraya yazın..."
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <Button 
+                  className="flex-1 bg-[#CCFF00] hover:bg-[#CCFF00]/90 text-black font-bold"
+                  onClick={() => saveTemplate(wsTemplate)}
+                >
+                  Kaydet
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => setIsEditingTemplate(false)}
+                >
+                  İptal
+                </Button>
               </div>
             </div>
           </div>

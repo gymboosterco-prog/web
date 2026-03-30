@@ -4,7 +4,7 @@ import { useLeadSubmission } from "@/hooks/use-lead-submission"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { PhoneInput } from "@/components/ui/phone-input"
-import { ArrowRight, CheckCircle2, Zap, Shield, Phone, Mail, User, Building2, Clock, Gift, AlertCircle } from "lucide-react"
+import { ArrowRight, CheckCircle2, Zap, Shield, Phone, Mail, User, Building2, Clock, Gift, AlertCircle, Instagram } from "lucide-react"
 
 export function Hero() {
   const { 
@@ -164,7 +164,21 @@ export function Hero() {
                       />
                     </div>
 
-                    <Button 
+                    <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground mr-1">Instagram Profil Adresi</label>
+              <div className="relative group">
+                <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                <Input
+                  type="text"
+                  placeholder="https://instagram.com/salonunuz"
+                  value={formData.instagramUrl}
+                  onChange={(e) => updateField("instagramUrl", e.target.value)}
+                  className="pl-10 h-12 bg-secondary/50 border-white/10 text-white focus:border-primary/50 transition-all"
+                />
+              </div>
+            </div>
+
+            <Button 
                       type="submit" 
                       size="lg"
                       disabled={isSubmitting}

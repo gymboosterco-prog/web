@@ -4,7 +4,7 @@ import { NextResponse } from "next/server"
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, email, phone, gymName } = body
+    const { name, email, phone, gymName, instagramUrl } = body
 
     if (!name || !email || !phone || !gymName) {
       return NextResponse.json(
@@ -23,6 +23,7 @@ export async function POST(request: Request) {
           email,
           phone,
           gym_name: gymName,
+          instagram_url: instagramUrl,
           status: "new",
           source: "website"
         }

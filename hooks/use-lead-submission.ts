@@ -5,6 +5,7 @@ export type LeadFormData = {
   email: string
   phone: string
   gymName: string
+  instagramUrl?: string
 }
 
 export function useLeadSubmission() {
@@ -12,7 +13,8 @@ export function useLeadSubmission() {
     name: "",
     email: "",
     phone: "",
-    gymName: ""
+    gymName: "",
+    instagramUrl: ""
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
