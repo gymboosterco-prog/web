@@ -38,5 +38,6 @@ export default async function AdminPage() {
     initialLeads={leads || []} 
     userRole={userRole} 
     serverUserId={user?.id}
+    profileError={profileError}
   />
 }

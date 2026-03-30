@@ -71,7 +71,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.E
 
 const PRIMARY_NEON = "#CCFF00"
 
-export function LeadsDashboard({ initialLeads, userRole, serverUserId }: { initialLeads: Lead[], userRole: 'ADMIN' | 'STAFF', serverUserId?: string }) {
+export function LeadsDashboard({ initialLeads, userRole, serverUserId, profileError }: { initialLeads: Lead[], userRole: 'ADMIN' | 'STAFF', serverUserId?: string, profileError?: any }) {
   const [leads, setLeads] = useState<Lead[]>(initialLeads)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
@@ -1160,8 +1160,13 @@ export function LeadsDashboard({ initialLeads, userRole, serverUserId }: { initi
             Count: {leads.length} | 
             Server ID: <span className="text-primary">{serverUserId || 'NULL (Session Missing)'}</span>
           </p>
+          {profileError && (
+            <p className="mt-1 text-red-500 font-mono">
+              DB Error: {JSON.stringify(profileError)}
+            </p>
+          )}
           <p className="mt-1 opacity-50 italic">
-            Duyuru: Eğer ADMIN olmanız gerekiyorsa lütfen üstteki "Server ID" değerini benimle paylaşın.
+            Duyuru: Eğer ADMIN olmanız gerekiyorsa lütfen üstteki "Server ID" veya "DB Error" bilgisini benimle paylaşın.
           </p>
         </div>
       </main>
