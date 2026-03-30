@@ -25,8 +25,12 @@ import {
   Instagram,
   Bell,
   Zap,
-  AlertCircle
+  AlertCircle,
+  Plus,
+  Check
 } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { toast } from "sonner"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -91,6 +95,8 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
   const [selectedTaskLead, setSelectedTaskLead] = useState<Lead | null>(null)
   const [nextActionDate, setNextActionDate] = useState("")
   const [nextActionType, setNextActionType] = useState<Lead['next_action_type']>(null)
+  const [inlineEditingId, setInlineEditingId] = useState<string | null>(null)
+  const [inlineNoteValue, setInlineNoteValue] = useState("")
 
   const router = useRouter()
   const supabase = createClient()
@@ -183,20 +189,30 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
     }
   }
 
-  const updateLeadNotes = async (leadId: string) => {
+  const updateLeadNotes = async (leadId: string, notes?: string) => {
+    const finalNotes = notes ?? noteText
     const response = await fetch(`/api/leads/${leadId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ notes: noteText })
+      body: JSON.stringify({ notes: finalNotes })
     })
 
     if (response.ok) {
       setLeads(leads.map(lead => 
-        lead.id === leadId ? { ...lead, notes: noteText } : lead
+        lead.id === leadId ? { ...lead, notes: finalNotes } : lead
       ))
       setEditingNotes(null)
+      setInlineEditingId(null)
       setNoteText("")
+      toast.success("Not kaydedildi 📝")
     }
+  }
+
+  const handleQuickCall = (lead: Lead) => {
+    incrementCallCount(lead.id, lead.call_count || 0)
+    toast.success(`${lead.name} arandı olarak işaretlendi 📞`, {
+      description: "Call counter güncellendi."
+    })
   }
 
   const deleteLead = async (leadId: string) => {
@@ -208,6 +224,7 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
 
     if (response.ok) {
       setLeads(leads.filter(lead => lead.id !== leadId))
+      toast.error("Lead silindi 🗑️")
     }
   }
 
@@ -794,7 +811,7 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
               <tbody>
                 {filteredLeads.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={6} className="p-8 text-center text-muted-foreground">
                       {searchQuery || statusFilter !== "all" 
                         ? "Filtrelere uygun lead bulunamadı" 
                         : "Henüz lead yok"}
@@ -804,152 +821,250 @@ export function LeadsDashboard({ initialLeads, userRole }: { initialLeads: Lead[
                   filteredLeads.map((lead) => {
                     const status = statusConfig[lead.status] || statusConfig.new
                     const StatusIcon = status.icon
+                    const isReadOnly = userRole === 'STAFF' && lead.assigned_to === 'Admin'
                     
                     return (
-                      <tr key={lead.id} className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors">
-                        <td className="p-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                              <span className="text-primary font-semibold">
-                                {lead.name.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-bold text-sm text-foreground truncate">{lead.gym_name}</p>
-                              <p className="text-xs text-muted-foreground truncate">{lead.name}</p>
-                              <div className="flex gap-2 mt-1">
-                                <a href={`tel:${lead.phone}`} className="text-[10px] text-primary hover:underline">{lead.phone}</a>
-                                <a href={`mailto:${lead.email}`} className="text-[10px] text-muted-foreground hover:underline truncate max-w-[100px]">{lead.email}</a>
+                      <React.Fragment key={lead.id}>
+                        <motion.tr 
+                          layout
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          whileHover={!isReadOnly ? { boxShadow: "0 0 15px rgba(204, 255, 0, 0.05)", backgroundColor: "rgba(204, 255, 0, 0.02)" } : {}}
+                          drag="x"
+                          dragConstraints={{ left: -100, right: 100 }}
+                          dragElastic={0.1}
+                          onDragEnd={(_, info) => {
+                            if (isReadOnly) return
+                            if (info.offset.x > 80) handleQuickCall(lead)
+                            if (info.offset.x < -80) {
+                              setInlineEditingId(lead.id)
+                              setInlineNoteValue(lead.notes || "")
+                            }
+                          }}
+                          className={`group relative border-b border-border last:border-0 transition-colors ${inlineEditingId === lead.id ? 'bg-[#CCFF00]/5 ring-1 ring-[#CCFF00]/20' : ''}`}
+                        >
+                          <td className="p-4 relative">
+                            {/* Hover Actions (Desktop Only) */}
+                            {!isReadOnly && (
+                              <div className="absolute left-0 top-0 bottom-0 flex items-center gap-1 px-2 opacity-0 group-hover:opacity-100 transition-all -translate-x-full group-hover:translate-x-0 z-10 bg-gradient-to-r from-background to-transparent pr-8">
+                                <Button 
+                                  size="icon" 
+                                  variant="ghost" 
+                                  className="h-8 w-8 rounded-full bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500 hover:text-white"
+                                  onClick={(e) => { e.stopPropagation(); handleQuickCall(lead); }}
+                                >
+                                  <Phone className="w-4 h-4" />
+                                </Button>
+                                <Button 
+                                  size="icon" 
+                                  variant="ghost" 
+                                  className="h-8 w-8 rounded-full bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white"
+                                  onClick={(e) => { e.stopPropagation(); openWhatsApp(lead); }}
+                                >
+                                  <MessageSquare className="w-4 h-4" />
+                                </Button>
+                                <Button 
+                                  size="icon" 
+                                  variant="ghost" 
+                                  className="h-8 w-8 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-black transition-all active:scale-95"
+                                  onClick={(e) => { 
+                                    e.stopPropagation();
+                                    setInlineEditingId(lead.id)
+                                    setInlineNoteValue(lead.notes || "")
+                                  }}
+                                >
+                                  <Plus className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            )}
+
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                <span className="text-primary font-semibold">
+                                  {lead.name.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-bold text-sm text-foreground truncate">{lead.gym_name}</p>
+                                <p className="text-xs text-muted-foreground truncate">{lead.name}</p>
+                                <div className="flex gap-2 mt-1">
+                                  <a href={`tel:${lead.phone}`} className="text-[10px] text-primary hover:underline">{lead.phone}</a>
+                                  <a href={`mailto:${lead.email}`} className="text-[10px] text-muted-foreground hover:underline truncate max-w-[100px]">{lead.email}</a>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="bg-green-500/10 hover:bg-green-500/20 text-green-500 border-green-500/20 text-[10px] md:text-xs font-bold"
-                              onClick={() => openWhatsApp(lead)}
-                            >
-                              <MessageSquare className="w-3.5 h-3.5 mr-1" />
-                              WhatsApp
-                            </Button>
-                            {userRole === 'STAFF' && (
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-center gap-2">
                               <Button 
                                 variant="outline" 
                                 size="sm" 
-                                className="border-purple-500/30 text-purple-500 hover:bg-purple-500/10 text-[10px] md:text-xs font-bold"
-                                onClick={() => {
-                                  setSelectedLead(lead)
-                                  setNoteText(lead.notes || "")
-                                }}
+                                className="bg-green-500/10 hover:bg-green-500/20 text-green-500 border-green-500/20 text-[10px] md:text-xs font-bold"
+                                onClick={() => openWhatsApp(lead)}
                               >
-                                <Calendar className="w-3.5 h-3.5 mr-1" />
-                                Toplantı Set Et
+                                <MessageSquare className="w-3.5 h-3.5 mr-1" />
+                                WhatsApp
                               </Button>
-                            )}
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <div className="flex flex-col items-start gap-1">
-                                <button className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border ${status.color} cursor-pointer hover:opacity-80 transition-opacity`}>
-                                  <StatusIcon className="w-3 h-3" />
-                                  {status.label}
-                                </button>
-                                {['new', 'called'].includes(lead.status) && lead.call_count > 0 && (
-                                  <span className="text-[10px] text-yellow-500 font-bold ml-2 bg-yellow-500/10 px-1.5 py-0.5 rounded border border-yellow-500/20">
-                                    {lead.call_count}x Arandı
-                                  </span>
-                                )}
-                              </div>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start">
-                              {Object.entries(statusConfig).map(([key, config]) => (
-                                <DropdownMenuItem
-                                  key={key}
+                              {!isReadOnly && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  disabled={isReadOnly}
+                                  className="border-purple-500/30 text-purple-500 hover:bg-purple-500/10 text-[10px] md:text-xs font-bold disabled:opacity-30"
                                   onClick={() => {
-                                    if (key === 'called') {
-                                      incrementCallCount(lead.id, lead.call_count || 0)
-                                    } else {
-                                      updateLeadStatus(lead.id, key)
-                                    }
+                                    setSelectedLead(lead)
+                                    setNoteText(lead.notes || "")
                                   }}
-                                  className="cursor-pointer"
                                 >
-                                  <config.icon className="w-4 h-4 mr-2" />
-                                  {config.label}
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Calendar className="w-4 h-4" />
-                            <ClientDate dateString={lead.created_at} />
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          {editingNotes === lead.id ? (
-                            <div className="flex gap-2">
-                              <Input
-                                type="text"
-                                value={noteText}
-                                onChange={(e) => setNoteText(e.target.value)}
-                                placeholder="Not ekle..."
-                                className="h-8 text-sm bg-secondary"
-                              />
-                              <Button size="sm" onClick={() => updateLeadNotes(lead.id)}>
-                                Kaydet
-                              </Button>
-                              <Button size="sm" variant="outline" onClick={() => setEditingNotes(null)}>
-                                İptal
-                              </Button>
+                                  <Calendar className="w-3.5 h-3.5 mr-1" />
+                                  Toplantı Set Et
+                                </Button>
+                              )}
                             </div>
-                          ) : (
+                          </td>
+                          <td className="p-4">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild disabled={isReadOnly}>
+                                <div className="flex flex-col items-start gap-1">
+                                  <button 
+                                    disabled={isReadOnly}
+                                    className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border ${status.color} ${isReadOnly ? 'cursor-not-allowed opacity-70' : 'cursor-pointer hover:opacity-80'} transition-opacity`}
+                                  >
+                                    <StatusIcon className="w-3 h-3" />
+                                    {status.label}
+                                    {isReadOnly && <Shield className="w-2.5 h-2.5 ml-1" />}
+                                  </button>
+                                  {['new', 'called'].includes(lead.status) && lead.call_count > 0 && (
+                                    <span className="text-[10px] text-yellow-500 font-bold ml-2 bg-yellow-500/10 px-1.5 py-0.5 rounded border border-yellow-500/20">
+                                      {lead.call_count}x Arandı
+                                    </span>
+                                  )}
+                                </div>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="start">
+                                {Object.entries(statusConfig).map(([key, config]) => (
+                                  <DropdownMenuItem
+                                    key={key}
+                                    onClick={() => {
+                                      if (key === 'called') {
+                                        incrementCallCount(lead.id, lead.call_count || 0)
+                                      } else {
+                                        updateLeadStatus(lead.id, key)
+                                      }
+                                    }}
+                                    className="cursor-pointer"
+                                  >
+                                    <config.icon className="w-4 h-4 mr-2" />
+                                    {config.label}
+                                  </DropdownMenuItem>
+                                ))}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Calendar className="w-4 h-4" />
+                              <ClientDate dateString={lead.created_at} />
+                            </div>
+                          </td>
+                          <td className="p-4 max-w-[200px]">
                             <button
+                              disabled={isReadOnly}
                               onClick={() => {
-                                setEditingNotes(lead.id)
-                                setNoteText(lead.notes || "")
+                                setInlineEditingId(lead.id)
+                                setInlineNoteValue(lead.notes || "")
                               }}
-                              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                              className={`text-sm h-8 flex items-center truncate transition-colors w-full text-left ${isReadOnly ? 'text-muted-foreground cursor-default' : 'text-muted-foreground hover:text-foreground cursor-pointer'}`}
                             >
                               {lead.notes || "Not ekle..."}
                             </button>
+                          </td>
+                          <td className="p-4 text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreVertical className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedLead(lead)
+                                    setNoteText(lead.notes || "")
+                                  }}
+                                  className="cursor-pointer"
+                                >
+                                  <Search className="w-4 h-4 mr-2" />
+                                  Detayları Gör
+                                </DropdownMenuItem>
+                                {userRole === 'ADMIN' && (
+                                  <DropdownMenuItem
+                                    onClick={() => deleteLead(lead.id)}
+                                    className="text-destructive cursor-pointer"
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Sil
+                                  </DropdownMenuItem>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </td>
+                        </motion.tr>
+
+                        {/* Inline Note Editing Row */}
+                        <AnimatePresence>
+                          {inlineEditingId === lead.id && (
+                            <motion.tr
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              exit={{ opacity: 0, height: 0 }}
+                              className="bg-[#CCFF00]/5 border-b border-border overflow-hidden"
+                            >
+                              <td colSpan={6} className="p-4 pt-0">
+                                <motion.div 
+                                  initial={{ y: -10 }}
+                                  animate={{ y: 0 }}
+                                  className="flex items-center gap-3 bg-card border border-[#CCFF00]/20 rounded-xl p-2 shadow-inner"
+                                >
+                                  <div className="flex-1 flex items-center gap-2">
+                                    <Plus className="w-4 h-4 text-[#CCFF00]" />
+                                    <input 
+                                      autoFocus
+                                      type="text"
+                                      value={inlineNoteValue}
+                                      onChange={(e) => setInlineNoteValue(e.target.value)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') updateLeadNotes(lead.id, inlineNoteValue)
+                                        if (e.key === 'Escape') setInlineEditingId(null)
+                                      }}
+                                      placeholder="Notunuzu yazın ve Enter'a basın..."
+                                      className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-1"
+                                    />
+                                  </div>
+                                  <div className="flex items-center gap-1 pr-1">
+                                    <Button 
+                                      size="sm" 
+                                      variant="ghost" 
+                                      className="h-8 text-[10px] text-muted-foreground hover:text-white"
+                                      onClick={() => setInlineEditingId(null)}
+                                    >
+                                      İptal (Esc)
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      className="h-8 bg-[#CCFF00] hover:bg-[#CCFF00]/90 text-black font-bold text-[10px]"
+                                      onClick={() => updateLeadNotes(lead.id, inlineNoteValue)}
+                                    >
+                                      Kaydet (Enter)
+                                    </Button>
+                                  </div>
+                                </motion.div>
+                              </td>
+                            </motion.tr>
                           )}
-                        </td>
-                        <td className="p-4 text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreVertical className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setSelectedLead(lead)
-                                  setNoteText(lead.notes || "")
-                                }}
-                                className="cursor-pointer"
-                              >
-                                <Search className="w-4 h-4 mr-2" />
-                                Detayları Gör
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => deleteLead(lead.id)}
-                                className="text-destructive cursor-pointer"
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Sil
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </td>
-                      </tr>
+                        </AnimatePresence>
+                      </React.Fragment>
                     )
                   })
                 )}
