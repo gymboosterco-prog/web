@@ -169,11 +169,11 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
   }
 
   const funnelData = [
-    { label: "Yeni", count: leads.length, color: "bg-blue-500" },
-    { label: "Arama", count: leads.filter(l => !["new"].includes(l.status)).length, color: "bg-yellow-500" },
-    { label: "Toplantı", count: leads.filter(l => ["meeting_set", "meeting_done", "proposal", "won"].includes(l.status)).length, color: "bg-purple-500" },
-    { label: "Teklif", count: leads.filter(l => ["proposal", "won"].includes(l.status)).length, color: "bg-orange-500" },
-    { label: "Satış", count: leads.filter(l => l.status === "won").length, color: "bg-primary" },
+    { label: "Yeni", count: leads.length, color: "#3b82f6" }, // Blue
+    { label: "Arama", count: leads.filter(l => !["new"].includes(l.status)).length, color: "#eab308" }, // Yellow
+    { label: "Toplantı", count: leads.filter(l => ["meeting_set", "meeting_done", "proposal", "won"].includes(l.status)).length, color: "#a855f7" }, // Purple
+    { label: "Teklif", count: leads.filter(l => ["proposal", "won"].includes(l.status)).length, color: "#f97316" }, // Orange
+    { label: "Satış", count: leads.filter(l => l.status === "won").length, color: "#00ae2a" }, // Primary Green
   ]
 
   return (
@@ -259,10 +259,14 @@ export function LeadsDashboard({ initialLeads }: { initialLeads: Lead[] }) {
                 <div key={stage.label} className="flex-1 flex flex-col items-center group">
                   <div className="w-full relative flex flex-col items-center justify-end h-full mb-3">
                     <div 
-                      className={`w-full max-w-[80px] ${stage.color} rounded-t-lg transition-all duration-500 group-hover:opacity-80`}
-                      style={{ height: `${heightPercent}%` }}
+                      className={`w-full max-w-[60px] md:max-w-[80px] rounded-t-lg transition-all duration-500 group-hover:brightness-110 shadow-[0_0_15px_-3px_rgba(0,0,0,0.3)]`}
+                      style={{ 
+                        height: `${Math.max(heightPercent, 2)}%`,
+                        backgroundColor: stage.color,
+                        boxShadow: `0 0 20px ${stage.color}20` 
+                      }}
                     >
-                      <div className="absolute -top-7 left-1/2 -translate-x-1/2 font-bold text-sm">
+                      <div className="absolute -top-7 left-1/2 -translate-x-1/2 font-bold text-sm text-foreground">
                         {stage.count}
                       </div>
                     </div>
