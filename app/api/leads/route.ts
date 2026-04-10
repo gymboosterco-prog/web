@@ -5,9 +5,9 @@ import { Resend } from "resend"
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, email, phone, gymName, instagramUrl } = body
+    const { name, phone, gymName, instagramUrl } = body
 
-    if (!name || !email || !phone || !gymName) {
+    if (!name || !phone || !gymName) {
       return NextResponse.json(
         { error: "Tüm alanlar zorunludur" },
         { status: 400 }
@@ -15,10 +15,6 @@ export async function POST(request: Request) {
     }
 
     // Validate field formats
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
-      return NextResponse.json({ error: "Geçersiz e-posta formatı" }, { status: 400 })
-    }
     if (typeof name !== 'string' || name.trim().length < 2 || name.length > 100) {
       return NextResponse.json({ error: "Ad en az 2 karakter olmalıdır" }, { status: 400 })
     }
@@ -36,7 +32,7 @@ export async function POST(request: Request) {
     const safeName = escapeHtml(name.trim())
     const safeGymName = escapeHtml(gymName.trim())
     const safePhone = escapeHtml(phone.trim())
-    const safeEmail = escapeHtml(email.trim().toLowerCase())
+
     const safeInstagram = instagramUrl ? escapeHtml(instagramUrl.trim().replace(/^@/, '')) : null
 
     const supabase = await createClient()
@@ -46,7 +42,6 @@ export async function POST(request: Request) {
       .insert([
         {
           name: safeName,
-          email: safeEmail,
           phone: safePhone,
           gym_name: safeGymName,
           instagram_url: safeInstagram,
@@ -83,8 +78,7 @@ export async function POST(request: Request) {
                 <tr><td style="color:#888;padding:6px 0;width:130px;">Ad Soyad</td><td style="color:#fff;font-weight:600;">${safeName}</td></tr>
                 <tr><td style="color:#888;padding:6px 0;">Salon Adı</td><td style="color:#fff;font-weight:600;">${safeGymName}</td></tr>
                 <tr><td style="color:#888;padding:6px 0;">Telefon</td><td style="color:#CCFF00;font-weight:600;">${safePhone}</td></tr>
-                <tr><td style="color:#888;padding:6px 0;">E-posta</td><td style="color:#fff;">${safeEmail}</td></tr>
-                ${safeInstagram ? `<tr><td style="color:#888;padding:6px 0;">Instagram</td><td style="color:#fff;">@${safeInstagram}</td></tr>` : ''}
+${safeInstagram ? `<tr><td style="color:#888;padding:6px 0;">Instagram</td><td style="color:#fff;">@${safeInstagram}</td></tr>` : ''}
               </table>
             </div>
             <div style="text-align:center;">

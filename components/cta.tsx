@@ -98,16 +98,6 @@ export function CTA() {
                       />
                     </div>
                     <div>
-                      <Input
-                        type="email"
-                        placeholder="E-posta Adresiniz"
-                        value={formData.email}
-                        onChange={(e) => updateField('email', e.target.value)}
-                        required
-                        className="h-10 md:h-11 lg:h-12 bg-secondary border-border text-sm md:text-base"
-                      />
-                    </div>
-                    <div>
                       <PhoneInput
                         value={formData.phone}
                         onChange={(e) => updateField('phone', e.target.value)}

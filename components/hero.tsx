@@ -109,18 +109,6 @@ export function Hero() {
                     </p>
                   </div>
 
-                  {/* Bonus Box */}
-                  <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-5 md:mb-6">
-                    <div className="flex items-start gap-3">
-                      <Gift className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-semibold text-sm md:text-base text-foreground">BONUS: Ücretsiz Rakip Analizi</p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Bölgenizdeki rakiplerinizin reklam stratejilerini öğrenin (Değeri: ₺2.500)
-                        </p>
-                      </div>
-                    </div>
-                  </div>
 
                   {error && (
                     <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm mb-4">
@@ -143,14 +131,6 @@ export function Hero() {
                       <PhoneInput
                         value={formData.phone}
                         onChange={(e) => updateField('phone', e.target.value)}
-                        required
-                        className="h-11 md:h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 text-sm md:text-base focus:border-primary/50 transition-colors"
-                      />
-                      <Input
-                        type="email"
-                        placeholder="E-posta Adresiniz"
-                        value={formData.email}
-                        onChange={(e) => updateField('email', e.target.value)}
                         required
                         className="h-11 md:h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 text-sm md:text-base focus:border-primary/50 transition-colors"
                       />

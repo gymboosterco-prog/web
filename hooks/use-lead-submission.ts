@@ -2,7 +2,6 @@ import { useState } from "react"
 
 export type LeadFormData = {
   name: string
-  email: string
   phone: string
   gymName: string
   instagramUrl?: string
@@ -11,7 +10,6 @@ export type LeadFormData = {
 export function useLeadSubmission() {
   const [formData, setFormData] = useState<LeadFormData>({
     name: "",
-    email: "",
     phone: "",
     gymName: "",
     instagramUrl: ""
@@ -28,12 +26,6 @@ export function useLeadSubmission() {
     // Client-side validasyon
     if (!formData.name.trim() || formData.name.trim().length < 2) {
       setError("Ad en az 2 karakter olmalıdır")
-      setIsSubmitting(false)
-      return
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(formData.email)) {
-      setError("Geçerli bir e-posta adresi girin")
       setIsSubmitting(false)
       return
     }
@@ -70,7 +62,6 @@ export function useLeadSubmission() {
             value: 0.00,
             currency: 'TRY',
             // Advanced Matching Parameters
-            em: formData.email.toLowerCase().trim(),
             ph: formData.phone.replace(/\D/g, ''),
             fn: firstName.toLowerCase().trim(),
             ln: lastName.toLowerCase().trim()
