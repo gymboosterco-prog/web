@@ -97,6 +97,10 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.E
 const REJECTION_REASONS = ["Fiyat", "Konum", "İlgisiz", "Bütçe Yok", "Ulaşılamadı", "Vazgeçti"]
 const PRIMARY_NEON = "#CCFF00"
 
+/** İstanbul (UTC+3) bazlı bugünün tarihini "YYYY-MM-DD" formatında döndürür */
+const todayIST = () =>
+  new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul' }).format(new Date())
+
 const suggestNextCallTime = (lastContactAt: string | null) => {
   if (!lastContactAt) return "10:00 AM"
   const hour = new Date(lastContactAt).getHours()
@@ -224,7 +228,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
 
   // Calculate daily stats for the badge
   const dailyStats = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0]
+    const today = todayIST()
     const ulasilamayanCount = leads.filter(l => l.call_count >= 3).length
     return {
       newCount: leads.filter(l => l.created_at.startsWith(today)).length,
@@ -334,7 +338,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
     const link = document.createElement("a")
     const url = URL.createObjectURL(blob)
     link.setAttribute("href", url)
-    link.setAttribute("download", `gymbooster-leads-${new Date().toISOString().split('T')[0]}.csv`)
+    link.setAttribute("download", `gymbooster-leads-${todayIST()}.csv`)
     link.style.visibility = 'hidden'
     document.body.appendChild(link)
     link.click()
@@ -362,7 +366,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
   // Admin Priority Sections
   const adminPriority = React.useMemo(() => {
     if (userRole !== 'ADMIN' || !isMounted) return { meetingsToday: [], proposalsPending: [] }
-    const today = new Date().toISOString().split('T')[0]
+    const today = todayIST()
     return {
       meetingsToday: leads.filter(l => {
         if (l.status !== 'meeting_planned' || !l.meeting_date) return false
