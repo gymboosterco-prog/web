@@ -69,7 +69,7 @@ export async function POST(request: Request) {
       const resend = new Resend(process.env.RESEND_API_KEY)
       await resend.emails.send({
         from: "Gymbooster <onboarding@resend.dev>",
-        to: ["admin@gymbooster.com"],
+        to: ["gymboosterco@gmail.com"],
         subject: `🚀 Yeni Lead: ${safeName} - ${safeGymName}`,
         html: `
           <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#0a0a0a;color:#e5e5e5;border-radius:12px;">
