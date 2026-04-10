@@ -18,9 +18,9 @@ export function StickyCTA() {
   }, [])
 
   const scrollToForm = () => {
-    const ctaSection = document.getElementById("cta-section")
-    if (ctaSection) {
-      ctaSection.scrollIntoView({ behavior: "smooth" })
+    const heroForm = document.getElementById("hero-form")
+    if (heroForm) {
+      heroForm.scrollIntoView({ behavior: "smooth" })
     }
   }
 

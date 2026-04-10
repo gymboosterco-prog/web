@@ -58,7 +58,7 @@ export function Header() {
           {/* CTA Button */}
           <div className="hidden md:block">
             <Button 
-              onClick={() => scrollToSection("iletisim")}
+              onClick={() => scrollToSection("hero-form")}
               className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs lg:text-sm h-9 lg:h-10 px-3 lg:px-4"
             >
               Ücretsiz Görüşme
@@ -108,7 +108,7 @@ export function Header() {
                 SSS
               </button>
               <Button 
-                onClick={() => scrollToSection("iletisim")}
+                onClick={() => scrollToSection("hero-form")}
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold mt-2 h-10"
               >
                 Ücretsiz Görüşme

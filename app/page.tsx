@@ -7,7 +7,6 @@ import { CaseStudies } from "@/components/case-studies"
 import { Guarantee } from "@/components/guarantee"
 import { Process } from "@/components/process"
 import { FAQ } from "@/components/faq"
-import { CTA } from "@/components/cta"
 import { Footer } from "@/components/footer"
 import { StickyCTA } from "@/components/sticky-cta"
 
@@ -31,9 +30,6 @@ export default function Home() {
         <Process />
         <section id="sss">
           <FAQ />
-        </section>
-        <section id="cta-section">
-          <CTA />
         </section>
         <Footer />
       </div>

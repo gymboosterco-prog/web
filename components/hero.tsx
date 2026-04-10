@@ -118,7 +118,7 @@ export function Hero() {
                   )}
 
                   {/* {/* Form */}
-                  <form onSubmit={handleSubmit} className="space-y-4 pt-4 md:pt-6">
+                  <form id="hero-form" onSubmit={handleSubmit} className="space-y-4 pt-4 md:pt-6">
                     <div className="space-y-3">
                       <Input
                         type="text"
