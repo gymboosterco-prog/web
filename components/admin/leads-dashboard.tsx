@@ -473,6 +473,62 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
     }
   }, [])
 
+  // Reminder notification polling — fires every 60 seconds
+  const ACTION_LABELS: Record<string, string> = {
+    CALL: "📞 Aranacak",
+    MEETING: "📅 Toplantı",
+    WHATSAPP: "💬 WhatsApp",
+    PROPOSAL_FOLLOWUP: "📄 Teklif Takibi",
+  }
+
+  useEffect(() => {
+    if (!notificationsEnabled) return
+
+    const STORAGE_KEY = "gymbooster_notified"
+    const TWO_MINUTES_MS = 2 * 60 * 1000
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000
+
+    const checkReminders = () => {
+      const now = Date.now()
+
+      let notified: Record<string, number> = {}
+      try {
+        notified = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}")
+        Object.keys(notified).forEach(k => {
+          if (now - notified[k] > ONE_DAY_MS) delete notified[k]
+        })
+      } catch {}
+
+      const dueLeads = leads.filter(l => {
+        if (!l.next_action_at || ['won', 'lost', 'negative'].includes(l.status)) return false
+        const actionTime = new Date(l.next_action_at).getTime()
+        const msSinceAction = now - actionTime
+        return msSinceAction >= 0 && msSinceAction <= TWO_MINUTES_MS && !notified[l.id]
+      })
+
+      dueLeads.forEach(lead => {
+        const actionLabel = ACTION_LABELS[lead.next_action_type || ""] || "Aksiyon"
+        new Notification(`⏰ ${actionLabel}: ${lead.name}`, {
+          body: `${lead.gym_name} — harekete geçme zamanı!`,
+          icon: "/icon-192.png",
+        })
+        toast.warning(`⏰ ${actionLabel}: ${lead.name}`, {
+          description: `${lead.gym_name} için hatırlatıcı zamanı geldi.`,
+          duration: 8000,
+        })
+        notified[lead.id] = now
+      })
+
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(notified))
+      } catch {}
+    }
+
+    checkReminders()
+    const interval = setInterval(checkReminders, 60_000)
+    return () => clearInterval(interval)
+  }, [leads, notificationsEnabled])
+
   // Daily Grind Logic - Move to useMemo to avoid hydration mismatch and save performance
   const dailyGrind = React.useMemo(() => {
     if (!isMounted) return { slaBreaches: [], dueToday: [], orphans: [] }
