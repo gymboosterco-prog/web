@@ -280,9 +280,15 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
       setEditingNotes(null)
       setInlineEditingId(null)
       setNoteText("")
-      toast.success("Not kaydedildi 📝")
+      setSelectedLead(null)
+      toast.success("Not başarıyla kaydedildi ✓")
     } else {
-      toast.error("Not kaydedilemedi")
+      let errMsg = "Not kaydedilemedi"
+      try {
+        const data = await response.json()
+        if (data?.error) errMsg = data.error
+      } catch {}
+      toast.error(errMsg)
     }
   }
 
