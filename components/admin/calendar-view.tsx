@@ -4,6 +4,11 @@ import React, { useState } from "react"
 import { DayPicker } from "react-day-picker"
 import { format, isSameDay, isPast, isToday } from "date-fns"
 import { tr } from "date-fns/locale"
+
+const istFmt = new Intl.DateTimeFormat('tr-TR', {
+  timeZone: 'Europe/Istanbul',
+  hour: '2-digit', minute: '2-digit', hour12: false,
+})
 import { Phone, Building2, Calendar, Clock, Zap } from "lucide-react"
 import "react-day-picker/style.css"
 
@@ -249,7 +254,7 @@ export function CalendarView({ leads, onSelectLead }: CalendarViewProps) {
                               <Calendar className="w-3 h-3 text-purple-400" />
                               <span className={isOverdueItem ? "text-red-400" : "text-purple-400"}>
                                 Toplantı: {lead.meeting_date
-                                  ? format(new Date(lead.meeting_date), "HH:mm", { locale: tr })
+                                  ? istFmt.format(new Date(lead.meeting_date))
                                   : "Saat belirsiz"}
                                 {isOverdueItem && " · Gecikmiş"}
                               </span>
@@ -259,7 +264,7 @@ export function CalendarView({ leads, onSelectLead }: CalendarViewProps) {
                               <Clock className="w-3 h-3 text-yellow-400" />
                               <span className={isOverdueItem ? "text-red-400" : "text-yellow-400"}>
                                 Aksiyon: {lead.next_action_at
-                                  ? format(new Date(lead.next_action_at), "HH:mm", { locale: tr })
+                                  ? istFmt.format(new Date(lead.next_action_at))
                                   : "Saat belirsiz"}
                                 {isOverdueItem && " · Gecikmiş"}
                               </span>

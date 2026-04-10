@@ -101,6 +101,18 @@ const PRIMARY_NEON = "#CCFF00"
 const todayIST = () =>
   new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul' }).format(new Date())
 
+/** UTC ISO string'i datetime-local input için İstanbul saatine çevirir ("YYYY-MM-DDTHH:mm") */
+const toISTLocal = (isoString: string) => {
+  const date = new Date(isoString)
+  if (isNaN(date.getTime())) return ""
+  return new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Europe/Istanbul',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit',
+    hour12: false,
+  }).format(date).replace(' ', 'T')
+}
+
 const suggestNextCallTime = (lastContactAt: string | null) => {
   if (!lastContactAt) return "10:00 AM"
   const hour = new Date(lastContactAt).getHours()
@@ -520,8 +532,10 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
   const handleFollowUpSubmit = async () => {
     if (!selectedTaskLead || !nextActionDate || !nextActionType) return
 
+    // nextActionDate is datetime-local value (Istanbul time) — convert to UTC
+    const nextActionUTC = new Date(nextActionDate + ':00+03:00').toISOString()
     await updateLead(selectedTaskLead.id, {
-      next_action_at: nextActionDate,
+      next_action_at: nextActionUTC,
       next_action_type: nextActionType,
       last_contact_at: new Date().toISOString()
     })
@@ -1526,8 +1540,13 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                   <span className="text-xs font-medium text-muted-foreground uppercase block mb-2">Toplantı Tarihi</span>
                   <Input
                     type="datetime-local"
-                    value={selectedLead.meeting_date ? new Date(selectedLead.meeting_date).toISOString().slice(0, 16) : ""}
-                    onChange={(e) => updateLead(selectedLead.id, { meeting_date: e.target.value || null })}
+                    value={selectedLead.meeting_date ? toISTLocal(selectedLead.meeting_date) : ""}
+                    onChange={(e) => {
+                      if (!e.target.value) { updateLead(selectedLead.id, { meeting_date: null }); return }
+                      // datetime-local is Istanbul time — convert to UTC ISO before saving
+                      const istDate = new Date(e.target.value + ':00+03:00')
+                      updateLead(selectedLead.id, { meeting_date: istDate.toISOString() })
+                    }}
                     disabled={userRole === 'STAFF' && selectedLead.assigned_to === 'Admin'}
                     className="h-10 bg-secondary/50 border-border disabled:opacity-50"
                   />
