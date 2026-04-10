@@ -140,6 +140,9 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
   const [inlineEditingId, setInlineEditingId] = useState<string | null>(null)
   const [inlineNoteValue, setInlineNoteValue] = useState("")
   const [activeView, setActiveView] = useState<'table' | 'kanban' | 'calendar'>('table')
+  const [statusHistory, setStatusHistory] = useState<{
+    id: string; old_status: string | null; new_status: string; changed_at: string; changed_by: string | null
+  }[]>([])
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const [rejectionState, setRejectionState] = useState<{ leadId: string; targetStatus: string } | null>(null)
   const [rejectionReason, setRejectionReason] = useState("")
@@ -528,6 +531,15 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
     const interval = setInterval(checkReminders, 60_000)
     return () => clearInterval(interval)
   }, [leads, notificationsEnabled])
+
+  // Fetch status history when detail panel opens
+  useEffect(() => {
+    if (!selectedLead) { setStatusHistory([]); return }
+    fetch(`/api/leads/${selectedLead.id}?history=1`)
+      .then(r => r.json())
+      .then(d => setStatusHistory(d.data ?? []))
+      .catch(() => {})
+  }, [selectedLead?.id])
 
   // Daily Grind Logic - Move to useMemo to avoid hydration mismatch and save performance
   const dailyGrind = React.useMemo(() => {
@@ -1672,6 +1684,38 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                       </Button>
                     </div>
                 </div>
+
+                {/* Status History Timeline */}
+                {statusHistory.length > 0 && (
+                  <div className="pt-4 border-t border-border space-y-3">
+                    <span className="text-xs font-medium text-muted-foreground uppercase block">Statü Geçmişi</span>
+                    <div className="space-y-2">
+                      {statusHistory.map((h) => {
+                        const oldCfg = h.old_status ? statusConfig[h.old_status] : null
+                        const newCfg = statusConfig[h.new_status]
+                        return (
+                          <div key={h.id} className="flex items-start gap-3 text-xs">
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <span className="text-muted-foreground">
+                                {oldCfg ? `${oldCfg.label} → ` : ""}
+                                <span className="text-foreground font-medium">{newCfg?.label ?? h.new_status}</span>
+                              </span>
+                              <div className="text-muted-foreground/60 mt-0.5">
+                                {new Intl.DateTimeFormat('tr-TR', {
+                                  timeZone: 'Europe/Istanbul',
+                                  day: '2-digit', month: 'short', year: 'numeric',
+                                  hour: '2-digit', minute: '2-digit'
+                                }).format(new Date(h.changed_at))}
+                                {h.changed_by ? ` · ${h.changed_by}` : ""}
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

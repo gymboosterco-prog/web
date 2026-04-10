@@ -1,6 +1,40 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const { searchParams } = new URL(request.url)
+
+    if (searchParams.get("history") !== "1") {
+      return NextResponse.json({ error: "Not found" }, { status: 404 })
+    }
+
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 })
+
+    const { data, error } = await supabase
+      .from("lead_status_history")
+      .select("*")
+      .eq("lead_id", id)
+      .order("changed_at", { ascending: false })
+
+    if (error) {
+      console.error("Supabase error:", error)
+      return NextResponse.json({ error: "Geçmiş getirilemedi" }, { status: 500 })
+    }
+
+    return NextResponse.json({ data })
+  } catch (error) {
+    console.error("API error:", error)
+    return NextResponse.json({ error: "Bir hata oluştu" }, { status: 500 })
+  }
+}
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -8,16 +42,16 @@ export async function PATCH(
   try {
     const { id } = await params
     const body = await request.json()
-    const { 
-      status, 
-      notes, 
-      meeting_date, 
-      value, 
-      assigned_to, 
-      instagram_url, 
-      member_count, 
-      lead_goal, 
-      call_count, 
+    const {
+      status,
+      notes,
+      meeting_date,
+      value,
+      assigned_to,
+      instagram_url,
+      member_count,
+      lead_goal,
+      call_count,
       ad_spend,
       next_action_at,
       next_action_type,
@@ -29,16 +63,11 @@ export async function PATCH(
     } = body
 
     const supabase = await createClient()
-    
-    // Check for authentication
+
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
-      return NextResponse.json(
-        { error: "Yetkisiz erişim" },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 })
     }
-
 
     // Validate status enum
     const VALID_STATUSES = ['new', 'called', 'meeting_planned', 'meeting_done', 'proposal', 'won', 'lost', 'cool_off']
@@ -77,6 +106,19 @@ export async function PATCH(
       }
     }
 
+    // Fetch current status for history tracking
+    let existingStatus: string | null = null
+    let existingAssignedTo: string | null = null
+    if (status !== undefined) {
+      const { data: existing } = await supabase
+        .from("leads")
+        .select("status, assigned_to")
+        .eq("id", id)
+        .single()
+      existingStatus = existing?.status ?? null
+      existingAssignedTo = existing?.assigned_to ?? null
+    }
+
     const updateData: Record<string, unknown> = {
       updated_at: new Date().toISOString()
     }
@@ -108,19 +150,23 @@ export async function PATCH(
 
     if (error) {
       console.error("Supabase error:", error)
-      return NextResponse.json(
-        { error: "Lead güncellenemedi" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Lead güncellenemedi" }, { status: 500 })
+    }
+
+    // Write to history if status actually changed
+    if (status !== undefined && existingStatus !== null && existingStatus !== status) {
+      await supabase.from("lead_status_history").insert({
+        lead_id: id,
+        old_status: existingStatus,
+        new_status: status,
+        changed_by: existingAssignedTo ?? "Admin"
+      })
     }
 
     return NextResponse.json({ success: true, data })
   } catch (error) {
     console.error("API error:", error)
-    return NextResponse.json(
-      { error: "Bir hata oluştu" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Bir hata oluştu" }, { status: 500 })
   }
 }
 
@@ -131,16 +177,11 @@ export async function DELETE(
   try {
     const { id } = await params
     const supabase = await createClient()
-    
-    // Check for authentication
+
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
-      return NextResponse.json(
-        { error: "Yetkisiz erişim" },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 })
     }
-
 
     const { error } = await supabase
       .from("leads")
@@ -149,18 +190,12 @@ export async function DELETE(
 
     if (error) {
       console.error("Supabase error:", error)
-      return NextResponse.json(
-        { error: "Lead silinemedi" },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: "Lead silinemedi" }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("API error:", error)
-    return NextResponse.json(
-      { error: "Bir hata oluştu" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Bir hata oluştu" }, { status: 500 })
   }
 }
