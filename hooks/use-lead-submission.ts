@@ -24,7 +24,30 @@ export function useLeadSubmission() {
     e.preventDefault()
     setIsSubmitting(true)
     setError(null)
-    
+
+    // Client-side validasyon
+    if (!formData.name.trim() || formData.name.trim().length < 2) {
+      setError("Ad en az 2 karakter olmalıdır")
+      setIsSubmitting(false)
+      return
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      setError("Geçerli bir e-posta adresi girin")
+      setIsSubmitting(false)
+      return
+    }
+    if (formData.phone.replace(/\D/g, '').length < 10) {
+      setError("Geçerli bir telefon numarası girin")
+      setIsSubmitting(false)
+      return
+    }
+    if (!formData.gymName.trim() || formData.gymName.trim().length < 2) {
+      setError("Salon adı en az 2 karakter olmalıdır")
+      setIsSubmitting(false)
+      return
+    }
+
     try {
       const response = await fetch("/api/leads", {
         method: "POST",

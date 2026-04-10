@@ -33,7 +33,7 @@ export function StickyCTA() {
         className="w-full h-12 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
       >
         <Phone className="w-5 h-5" />
-        Ucretsiz Gorusme Talep Et
+        Ücretsiz Görüşme Talep Et
       </Button>
     </div>
   )

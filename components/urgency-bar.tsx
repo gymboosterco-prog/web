@@ -6,11 +6,17 @@ import { X, Zap } from "lucide-react"
 export function UrgencyBar() {
   const [isVisible, setIsVisible] = useState(true)
   const [isMounted, setIsMounted] = useState(false)
-  const [timeLeft, setTimeLeft] = useState({
-    hours: 23,
-    minutes: 59,
-    seconds: 59
-  })
+  const getTimeLeft = () => {
+    const end = new Date('2025-04-30T23:59:59+03:00').getTime()
+    const diff = Math.max(0, end - Date.now())
+    return {
+      hours: Math.floor(diff / (1000 * 60 * 60)),
+      minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+      seconds: Math.floor((diff % (1000 * 60)) / 1000),
+    }
+  }
+
+  const [timeLeft, setTimeLeft] = useState(getTimeLeft)
 
   useEffect(() => {
     setIsMounted(true)
@@ -26,16 +32,7 @@ export function UrgencyBar() {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev.seconds > 0) {
-          return { ...prev, seconds: prev.seconds - 1 }
-        } else if (prev.minutes > 0) {
-          return { ...prev, minutes: prev.minutes - 1, seconds: 59 }
-        } else if (prev.hours > 0) {
-          return { hours: prev.hours - 1, minutes: 59, seconds: 59 }
-        }
-        return prev
-      })
+      setTimeLeft(getTimeLeft())
     }, 1000)
 
     return () => clearInterval(timer)
@@ -49,8 +46,8 @@ export function UrgencyBar() {
       <div className="container flex items-center justify-center gap-2 md:gap-4 text-[10px] sm:text-xs md:text-sm pr-6 md:pr-8">
         <Zap className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0 hidden sm:block" />
         <span className="text-center leading-tight">
-          <strong className="hidden sm:inline">MART AYI ÖZEL:</strong>
-          <strong className="sm:hidden">MART:</strong>
+          <strong className="hidden sm:inline">NİSAN AYI ÖZEL:</strong>
+          <strong className="sm:hidden">NİSAN:</strong>
           {" "}İlk 5 salon <strong>%20 indirim!</strong>
           <span className="hidden sm:inline">{" "}Kalan süre:</span>
           {" "}<strong className="tabular-nums">{String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}</strong>
