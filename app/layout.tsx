@@ -7,8 +7,8 @@ import { PwaHandler } from '@/components/pwa-handler'
 import Script from 'next/script'
 import './globals.css'
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk", display: "swap" });
 
 const BASE_URL = 'https://gymbooster.com.tr'
 
@@ -132,6 +132,9 @@ export default function RootLayout({
   return (
     <html lang="tr" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="https://connect.facebook.net" />
+        <link rel="dns-prefetch" href="https://www.facebook.com" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -150,7 +153,7 @@ export default function RootLayout({
           <Analytics />
           <Script
             id="fb-pixel"
-            strategy="afterInteractive"
+            strategy="lazyOnload"
             dangerouslySetInnerHTML={{
               __html: `
                 !function(f,b,e,v,n,t,s)

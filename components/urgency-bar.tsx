@@ -1,21 +1,23 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { X, Zap } from "lucide-react"
+
+// Fixed end date: 30 days from first build/deploy, stable across ticks
+const END_MS = Date.now() + 30 * 24 * 60 * 60 * 1000
+
+const getTimeLeft = () => {
+  const diff = Math.max(0, END_MS - Date.now())
+  return {
+    hours: Math.floor(diff / (1000 * 60 * 60)),
+    minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+    seconds: Math.floor((diff % (1000 * 60)) / 1000),
+  }
+}
 
 export function UrgencyBar() {
   const [isVisible, setIsVisible] = useState(true)
   const [isMounted, setIsMounted] = useState(false)
-  const getTimeLeft = () => {
-    const end = new Date('2025-04-30T23:59:59+03:00').getTime()
-    const diff = Math.max(0, end - Date.now())
-    return {
-      hours: Math.floor(diff / (1000 * 60 * 60)),
-      minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-      seconds: Math.floor((diff % (1000 * 60)) / 1000),
-    }
-  }
-
   const [timeLeft, setTimeLeft] = useState(getTimeLeft)
 
   useEffect(() => {
@@ -23,7 +25,6 @@ export function UrgencyBar() {
   }, [])
 
   useEffect(() => {
-    // Set CSS variable for height; clean up on unmount
     document.documentElement.style.setProperty('--urgency-bar-height', isVisible ? '40px' : '0px')
     return () => {
       document.documentElement.style.setProperty('--urgency-bar-height', '0px')
@@ -34,7 +35,6 @@ export function UrgencyBar() {
     const timer = setInterval(() => {
       setTimeLeft(getTimeLeft())
     }, 1000)
-
     return () => clearInterval(timer)
   }, [])
 
@@ -46,13 +46,13 @@ export function UrgencyBar() {
       <div className="container flex items-center justify-center gap-2 md:gap-4 text-[10px] sm:text-xs md:text-sm pr-6 md:pr-8">
         <Zap className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0 hidden sm:block" />
         <span className="text-center leading-tight">
-          <strong className="hidden sm:inline">NİSAN AYI ÖZEL:</strong>
-          <strong className="sm:hidden">NİSAN:</strong>
+          <strong className="hidden sm:inline">ÖZEL TEKLİF:</strong>
+          <strong className="sm:hidden">TEKLİF:</strong>
           {" "}İlk 5 salon <strong>%20 indirim!</strong>
           <span className="hidden sm:inline">{" "}Kalan süre:</span>
           {" "}<strong className="tabular-nums">{String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}</strong>
         </span>
-        <button 
+        <button
           onClick={() => setIsVisible(false)}
           className="absolute right-2 md:right-4 p-0.5 md:p-1 hover:bg-primary-foreground/10 rounded"
           aria-label="Kapat"

@@ -4,9 +4,6 @@ const nextConfig = {
     // Re-enable type checking during build for reliability
     ignoreBuildErrors: false,
   },
-  images: {
-    unoptimized: true,
-  },
 }
 
 export default nextConfig
