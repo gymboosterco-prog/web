@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 export type LeadFormData = {
   name: string
@@ -8,6 +9,7 @@ export type LeadFormData = {
 }
 
 export function useLeadSubmission() {
+  const router = useRouter()
   const [formData, setFormData] = useState<LeadFormData>({
     name: "",
     phone: "",
@@ -49,7 +51,8 @@ export function useLeadSubmission() {
       
       if (response.ok) {
         setIsSubmitted(true)
-        
+        router.push('/tesekkurler')
+
         // Meta Pixel Lead tracking with Advanced Matching
         if (typeof window !== 'undefined' && (window as any).fbq) {
           const nameParts = formData.name.trim().split(/\s+/);
