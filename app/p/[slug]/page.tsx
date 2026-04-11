@@ -139,6 +139,13 @@ export default async function SalonLandingPage({ params }: Props) {
             </div>
           )}
 
+          {/* Form — hero'nun hemen altında */}
+          <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-6 sm:p-8 mb-12">
+            <h2 className="text-xl font-bold text-center mb-2">{ctaText}</h2>
+            <p className="text-center text-white/50 text-sm mb-6">Formu doldurun, sizi arayalım.</p>
+            <SalonForm salonId={salon.id} salonName={salon.name} ctaText={ctaText} primaryColor={primaryColor} />
+          </div>
+
           {/* Stats */}
           {stats.length > 0 && (
             <div className={`grid gap-4 mb-12 ${stats.length <= 2 ? "grid-cols-2" : stats.length === 3 ? "grid-cols-3" : "grid-cols-2 sm:grid-cols-4"}`}>
@@ -181,13 +188,6 @@ export default async function SalonLandingPage({ params }: Props) {
               <p className="text-white font-semibold text-base sm:text-lg leading-relaxed">{guaranteeText}</p>
             </div>
           )}
-
-          {/* Form */}
-          <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-6 sm:p-8 mb-8">
-            <h2 className="text-xl font-bold text-center mb-2">{ctaText}</h2>
-            <p className="text-center text-white/50 text-sm mb-6">Formu doldurun, sizi arayalım.</p>
-            <SalonForm salonId={salon.id} salonName={salon.name} ctaText={ctaText} primaryColor={primaryColor} />
-          </div>
 
           {/* Testimonial */}
           {salon.testimonial && (
