@@ -4,7 +4,8 @@ import { useLeadSubmission } from "@/hooks/use-lead-submission"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { PhoneInput } from "@/components/ui/phone-input"
-import { ArrowRight, CheckCircle2, Zap, Shield, Phone, Mail, User, Building2, Clock, Gift, AlertCircle, Instagram } from "lucide-react"
+import { ArrowRight, CheckCircle2, Zap, Shield, Clock, Gift, AlertCircle } from "lucide-react"
+import { Instagram } from "lucide-react"
 
 export function Hero() {
   const {
@@ -32,22 +33,22 @@ export function Hero() {
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4 md:mb-6">
               <Zap className="w-4 h-4 text-primary" />
-              <span className="text-sm md:text-base font-medium text-primary">Sınırlı Kontenjan: Bu Ay Sadece 5 Salon</span>
+              <span className="text-sm md:text-base font-medium text-primary">Bu Ay Sadece 5 Salon Alıyoruz</span>
             </div>
 
             {/* Main Headline */}
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4 md:mb-6 text-balance">
-              <span className="text-foreground">Spor Salonunuza</span>
+              <span className="text-foreground">Salonunuzun Telefonu</span>
               <br />
-              <span className="text-primary">Her Ay 30+ Nitelikli Potansiyel Müşteri</span>
+              <span className="text-primary">Her Ay 30 Garantili Lead</span>
               <br />
-              <span className="text-foreground">Garantisi Veriyoruz</span>
+              <span className="text-foreground">İle Dursun Diye Çalıştırıyoruz</span>
             </h1>
 
             {/* Sub-headline */}
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-4 md:mb-6 text-pretty">
-              Yapay zeka destekli pazarlama stratejilerimiz ile üye sayınızı katlamak için çalışıyoruz.
-              <strong className="text-foreground"> Sonuç almazsanız, ödeme yapmazsınız.</strong>
+              Reklama para harcıyorsunuz ama telefon çalmıyor mu? Yapay zeka destekli sistemimiz salonunuzun çevresindeki aktif potansiyel üyeleri bulur, sizi onlarla tanıştırır.{" "}
+              <strong className="text-foreground">30 lead tutturmazsak, tutturana kadar bedava çalışırız.</strong>
             </p>
 
             {/* Trust indicators */}

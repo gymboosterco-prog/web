@@ -5,11 +5,14 @@ import { Hero } from "@/components/hero"
 import { SocialProof } from "@/components/social-proof"
 import { StickyCTA } from "@/components/sticky-cta"
 
+const PainSection = dynamic(() => import("@/components/pain-section").then(m => ({ default: m.PainSection })))
 const Services = dynamic(() => import("@/components/services").then(m => ({ default: m.Services })))
 const CaseStudies = dynamic(() => import("@/components/case-studies").then(m => ({ default: m.CaseStudies })))
 const Guarantee = dynamic(() => import("@/components/guarantee").then(m => ({ default: m.Guarantee })))
+const ForWho = dynamic(() => import("@/components/for-who").then(m => ({ default: m.ForWho })))
 const Process = dynamic(() => import("@/components/process").then(m => ({ default: m.Process })))
 const FAQ = dynamic(() => import("@/components/faq").then(m => ({ default: m.FAQ })))
+const ROITeaser = dynamic(() => import("@/components/roi-teaser").then(m => ({ default: m.ROITeaser })))
 const Footer = dynamic(() => import("@/components/footer").then(m => ({ default: m.Footer })))
 
 export default function Home() {
@@ -19,6 +22,7 @@ export default function Home() {
       <div className="pt-10">
         <Header />
         <Hero />
+        <PainSection />
         <SocialProof />
         <section id="hizmetler">
           <Services />
@@ -29,10 +33,12 @@ export default function Home() {
         <section id="garantiler">
           <Guarantee />
         </section>
+        <ForWho />
         <Process />
         <section id="sss">
           <FAQ />
         </section>
+        <ROITeaser />
         <Footer />
       </div>
       <StickyCTA />

@@ -1,81 +1,97 @@
-import { Bot, BarChart3, Target, Users, MessageSquare, Repeat } from "lucide-react"
+import { CheckCircle2 } from "lucide-react"
 
-const services = [
+const included = [
   {
-    icon: Bot,
-    title: "AI Destekli Reklam Yönetimi",
-    description: "Meta & Google reklamlarınızı yapay zeka ile optimize ediyoruz. 7/24 otomatik A/B testleri.",
-    highlight: "2.3x Daha Düşük CPA"
+    title: "Meta & Google Reklam Yönetimi",
+    description: "Günlük optimizasyon, A/B test, hiperlokal hedefleme. 7/24 aktif.",
+    value: "₺6.000–8.000/ay",
   },
   {
-    icon: Target,
-    title: "Hedefli Lead Generation",
-    description: "Salonunuzun yakınındaki potansiyel üyeleri bulup, onları sizinle tanıştırıyoruz.",
-    highlight: "Hiperlokal Hedefleme"
+    title: "30 Garantili Aylık Lead",
+    description: "Telefon numarası doğrulanmış, gerçekten ilgilenen potansiyel üyeler.",
+    value: "₺100–150/lead × 30",
   },
   {
-    icon: BarChart3,
-    title: "Performans Dashboard",
-    description: "Tüm metrikleri tek panelden takip edin. Lead, üye, ROI - her şey gerçek zamanlı.",
-    highlight: "Anlık Raporlama"
+    title: "Lead Takip & CRM Sistemi",
+    description: "Kim arandı, kim cevaplamadı, kim düşünüyor — hepsi tek panelde.",
+    value: "₺1.500–2.500/ay",
   },
   {
-    icon: Users,
-    title: "Lead Nurturing",
-    description: "Potansiyel üyeleri otomatik e-posta ve SMS kampanyaları ile sıcak tutuyoruz.",
-    highlight: "Otomatik Takip"
+    title: "Haftalık Strateji Görüşmesi",
+    description: "Her hafta rakamları birlikte inceliyor, kampanyaları ayarlıyoruz.",
+    value: "₺2.000+/görüşme",
   },
   {
-    icon: MessageSquare,
-    title: "Chatbot Entegrasyonu",
-    description: "7/24 aktif AI chatbot ile ziyaretçileri lead'e, lead'leri üyeye dönüştürüyoruz.",
-    highlight: "7/24 Aktif"
+    title: "Landing Page & Form Optimizasyonu",
+    description: "Reklam trafiğini lead'e dönüştüren sayfaları biz kurarız.",
+    value: "₺3.000–5.000 tek seferlik",
   },
   {
-    icon: Repeat,
-    title: "Retargeting Kampanyaları",
-    description: "Web sitenizi ziyaret edip karar vermeyenleri geri getiriyoruz.",
-    highlight: "3x Daha Yüksek Dönüşüm"
-  }
+    title: "30 Günlük Para İadesi Garantisi",
+    description: "Memnun kalmazsanız soru sormadan tüm ödemenizi iade ederiz.",
+    value: "Priceless",
+  },
 ]
 
 export function Services() {
   return (
     <section id="hizmetler" className="py-16 md:py-24 lg:py-32 bg-background">
       <div className="container px-4">
-        <div className="text-center mb-10 md:mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
-            <Bot className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-            <span className="text-sm md:text-base font-medium text-primary">AI-Powered</span>
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-10 md:mb-14">
+            <p className="text-sm font-semibold text-primary uppercase tracking-widest mb-3">Grand Slam Teklif</p>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-balance">
+              ₺10.000/ay Karşılığında{" "}
+              <span className="text-primary">Ne Alıyorsunuz?</span>
+            </h2>
+            <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
+              Ayrı ayrı alsaydınız ne kadara mal olurdu — hesaplayın.
+            </p>
           </div>
-          
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 text-balance">
-            Size <span className="text-primary">Neler Sunuyoruz?</span>
-          </h2>
-          <p className="text-base md:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto">
-            Sadece reklam vermiyoruz. Uçtan uca dijital büyüme sistemi kuruyoruz.
-          </p>
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 max-w-6xl mx-auto">
-          {services.map((service, index) => (
-            <div 
-              key={index}
-              className="group p-5 md:p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/5"
-            >
-              <div className="flex items-start justify-between gap-3 mb-4">
-                <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0">
-                  <service.icon className="w-6 h-6 md:w-7 md:h-7 text-primary" />
+          <div className="rounded-2xl border border-border bg-card overflow-hidden mb-8">
+            {included.map((item, index) => (
+              <div
+                key={index}
+                className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5 md:p-6 ${
+                  index !== included.length - 1 ? "border-b border-border" : ""
+                }`}
+              >
+                <div className="flex items-start gap-3 flex-1">
+                  <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-sm md:text-base">{item.title}</p>
+                    <p className="text-xs md:text-sm text-muted-foreground mt-0.5">{item.description}</p>
+                  </div>
                 </div>
-                <span className="text-xs md:text-sm font-semibold px-2.5 py-1 rounded bg-primary/10 text-primary whitespace-nowrap">
-                  {service.highlight}
-                </span>
+                <div className="ml-8 sm:ml-0 flex-shrink-0">
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded bg-primary/10 text-primary whitespace-nowrap">
+                    {item.value}
+                  </span>
+                </div>
               </div>
-              
-              <h3 className="text-lg md:text-xl lg:text-2xl font-bold mb-2 md:mb-3">{service.title}</h3>
-              <p className="text-sm md:text-base text-muted-foreground leading-relaxed">{service.description}</p>
+            ))}
+          </div>
+
+          {/* Value comparison */}
+          <div className="rounded-2xl bg-primary/5 border-2 border-primary/30 p-6 md:p-8">
+            <div className="grid sm:grid-cols-3 gap-6 text-center">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Ayrı ayrı piyasa değeri</p>
+                <p className="text-2xl md:text-3xl font-bold line-through text-muted-foreground">₺17.500+</p>
+              </div>
+              <div className="flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-lg">→</div>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Sizin ödediğiniz</p>
+                <p className="text-3xl md:text-4xl font-bold text-primary">₺10.000<span className="text-base font-normal text-muted-foreground">/ay</span></p>
+              </div>
             </div>
-          ))}
+            <p className="text-center text-sm text-muted-foreground mt-4">
+              + Tüm bunların üstüne: <strong className="text-foreground">30 lead tutturmazsak, tutturana kadar bedava çalışırız.</strong>
+            </p>
+          </div>
         </div>
       </div>
     </section>

@@ -9,37 +9,37 @@ import {
 
 const faqs = [
   {
-    question: "Gerçekten her ay 30+ lead garantisi veriyor musunuz?",
-    answer: "Evet, kesinlikle. Her ay minimum 30 nitelikli potansiyel müşteri (telefon numarası ve bilgileri doğrulanmış, spor salonuyla ilgilenen kişiler) garantisi veriyoruz. Bu hedefe ulaşamazsak, tutturana kadar ücretsiz çalışmaya devam ediyoruz. Garanti sözleşmemizde yazılı."
+    question: "₺10.000/ay pahalı değil mi?",
+    answer: "Hesaplayalım. Aylık üyelik ücretiniz ₺1.500 ise, sadece 7 yeni üye bu masrafı karşılar. Biz ayda 30 lead garantisi veriyoruz. Siz bu 30 kişinin 7'sini üye yaparsanız kâra geçtiniz — geri kalan 23 lead saf kâr. Bunu kârlı bulmuyorsanız konuşmayalım."
   },
   {
-    question: "Hangi tür spor salonları için uygunsunuz?",
-    answer: "Butik pilates stüdyolarından büyük fitness zincirlerine kadar her ölçekte çalışıyoruz. CrossFit box'ları, yoga stüdyoları, geleneksel spor salonları, PT stüdyoları - hepsiyle deneyimimiz var."
+    question: "30 lead garantisi veriyorsunuz ama satışı ben yapmak zorundayım.",
+    answer: "Doğru. Biz boru hattını doldururuz, satışı siz yaparsınız. Bu yüzden ilk görüşmemizde satış sürecinizi de konuşuruz — arama şablonu, takip süreci. Gelen lead'i doğru takip eden salonlar ortalama %15-25 dönüşüm görüyor."
   },
   {
-    question: "Sonuç almak ne kadar sürer?",
-    answer: "İlk lead'lerinizi genellikle 7 gün içinde görmeye başlarsınız. Üye dönüşümleri salonunuzun satış sürecine bağlı olarak 2-4 hafta içinde gelmeye başlar."
+    question: "Kendi başıma Meta reklamı verebilirim.",
+    answer: "Kesinlikle verebilirsiniz. Bunu yapan çok salon var — sonra bize geliyor. Yanlış hedefleme, yüksek CPA, A/B test bilgisi yok, reklam hesabı askıya alındı. 2 yıldır sadece spor salonlarıyla çalışıyoruz. Bu deneyim fark yaratıyor."
   },
   {
-    question: "Bütçem sınırlı, yine de çalışabilir miyiz?",
-    answer: "Aylık minimum 5.000 TL reklam bütçesi ile başlıyoruz. Bu, sağlıklı bir ROI için minimum eşik. Daha düşük bütçelerle sonuç almak zor olduğu için bu limitin altında çalışmıyoruz."
+    question: "İlk sonucu ne zaman görürüm?",
+    answer: "Anlaştığımız günden 7 gün içinde kampanyalar aktif olur. İlk lead'ler genellikle ilk hafta içinde gelmeye başlar. 30 günlük garantiyi saymak için beklemenize gerek yok — sonuçlar hızlı gelir."
   },
   {
-    question: "Sözleşme süresi ne kadar?",
-    answer: "Minimum 3 aylık çalışıyoruz çünkü AI sistemlerimizin öğrenmesi ve optimize olması için bu süre gerekli. Ancak ilk 30 gün içinde memnun kalmazsanız tam para iade garantisi veriyoruz."
+    question: "3 aylık minimum sözleşme çok uzun.",
+    answer: "İlk 30 günde sonuç yoksa tüm ödemenizi iade ediyoruz. Fiilen risk 30 gün. 3 ay şartı şundan: AI optimizasyon sistemimiz ilk 30 günde öğreniyor, ikinci ayda ivme kazanıyor, üçüncü ayda tam gücünde çalışıyor. Daha kısa sürede adil bir değerlendirme yapılamaz."
   },
   {
-    question: "Rakiplerimden farkınız ne?",
-    answer: "3 temel fark: 1) Sadece spor salonlarına odaklanıyoruz - niş uzmanlık. 2) AI destekli optimizasyon ile insan ajanslarından 2-3x daha iyi performans alıyoruz. 3) Performans garantisi veriyoruz, kimse bunu yapmıyor."
+    question: "Şu an doğru zaman değil, biraz bekleyelim.",
+    answer: "Her geçen ay boş kalan salonunuza kaç potansiyel üye gelmiyor? Aylık ₺1.500 üyelik × 6 kaçırılan üye = ₺9.000 kaybedilen gelir. Beklemenin maliyeti var. \"Doğru zaman\" genellikle şu andır."
   },
   {
-    question: "Raporlama nasıl yapılıyor?",
-    answer: "Gerçek zamanlı dashboard erişimi + haftalık detaylı rapor + aylık strateji toplantısı. Her harcanan kuruşun nereye gittiğini görürsünüz."
+    question: "Hangi tür salonlarla çalışıyorsunuz?",
+    answer: "Butik pilates ve yoga stüdyolarından büyük fitness salonlarına, CrossFit box'larından PT stüdyolarına kadar her ölçekte çalışıyoruz. Ortak nokta: aktif olarak büyümek istemeleri."
   },
   {
-    question: "Mevcut web sitem ve sosyal medyamla entegre çalışabilir misiniz?",
-    answer: "Kesinlikle. Mevcut altyapınıza entegre oluyoruz. Gerekirse landing page, form, chatbot gibi unsurları da biz oluşturuyoruz - ek ücret yok."
-  }
+    question: "Reklam bütçesi ayrı mı ödeniyor?",
+    answer: "Evet. ₺10.000/ay hizmet bedeli — reklam yönetimi, strateji, CRM, raporlama. Reklam harcaması ayrıca Meta veya Google hesabınızdan doğrudan çıkar. Minimum ₺3.000/ay reklam bütçesi öneriyoruz."
+  },
 ]
 
 export function FAQ() {
@@ -47,19 +47,20 @@ export function FAQ() {
     <section id="sss" className="py-12 md:py-20 lg:py-32 bg-secondary/30">
       <div className="container px-4">
         <div className="text-center mb-8 md:mb-12 lg:mb-16">
+          <p className="text-sm font-semibold text-primary uppercase tracking-widest mb-3">İtirazlar & Cevaplar</p>
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-6 text-balance">
-            Sıkça Sorulan <span className="text-primary">Sorular</span>
+            Aklınızdaki <span className="text-primary">Soruları Bilelim</span>
           </h2>
           <p className="text-sm md:text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
-            Merak ettiklerinizi yanıtladık. Başka sorunuz varsa bize ulaşın.
+            Dürüst sorular, dürüst cevaplar.
           </p>
         </div>
 
         <div className="max-w-3xl mx-auto">
           <Accordion type="single" collapsible className="space-y-2 md:space-y-3 lg:space-y-4">
             {faqs.map((faq, index) => (
-              <AccordionItem 
-                key={index} 
+              <AccordionItem
+                key={index}
                 value={`item-${index}`}
                 className="bg-card border border-border rounded-lg md:rounded-xl px-4 md:px-6 data-[state=open]:border-primary/30"
               >
