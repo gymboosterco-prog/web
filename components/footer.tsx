@@ -20,7 +20,7 @@ export function Footer() {
             <div className="space-y-1.5 md:space-y-2 text-xs md:text-sm text-muted-foreground">
               <div className="flex items-center gap-1.5 md:gap-2">
                 <Mail className="w-3.5 h-3.5 md:w-4 md:h-4 flex-shrink-0" />
-                <span className="truncate">info@gymbooster.com.tr</span>
+                <span className="truncate">info@gymbooster.tr</span>
               </div>
               <div className="flex items-center gap-1.5 md:gap-2">
                 <Phone className="w-3.5 h-3.5 md:w-4 md:h-4 flex-shrink-0" />

@@ -82,7 +82,7 @@ ${safeInstagram ? `<tr><td style="color:#888;padding:6px 0;">Instagram</td><td s
               </table>
             </div>
             <div style="text-align:center;">
-              <a href="https://gymbooster.com.tr/admin" style="display:inline-block;background:#CCFF00;color:#000;font-weight:700;padding:12px 32px;border-radius:8px;text-decoration:none;">Dashboard'a Git →</a>
+              <a href="https://gymbooster.tr/admin" style="display:inline-block;background:#CCFF00;color:#000;font-weight:700;padding:12px 32px;border-radius:8px;text-decoration:none;">Dashboard'a Git →</a>
             </div>
             <p style="color:#555;font-size:12px;text-align:center;margin-top:24px;">Gymbooster Lead Yönetim Sistemi</p>
           </div>

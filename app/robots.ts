@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/admin/', '/api/'],
       },
     ],
-    sitemap: 'https://gymbooster.com.tr/sitemap.xml',
+    sitemap: 'https://gymbooster.tr/sitemap.xml',
   }
 }
