@@ -67,6 +67,7 @@ export default async function SalonLandingPage({ params }: Props) {
           --salon-primary: ${primaryColor};
           --salon-accent: ${accentColor};
         }
+        .feature-card:hover { border-color: ${primaryColor}40; }
       `}</style>
 
       {/* Grid background */}
@@ -156,10 +157,7 @@ export default async function SalonLandingPage({ params }: Props) {
               <h2 className="text-lg font-bold text-center mb-6 text-white/80">Neden {salon.name}?</h2>
               <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
                 {features.map((f, i) => (
-                  <div key={i} className="flex gap-3 bg-white/[0.04] border border-white/10 rounded-xl p-4 transition-colors"
-                    style={{ ['--hover-border' as string]: `${primaryColor}33` }}
-                    onMouseEnter={e => (e.currentTarget.style.borderColor = `${primaryColor}33`)}
-                    onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)')}>
+                  <div key={i} className="feature-card flex gap-3 bg-white/[0.04] border border-white/10 rounded-xl p-4 transition-colors">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: `${primaryColor}18`, border: `1px solid ${primaryColor}33` }}>
                       <CheckCircle2 className="w-4 h-4" style={{ color: primaryColor }} />
                     </div>
