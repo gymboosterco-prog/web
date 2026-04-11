@@ -5,7 +5,7 @@ import { toast } from "sonner"
 import { Plus, Copy, Check, ExternalLink, Building2, Users, X, Trash2, Pencil, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { SALON_PRESETS, SALON_TYPE_OPTIONS, type SalonType, type SalonFeature, type SalonStat } from "@/lib/salon-presets"
+import { SALON_PRESETS, SALON_TYPE_OPTIONS, COLOR_PRESETS, type SalonType, type SalonFeature, type SalonStat } from "@/lib/salon-presets"
 
 type Salon = {
   id: string
@@ -28,15 +28,24 @@ type Salon = {
   testimonial_author: string | null
   active: boolean
   created_at: string
+  primary_color: string | null
+  accent_color: string | null
+  logo_url: string | null
+  pain_points: string[] | null
+  guarantee_text: string | null
   salon_leads: { count: number }[]
 }
 
 type FormState = {
   // Tab 1: Salon
   name: string; slug: string; city: string; phone: string; salon_type: SalonType
+  logo_url: string
   // Tab 2: İçerik
+  primary_color: string; accent_color: string
   tagline: string; hero_headline: string; hero_sub: string
   offer: string; urgency_text: string; cta_text: string
+  pain_points: string[]
+  guarantee_text: string
   features: SalonFeature[]; stats: SalonStat[]
   testimonial: string; testimonial_author: string
   // Tab 3: Sahip
@@ -45,8 +54,12 @@ type FormState = {
 
 const EMPTY_FORM: FormState = {
   name: "", slug: "", city: "", phone: "", salon_type: "fitness",
+  logo_url: "",
+  primary_color: "#CCFF00", accent_color: "#ffffff",
   tagline: "", hero_headline: "", hero_sub: "",
   offer: "", urgency_text: "", cta_text: "",
+  pain_points: [],
+  guarantee_text: "",
   features: [], stats: [],
   testimonial: "", testimonial_author: "",
   owner_name: "", owner_email: "",
@@ -91,6 +104,10 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
       cta_text: preset.cta_text,
       features: [...preset.features],
       stats: [...preset.stats],
+      primary_color: preset.primary_color,
+      accent_color: preset.accent_color,
+      pain_points: [...preset.pain_points],
+      guarantee_text: preset.guarantee_text,
     }))
   }
 
@@ -124,6 +141,17 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
     setForm(p => ({ ...p, stats: p.stats.filter((_, idx) => idx !== i) }))
   }
 
+  const updatePainPoint = (i: number, val: string) => {
+    setForm(p => ({ ...p, pain_points: p.pain_points.map((pp, idx) => idx === i ? val : pp) }))
+  }
+  const addPainPoint = () => {
+    if (form.pain_points.length >= 5) return
+    setForm(p => ({ ...p, pain_points: [...p.pain_points, ""] }))
+  }
+  const removePainPoint = (i: number) => {
+    setForm(p => ({ ...p, pain_points: p.pain_points.filter((_, idx) => idx !== i) }))
+  }
+
   const openModal = () => {
     setForm(EMPTY_FORM)
     applyPreset("fitness")
@@ -136,9 +164,14 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
     setForm({
       name: salon.name, slug: salon.slug, city: salon.city || "", phone: salon.phone || "",
       salon_type: (salon.salon_type as SalonType) || "fitness",
+      logo_url: salon.logo_url || "",
+      primary_color: salon.primary_color || "#CCFF00",
+      accent_color: salon.accent_color || "#ffffff",
       tagline: salon.tagline || "", hero_headline: salon.hero_headline || "",
       hero_sub: salon.hero_sub || "", offer: salon.offer || "",
       urgency_text: salon.urgency_text || "", cta_text: salon.cta_text || "",
+      pain_points: salon.pain_points || [],
+      guarantee_text: salon.guarantee_text || "",
       features: salon.features || [], stats: salon.stats || [],
       testimonial: salon.testimonial || "", testimonial_author: salon.testimonial_author || "",
       owner_name: salon.owner_name || "", owner_email: salon.owner_email || "",
@@ -216,23 +249,33 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
           {salons.map(salon => {
             const leadCount = salon.salon_leads?.[0]?.count ?? 0
             const preset = SALON_PRESETS[(salon.salon_type as SalonType) || "fitness"]
+            const primaryColor = salon.primary_color || preset.primary_color
             const landingUrl = `${SITE_URL}/p/${salon.slug}`
             const embedCode = `<iframe src="${SITE_URL}/f/${salon.slug}" width="100%" height="520" frameborder="0" style="border:none;border-radius:12px;"></iframe>`
             return (
               <div key={salon.id} className="bg-card border border-border rounded-2xl p-5">
                 <div className="flex items-start justify-between gap-3 mb-4">
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-base">{preset.emoji}</span>
-                      <h3 className="font-bold text-base">{salon.name}</h3>
-                      {salon.city && <span className="text-xs text-muted-foreground">· {salon.city}</span>}
-                      <span className={`text-xs px-2 py-0.5 rounded-full border ${salon.active ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"}`}>
-                        {salon.active ? "Aktif" : "Pasif"}
-                      </span>
+                  <div className="flex items-start gap-3">
+                    {/* Color dot */}
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-base"
+                      style={{ background: `${primaryColor}20`, border: `1px solid ${primaryColor}40` }}>
+                      {salon.logo_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={salon.logo_url} alt="" className="w-6 h-6 object-contain rounded" />
+                      ) : preset.emoji}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">{preset.label}</p>
-                    {salon.offer && <p className="text-xs text-primary mt-0.5">🎁 {salon.offer}</p>}
-                    {salon.owner_name && <p className="text-xs text-muted-foreground">{salon.owner_name} · {salon.owner_email}</p>}
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-bold text-base">{salon.name}</h3>
+                        {salon.city && <span className="text-xs text-muted-foreground">· {salon.city}</span>}
+                        <span className={`text-xs px-2 py-0.5 rounded-full border ${salon.active ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"}`}>
+                          {salon.active ? "Aktif" : "Pasif"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">{preset.label}</p>
+                      {salon.offer && <p className="text-xs mt-0.5" style={{ color: primaryColor }}>🎁 {salon.offer}</p>}
+                      {salon.owner_name && <p className="text-xs text-muted-foreground">{salon.owner_name} · {salon.owner_email}</p>}
+                    </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <div className="flex items-center gap-1">
@@ -325,7 +368,7 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
                         className="w-full h-10 rounded-lg bg-secondary border border-border px-3 text-sm appearance-none">
                         {SALON_TYPE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                       </select>
-                      <p className="text-xs text-muted-foreground mt-1">Türü seçince landing page içeriği otomatik dolar, istediğiniz değiştirebilirsiniz</p>
+                      <p className="text-xs text-muted-foreground mt-1">Türü seçince landing page içeriği otomatik dolar</p>
                     </div>
                     <div>
                       <label className="text-xs font-medium text-muted-foreground mb-1 block">Salon Adı *</label>
@@ -344,6 +387,18 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
                       <label className="text-xs font-medium text-muted-foreground mb-1 block">Telefon</label>
                       <Input placeholder="0555 123 45 67" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} className="bg-secondary border-border" />
                     </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Logo URL (opsiyonel)</label>
+                      <Input placeholder="https://..." value={form.logo_url} onChange={e => setForm(p => ({ ...p, logo_url: e.target.value }))} className="bg-secondary border-border" />
+                      <p className="text-xs text-muted-foreground mt-1">Logonuzun URL'ini girin. Yoksa salon türünün emojisi kullanılır.</p>
+                      {form.logo_url && (
+                        <div className="mt-2 flex items-center gap-2">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={form.logo_url} alt="Logo önizleme" className="w-12 h-12 object-contain rounded-lg border border-border bg-secondary p-1" onError={e => { (e.target as HTMLImageElement).style.display = "none" }} />
+                          <span className="text-xs text-muted-foreground">Önizleme</span>
+                        </div>
+                      )}
+                    </div>
                   </>
                 )}
 
@@ -353,6 +408,31 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
                     <p className="text-xs text-muted-foreground bg-primary/5 border border-primary/20 rounded-lg p-2.5">
                       Seçtiğiniz salon türüne göre otomatik dolduruldu. İstediğiniz alanı düzenleyebilirsiniz.
                     </p>
+
+                    {/* Colors */}
+                    <div className="bg-secondary/50 border border-border rounded-xl p-3 space-y-3">
+                      <label className="text-xs font-semibold text-foreground block">Marka Rengi</label>
+                      <div className="flex flex-wrap gap-2">
+                        {COLOR_PRESETS.map(c => (
+                          <button key={c.value} type="button" title={c.label}
+                            onClick={() => setForm(p => ({ ...p, primary_color: c.value }))}
+                            className="w-7 h-7 rounded-full border-2 transition-transform hover:scale-110"
+                            style={{
+                              background: c.value,
+                              borderColor: form.primary_color === c.value ? "#fff" : "transparent",
+                              boxShadow: form.primary_color === c.value ? "0 0 0 2px rgba(255,255,255,0.3)" : "none",
+                            }} />
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg border border-border flex-shrink-0" style={{ background: form.primary_color }} />
+                        <Input value={form.primary_color} onChange={e => setForm(p => ({ ...p, primary_color: e.target.value }))}
+                          placeholder="#CCFF00" className="bg-secondary border-border font-mono text-sm h-8" />
+                        <input type="color" value={form.primary_color} onChange={e => setForm(p => ({ ...p, primary_color: e.target.value }))}
+                          className="w-8 h-8 rounded cursor-pointer border-0 bg-transparent p-0" />
+                      </div>
+                    </div>
+
                     <div>
                       <label className="text-xs font-medium text-muted-foreground mb-1 block">Ana Başlık</label>
                       <Input value={form.hero_headline} onChange={e => setForm(p => ({ ...p, hero_headline: e.target.value }))} className="bg-secondary border-border" />
@@ -363,7 +443,7 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
                         className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:border-primary/50" />
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Tagline (kısa açıklama)</label>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Tagline</label>
                       <Input placeholder="Ankara'nın en iyi pilates stüdyosu" value={form.tagline} onChange={e => setForm(p => ({ ...p, tagline: e.target.value }))} className="bg-secondary border-border" />
                     </div>
                     <div>
@@ -377,6 +457,35 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
                     <div>
                       <label className="text-xs font-medium text-muted-foreground mb-1 block">Buton Metni</label>
                       <Input placeholder="Ücretsiz Deneme Dersi Al" value={form.cta_text} onChange={e => setForm(p => ({ ...p, cta_text: e.target.value }))} className="bg-secondary border-border" />
+                    </div>
+
+                    {/* Pain Points */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-xs font-medium text-muted-foreground">Acı Noktaları ({form.pain_points.length}/5)</label>
+                        <button type="button" onClick={addPainPoint} disabled={form.pain_points.length >= 5}
+                          className="text-xs text-primary hover:underline disabled:opacity-40">+ Ekle</button>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-2">Hedef kitlenizin yaşadığı sorunlar. "Hâlâ bunlarla mı boğuşuyorsunuz?" bölümünde gösterilir.</p>
+                      <div className="space-y-2">
+                        {form.pain_points.map((pp, i) => (
+                          <div key={i} className="flex items-center gap-2">
+                            <Input value={pp} onChange={e => updatePainPoint(i, e.target.value)}
+                              placeholder="Aylarca spor yaptınız ama sonuç alamadınız" className="bg-secondary border-border text-sm h-9" />
+                            <button type="button" onClick={() => removePainPoint(i)} className="text-muted-foreground hover:text-destructive flex-shrink-0">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Guarantee */}
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Garanti Metni (opsiyonel)</label>
+                      <textarea value={form.guarantee_text} onChange={e => setForm(p => ({ ...p, guarantee_text: e.target.value }))}
+                        placeholder="İlk ayın sonunda fark etmezseniz paranızı iade ediyoruz." rows={2}
+                        className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:border-primary/50" />
                     </div>
 
                     {/* Features */}

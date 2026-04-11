@@ -5,7 +5,17 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CheckCircle2, AlertCircle, ArrowRight, Shield } from "lucide-react"
 
-export function SalonForm({ salonId, salonName, ctaText }: { salonId: string; salonName: string; ctaText?: string }) {
+export function SalonForm({
+  salonId,
+  salonName,
+  ctaText,
+  primaryColor = "#CCFF00",
+}: {
+  salonId: string
+  salonName: string
+  ctaText?: string
+  primaryColor?: string
+}) {
   const [formData, setFormData] = useState({ name: "", phone: "", instagram_url: "" })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
@@ -35,8 +45,9 @@ export function SalonForm({ salonId, salonName, ctaText }: { salonId: string; sa
   if (isSubmitted) {
     return (
       <div className="text-center py-10">
-        <div className="w-20 h-20 rounded-full bg-[#CCFF00]/10 border border-[#CCFF00]/30 flex items-center justify-center mx-auto mb-5">
-          <CheckCircle2 className="w-10 h-10 text-[#CCFF00]" />
+        <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5"
+          style={{ background: `${primaryColor}1a`, border: `1px solid ${primaryColor}4d` }}>
+          <CheckCircle2 className="w-10 h-10" style={{ color: primaryColor }} />
         </div>
         <h3 className="text-2xl font-bold text-white mb-2">Başvurunuz Alındı!</h3>
         <p className="text-white/60">
@@ -61,7 +72,8 @@ export function SalonForm({ salonId, salonName, ctaText }: { salonId: string; sa
           value={formData.name}
           onChange={e => setFormData(p => ({ ...p, name: e.target.value }))}
           required
-          className="h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#CCFF00]/50"
+          className="h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30"
+          style={{ ['--tw-ring-color' as string]: `${primaryColor}80` }}
         />
         <Input
           placeholder="Telefon Numaranız"
@@ -69,27 +81,27 @@ export function SalonForm({ salonId, salonName, ctaText }: { salonId: string; sa
           value={formData.phone}
           onChange={e => setFormData(p => ({ ...p, phone: e.target.value }))}
           required
-          className="h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#CCFF00]/50"
+          className="h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30"
         />
         <Input
           placeholder="Instagram Kullanıcı Adı (opsiyonel)"
           value={formData.instagram_url}
           onChange={e => setFormData(p => ({ ...p, instagram_url: e.target.value }))}
-          className="h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#CCFF00]/50"
+          className="h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30"
         />
-        <Button
+        <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full h-13 bg-[#CCFF00] hover:bg-[#CCFF00]/90 text-black font-bold text-base"
-          size="lg"
+          className="w-full h-13 rounded-lg font-bold text-base flex items-center justify-center gap-2 transition-opacity disabled:opacity-70 py-3"
+          style={{ background: primaryColor, color: "#000" }}
         >
           {isSubmitting ? "Gönderiliyor..." : (
             <>
               {ctaText || "Ücretsiz Bilgi Al"}
-              <ArrowRight className="w-5 h-5 ml-2" />
+              <ArrowRight className="w-5 h-5" />
             </>
           )}
-        </Button>
+        </button>
       </form>
 
       <div className="flex items-center justify-center gap-2 mt-4 text-xs text-white/40">

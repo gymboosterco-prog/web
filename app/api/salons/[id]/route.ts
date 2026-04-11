@@ -15,6 +15,7 @@ const ALLOWED_FIELDS = [
   "hero_headline", "hero_sub", "urgency_text", "cta_text",
   "features", "stats", "testimonial", "testimonial_author",
   "owner_name", "owner_email", "active",
+  "primary_color", "accent_color", "logo_url", "pain_points", "guarantee_text",
 ]
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {

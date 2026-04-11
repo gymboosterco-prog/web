@@ -34,6 +34,7 @@ export async function POST(request: Request) {
     city, tagline, offer, salon_type,
     hero_headline, hero_sub, urgency_text, cta_text,
     features, stats, testimonial, testimonial_author,
+    primary_color, accent_color, logo_url, pain_points, guarantee_text,
   } = body
 
   if (!name || !slug) {
@@ -55,6 +56,8 @@ export async function POST(request: Request) {
       hero_headline, hero_sub, urgency_text, cta_text,
       features: features || [], stats: stats || [],
       testimonial, testimonial_author,
+      primary_color, accent_color, logo_url,
+      pain_points: pain_points || [], guarantee_text,
     }])
     .select()
     .single()
