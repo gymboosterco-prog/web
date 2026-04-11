@@ -29,7 +29,12 @@ export async function POST(request: Request) {
   if (!supabase) return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 })
 
   const body = await request.json()
-  const { name, slug, owner_name, owner_email, phone, city, tagline, offer } = body
+  const {
+    name, slug, owner_name, owner_email, phone,
+    city, tagline, offer, salon_type,
+    hero_headline, hero_sub, urgency_text, cta_text,
+    features, stats, testimonial, testimonial_author,
+  } = body
 
   if (!name || !slug) {
     return NextResponse.json({ error: "Salon adı ve slug zorunlu" }, { status: 400 })
@@ -43,7 +48,14 @@ export async function POST(request: Request) {
   // Create salon record
   const { data: salon, error: salonError } = await supabase
     .from("salons")
-    .insert([{ name: name.trim(), slug: slug.trim(), owner_name, owner_email, phone, city, tagline, offer }])
+    .insert([{
+      name: name.trim(), slug: slug.trim(),
+      owner_name, owner_email, phone,
+      city, tagline, offer, salon_type,
+      hero_headline, hero_sub, urgency_text, cta_text,
+      features: features || [], stats: stats || [],
+      testimonial, testimonial_author,
+    }])
     .select()
     .single()
 

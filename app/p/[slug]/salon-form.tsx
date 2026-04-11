@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CheckCircle2, AlertCircle, ArrowRight, Shield } from "lucide-react"
 
-export function SalonForm({ salonId, salonName }: { salonId: string; salonName: string }) {
+export function SalonForm({ salonId, salonName, ctaText }: { salonId: string; salonName: string; ctaText?: string }) {
   const [formData, setFormData] = useState({ name: "", phone: "", instagram_url: "" })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
@@ -85,7 +85,7 @@ export function SalonForm({ salonId, salonName }: { salonId: string; salonName: 
         >
           {isSubmitting ? "Gönderiliyor..." : (
             <>
-              Ücretsiz Bilgi Al
+              {ctaText || "Ücretsiz Bilgi Al"}
               <ArrowRight className="w-5 h-5 ml-2" />
             </>
           )}

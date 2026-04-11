@@ -2,58 +2,130 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
-import { Plus, Copy, Check, ExternalLink, Building2, Users, X } from "lucide-react"
+import { Plus, Copy, Check, ExternalLink, Building2, Users, X, ChevronDown, ChevronUp, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { SALON_PRESETS, SALON_TYPE_OPTIONS, type SalonType, type SalonFeature, type SalonStat } from "@/lib/salon-presets"
 
 type Salon = {
   id: string
   name: string
   slug: string
+  salon_type: string | null
   owner_name: string | null
   owner_email: string | null
   phone: string | null
   city: string | null
   tagline: string | null
   offer: string | null
+  hero_headline: string | null
+  hero_sub: string | null
+  urgency_text: string | null
+  cta_text: string | null
+  features: SalonFeature[]
+  stats: SalonStat[]
+  testimonial: string | null
+  testimonial_author: string | null
   active: boolean
   created_at: string
   salon_leads: { count: number }[]
 }
 
+type FormState = {
+  // Tab 1: Salon
+  name: string; slug: string; city: string; phone: string; salon_type: SalonType
+  // Tab 2: İçerik
+  tagline: string; hero_headline: string; hero_sub: string
+  offer: string; urgency_text: string; cta_text: string
+  features: SalonFeature[]; stats: SalonStat[]
+  testimonial: string; testimonial_author: string
+  // Tab 3: Sahip
+  owner_name: string; owner_email: string
+}
+
+const EMPTY_FORM: FormState = {
+  name: "", slug: "", city: "", phone: "", salon_type: "fitness",
+  tagline: "", hero_headline: "", hero_sub: "",
+  offer: "", urgency_text: "", cta_text: "",
+  features: [], stats: [],
+  testimonial: "", testimonial_author: "",
+  owner_name: "", owner_email: "",
+}
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://gymbooster.tr"
 
 function slugify(text: string) {
-  return text
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "")
+  return text.toLowerCase()
+    .replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").replace(/-+/g, "-").replace(/^-|-$/g, "")
 }
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
-  const copy = () => {
-    navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
   return (
-    <button onClick={copy} className="p-1.5 rounded hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground">
+    <button onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
+      className="p-1.5 rounded hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground">
       {copied ? <Check className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
     </button>
   )
 }
 
+type Tab = "salon" | "icerik" | "sahip"
+
 export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
   const [salons, setSalons] = useState<Salon[]>(initialSalons)
   const [showModal, setShowModal] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
-  const [form, setForm] = useState({ name: "", slug: "", owner_name: "", owner_email: "", phone: "", city: "", tagline: "", offer: "" })
+  const [activeTab, setActiveTab] = useState<Tab>("salon")
+  const [form, setForm] = useState<FormState>(EMPTY_FORM)
+
+  const applyPreset = (type: SalonType) => {
+    const preset = SALON_PRESETS[type]
+    setForm(p => ({
+      ...p,
+      salon_type: type,
+      hero_headline: preset.hero_headline,
+      hero_sub: preset.hero_sub,
+      cta_text: preset.cta_text,
+      features: [...preset.features],
+      stats: [...preset.stats],
+    }))
+  }
 
   const handleNameChange = (name: string) => {
     setForm(p => ({ ...p, name, slug: slugify(name) }))
+  }
+
+  const handleTypeChange = (type: SalonType) => {
+    applyPreset(type)
+  }
+
+  const updateFeature = (i: number, field: keyof SalonFeature, val: string) => {
+    setForm(p => ({ ...p, features: p.features.map((f, idx) => idx === i ? { ...f, [field]: val } : f) }))
+  }
+  const addFeature = () => {
+    if (form.features.length >= 6) return
+    setForm(p => ({ ...p, features: [...p.features, { title: "", description: "" }] }))
+  }
+  const removeFeature = (i: number) => {
+    setForm(p => ({ ...p, features: p.features.filter((_, idx) => idx !== i) }))
+  }
+
+  const updateStat = (i: number, field: keyof SalonStat, val: string) => {
+    setForm(p => ({ ...p, stats: p.stats.map((s, idx) => idx === i ? { ...s, [field]: val } : s) }))
+  }
+  const addStat = () => {
+    if (form.stats.length >= 4) return
+    setForm(p => ({ ...p, stats: [...p.stats, { value: "", label: "" }] }))
+  }
+  const removeStat = (i: number) => {
+    setForm(p => ({ ...p, stats: p.stats.filter((_, idx) => idx !== i) }))
+  }
+
+  const openModal = () => {
+    setForm(EMPTY_FORM)
+    applyPreset("fitness")
+    setActiveTab("salon")
+    setShowModal(true)
   }
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -67,31 +139,32 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
       })
       const data = await res.json()
       if (!res.ok) { toast.error(data.error || "Hata oluştu"); return }
-
       setSalons(prev => [{ ...data.data, salon_leads: [{ count: 0 }] }, ...prev])
       setShowModal(false)
-      setForm({ name: "", slug: "", owner_name: "", owner_email: "", phone: "", city: "", tagline: "", offer: "" })
-      toast.success(`${data.data.name} oluşturuldu! ${form.owner_email ? "Davet e-postası gönderildi." : ""}`)
+      toast.success(`${data.data.name} oluşturuldu!${form.owner_email ? " Davet e-postası gönderildi." : ""}`)
     } finally {
       setIsCreating(false)
     }
   }
 
+  const tabs: { key: Tab; label: string }[] = [
+    { key: "salon", label: "1. Salon" },
+    { key: "icerik", label: "2. İçerik" },
+    { key: "sahip", label: "3. Sahip" },
+  ]
+
   return (
     <div className="p-4 md:p-6 max-w-5xl mx-auto">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-bold">Müşteri Salonları</h1>
           <p className="text-sm text-muted-foreground">{salons.length} salon</p>
         </div>
-        <Button onClick={() => setShowModal(true)} className="bg-primary text-primary-foreground">
-          <Plus className="w-4 h-4 mr-2" />
-          Yeni Salon Ekle
+        <Button onClick={openModal} className="bg-primary text-primary-foreground">
+          <Plus className="w-4 h-4 mr-2" />Yeni Salon Ekle
         </Button>
       </div>
 
-      {/* Salon List */}
       {salons.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           <Building2 className="w-12 h-12 mx-auto mb-3 opacity-20" />
@@ -101,23 +174,24 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
         <div className="space-y-3">
           {salons.map(salon => {
             const leadCount = salon.salon_leads?.[0]?.count ?? 0
+            const preset = SALON_PRESETS[(salon.salon_type as SalonType) || "fitness"]
             const landingUrl = `${SITE_URL}/p/${salon.slug}`
             const embedCode = `<iframe src="${SITE_URL}/f/${salon.slug}" width="100%" height="520" frameborder="0" style="border:none;border-radius:12px;"></iframe>`
-            const portalUrl = `${SITE_URL}/portal`
-
             return (
               <div key={salon.id} className="bg-card border border-border rounded-2xl p-5">
                 <div className="flex items-start justify-between gap-3 mb-4">
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-base">{preset.emoji}</span>
                       <h3 className="font-bold text-base">{salon.name}</h3>
                       {salon.city && <span className="text-xs text-muted-foreground">· {salon.city}</span>}
                       <span className={`text-xs px-2 py-0.5 rounded-full border ${salon.active ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"}`}>
                         {salon.active ? "Aktif" : "Pasif"}
                       </span>
                     </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">{preset.label}</p>
                     {salon.offer && <p className="text-xs text-primary mt-0.5">🎁 {salon.offer}</p>}
-                    {salon.owner_name && <p className="text-xs text-muted-foreground mt-0.5">{salon.owner_name} · {salon.owner_email}</p>}
+                    {salon.owner_name && <p className="text-xs text-muted-foreground">{salon.owner_name} · {salon.owner_email}</p>}
                   </div>
                   <div className="flex items-center gap-1.5 flex-shrink-0">
                     <Users className="w-3.5 h-3.5 text-primary" />
@@ -125,8 +199,6 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
                     <span className="text-xs text-muted-foreground">başvuru</span>
                   </div>
                 </div>
-
-                {/* Links */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 p-2.5 rounded-lg bg-primary/5 border border-primary/20">
                     <span className="text-xs font-semibold text-primary w-24 flex-shrink-0">Landing Page</span>
@@ -136,17 +208,10 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                   </div>
-
                   <div className="flex items-start gap-2 p-2.5 rounded-lg bg-secondary/50 border border-border">
                     <span className="text-xs text-muted-foreground w-24 flex-shrink-0 mt-0.5">Embed Kodu</span>
                     <code className="text-xs text-muted-foreground flex-1 truncate">{embedCode}</code>
                     <CopyButton text={embedCode} />
-                  </div>
-
-                  <div className="flex items-center gap-2 p-2.5 rounded-lg bg-secondary/50 border border-border">
-                    <span className="text-xs text-muted-foreground w-24 flex-shrink-0">Portal</span>
-                    <code className="text-xs text-primary flex-1 truncate">{portalUrl}</code>
-                    <CopyButton text={portalUrl} />
                   </div>
                 </div>
               </div>
@@ -155,60 +220,187 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
         </div>
       )}
 
-      {/* Create Modal */}
+      {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setShowModal(false)}>
-          <div className="bg-card border border-border rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-5">
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowModal(false)}>
+          <div className="bg-card border border-border rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-border flex-shrink-0">
               <h2 className="text-lg font-bold">Yeni Salon Ekle</h2>
               <button onClick={() => setShowModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
             </div>
-            <form onSubmit={handleCreate} className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
-              <p className="text-xs font-semibold text-primary uppercase tracking-widest">Salon Bilgileri</p>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Salon Adı *</label>
-                <Input placeholder="Ankara Fitness Center" value={form.name} onChange={e => handleNameChange(e.target.value)} required className="bg-secondary border-border" />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Şehir / İlçe</label>
-                <Input placeholder="Ankara, Çankaya" value={form.city} onChange={e => setForm(p => ({ ...p, city: e.target.value }))} className="bg-secondary border-border" />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Slug (URL) *</label>
-                <Input placeholder="ankara-fitness-center" value={form.slug} onChange={e => setForm(p => ({ ...p, slug: e.target.value }))} required className="bg-secondary border-border font-mono text-sm" />
-                <p className="text-xs text-muted-foreground mt-1">gymbooster.tr/p/<strong>{form.slug || "salon-slug"}</strong></p>
+
+            {/* Tabs */}
+            <div className="flex gap-1 px-6 pt-3 flex-shrink-0">
+              {tabs.map(t => (
+                <button key={t.key} onClick={() => setActiveTab(t.key)}
+                  className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-colors ${activeTab === t.key ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleCreate} className="flex flex-col flex-1 overflow-hidden">
+              <div className="overflow-y-auto flex-1 px-6 py-4 space-y-3">
+
+                {/* TAB 1: SALON */}
+                {activeTab === "salon" && (
+                  <>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Salon Türü *</label>
+                      <select value={form.salon_type} onChange={e => handleTypeChange(e.target.value as SalonType)}
+                        className="w-full h-10 rounded-lg bg-secondary border border-border px-3 text-sm appearance-none">
+                        {SALON_TYPE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      </select>
+                      <p className="text-xs text-muted-foreground mt-1">Türü seçince landing page içeriği otomatik dolar, istediğiniz değiştirebilirsiniz</p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Salon Adı *</label>
+                      <Input placeholder="Ankara Fitness Center" value={form.name} onChange={e => handleNameChange(e.target.value)} required className="bg-secondary border-border" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Şehir / İlçe</label>
+                      <Input placeholder="Ankara, Çankaya" value={form.city} onChange={e => setForm(p => ({ ...p, city: e.target.value }))} className="bg-secondary border-border" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Slug (URL) *</label>
+                      <Input placeholder="ankara-fitness" value={form.slug} onChange={e => setForm(p => ({ ...p, slug: e.target.value }))} required className="bg-secondary border-border font-mono text-sm" />
+                      <p className="text-xs text-muted-foreground mt-1">gymbooster.tr/p/<strong>{form.slug || "salon-slug"}</strong></p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Telefon</label>
+                      <Input placeholder="0555 123 45 67" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} className="bg-secondary border-border" />
+                    </div>
+                  </>
+                )}
+
+                {/* TAB 2: İÇERİK */}
+                {activeTab === "icerik" && (
+                  <>
+                    <p className="text-xs text-muted-foreground bg-primary/5 border border-primary/20 rounded-lg p-2.5">
+                      Seçtiğiniz salon türüne göre otomatik dolduruldu. İstediğiniz alanı düzenleyebilirsiniz.
+                    </p>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Ana Başlık</label>
+                      <Input value={form.hero_headline} onChange={e => setForm(p => ({ ...p, hero_headline: e.target.value }))} className="bg-secondary border-border" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Alt Başlık</label>
+                      <textarea value={form.hero_sub} onChange={e => setForm(p => ({ ...p, hero_sub: e.target.value }))} rows={2}
+                        className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:border-primary/50" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Tagline (kısa açıklama)</label>
+                      <Input placeholder="Ankara'nın en iyi pilates stüdyosu" value={form.tagline} onChange={e => setForm(p => ({ ...p, tagline: e.target.value }))} className="bg-secondary border-border" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Özel Teklif / Promosyon</label>
+                      <Input placeholder="İlk ay %50 indirim" value={form.offer} onChange={e => setForm(p => ({ ...p, offer: e.target.value }))} className="bg-secondary border-border" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Aciliyet Mesajı</label>
+                      <Input placeholder="Bu ay yalnızca 5 yeni üye alıyoruz" value={form.urgency_text} onChange={e => setForm(p => ({ ...p, urgency_text: e.target.value }))} className="bg-secondary border-border" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Buton Metni</label>
+                      <Input placeholder="Ücretsiz Deneme Dersi Al" value={form.cta_text} onChange={e => setForm(p => ({ ...p, cta_text: e.target.value }))} className="bg-secondary border-border" />
+                    </div>
+
+                    {/* Features */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-xs font-medium text-muted-foreground">Özellikler ({form.features.length}/6)</label>
+                        <button type="button" onClick={addFeature} disabled={form.features.length >= 6}
+                          className="text-xs text-primary hover:underline disabled:opacity-40">+ Ekle</button>
+                      </div>
+                      <div className="space-y-2">
+                        {form.features.map((f, i) => (
+                          <div key={i} className="bg-secondary/50 border border-border rounded-lg p-3 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Input value={f.title} onChange={e => updateFeature(i, "title", e.target.value)} placeholder="Başlık" className="bg-secondary border-border h-8 text-sm" />
+                              <button type="button" onClick={() => removeFeature(i)} className="text-muted-foreground hover:text-destructive flex-shrink-0">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                            <textarea value={f.description} onChange={e => updateFeature(i, "description", e.target.value)}
+                              placeholder="Açıklama" rows={2}
+                              className="w-full bg-secondary border border-border rounded-lg px-3 py-1.5 text-xs resize-none focus:outline-none focus:border-primary/50" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Stats */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-xs font-medium text-muted-foreground">İstatistikler ({form.stats.length}/4)</label>
+                        <button type="button" onClick={addStat} disabled={form.stats.length >= 4}
+                          className="text-xs text-primary hover:underline disabled:opacity-40">+ Ekle</button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {form.stats.map((s, i) => (
+                          <div key={i} className="bg-secondary/50 border border-border rounded-lg p-2 space-y-1">
+                            <div className="flex items-center gap-1">
+                              <Input value={s.value} onChange={e => updateStat(i, "value", e.target.value)} placeholder="500+" className="bg-secondary border-border h-7 text-xs" />
+                              <button type="button" onClick={() => removeStat(i)} className="text-muted-foreground hover:text-destructive flex-shrink-0">
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                            <Input value={s.label} onChange={e => updateStat(i, "label", e.target.value)} placeholder="Aktif Üye" className="bg-secondary border-border h-7 text-xs" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Testimonial */}
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Müşteri Yorumu (opsiyonel)</label>
+                      <textarea value={form.testimonial} onChange={e => setForm(p => ({ ...p, testimonial: e.target.value }))}
+                        placeholder="3 ayda 12 kilo verdim ve hiç bu kadar enerjik hissetmemiştim..." rows={2}
+                        className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:border-primary/50 mb-2" />
+                      <Input value={form.testimonial_author} onChange={e => setForm(p => ({ ...p, testimonial_author: e.target.value }))}
+                        placeholder="Ayşe K. — 6 aylık üye" className="bg-secondary border-border" />
+                    </div>
+                  </>
+                )}
+
+                {/* TAB 3: SAHİP */}
+                {activeTab === "sahip" && (
+                  <>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Salon Sahibi Adı</label>
+                      <Input placeholder="Ahmet Yılmaz" value={form.owner_name} onChange={e => setForm(p => ({ ...p, owner_name: e.target.value }))} className="bg-secondary border-border" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">E-posta</label>
+                      <Input type="email" placeholder="ahmet@salon.com" value={form.owner_email} onChange={e => setForm(p => ({ ...p, owner_email: e.target.value }))} className="bg-secondary border-border" />
+                      <p className="text-xs text-muted-foreground mt-1">Girilirse portal için davet e-postası gönderilir</p>
+                    </div>
+                  </>
+                )}
               </div>
 
-              <p className="text-xs font-semibold text-primary uppercase tracking-widest pt-1">Landing Page İçeriği</p>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Tagline</label>
-                <Input placeholder="Ankara'nın en iyi fitness deneyimi" value={form.tagline} onChange={e => setForm(p => ({ ...p, tagline: e.target.value }))} className="bg-secondary border-border" />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Özel Teklif</label>
-                <Input placeholder="İlk ay %50 indirim" value={form.offer} onChange={e => setForm(p => ({ ...p, offer: e.target.value }))} className="bg-secondary border-border" />
-              </div>
-
-              <p className="text-xs font-semibold text-primary uppercase tracking-widest pt-1">Salon Sahibi</p>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Ad Soyad</label>
-                <Input placeholder="Ahmet Yılmaz" value={form.owner_name} onChange={e => setForm(p => ({ ...p, owner_name: e.target.value }))} className="bg-secondary border-border" />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">E-posta</label>
-                <Input type="email" placeholder="ahmet@salon.com" value={form.owner_email} onChange={e => setForm(p => ({ ...p, owner_email: e.target.value }))} className="bg-secondary border-border" />
-                <p className="text-xs text-muted-foreground mt-1">Girilirse portal için davet e-postası gönderilir</p>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Telefon</label>
-                <Input placeholder="0555 123 45 67" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} className="bg-secondary border-border" />
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <Button type="button" variant="outline" className="flex-1" onClick={() => setShowModal(false)}>İptal</Button>
-                <Button type="submit" disabled={isCreating} className="flex-1 bg-primary text-primary-foreground">
-                  {isCreating ? "Oluşturuluyor..." : "Oluştur"}
-                </Button>
+              {/* Footer */}
+              <div className="px-6 py-4 border-t border-border flex gap-2 flex-shrink-0">
+                {activeTab !== "salon" && (
+                  <Button type="button" variant="outline" onClick={() => setActiveTab(activeTab === "sahip" ? "icerik" : "salon")}>
+                    ← Geri
+                  </Button>
+                )}
+                {activeTab !== "sahip" ? (
+                  <Button type="button" className="flex-1 bg-primary text-primary-foreground"
+                    onClick={() => setActiveTab(activeTab === "salon" ? "icerik" : "sahip")}>
+                    İleri →
+                  </Button>
+                ) : (
+                  <>
+                    <Button type="button" variant="outline" onClick={() => setShowModal(false)}>İptal</Button>
+                    <Button type="submit" disabled={isCreating} className="flex-1 bg-primary text-primary-foreground">
+                      {isCreating ? "Oluşturuluyor..." : "✓ Oluştur"}
+                    </Button>
+                  </>
+                )}
               </div>
             </form>
           </div>
