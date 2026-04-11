@@ -13,6 +13,9 @@ type Salon = {
   owner_name: string | null
   owner_email: string | null
   phone: string | null
+  city: string | null
+  tagline: string | null
+  offer: string | null
   active: boolean
   created_at: string
   salon_leads: { count: number }[]
@@ -47,7 +50,7 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
   const [salons, setSalons] = useState<Salon[]>(initialSalons)
   const [showModal, setShowModal] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
-  const [form, setForm] = useState({ name: "", slug: "", owner_name: "", owner_email: "", phone: "" })
+  const [form, setForm] = useState({ name: "", slug: "", owner_name: "", owner_email: "", phone: "", city: "", tagline: "", offer: "" })
 
   const handleNameChange = (name: string) => {
     setForm(p => ({ ...p, name, slug: slugify(name) }))
@@ -67,7 +70,7 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
 
       setSalons(prev => [{ ...data.data, salon_leads: [{ count: 0 }] }, ...prev])
       setShowModal(false)
-      setForm({ name: "", slug: "", owner_name: "", owner_email: "", phone: "" })
+      setForm({ name: "", slug: "", owner_name: "", owner_email: "", phone: "", city: "", tagline: "", offer: "" })
       toast.success(`${data.data.name} oluşturuldu! ${form.owner_email ? "Davet e-postası gönderildi." : ""}`)
     } finally {
       setIsCreating(false)
@@ -98,22 +101,23 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
         <div className="space-y-3">
           {salons.map(salon => {
             const leadCount = salon.salon_leads?.[0]?.count ?? 0
+            const landingUrl = `${SITE_URL}/p/${salon.slug}`
             const embedCode = `<iframe src="${SITE_URL}/f/${salon.slug}" width="100%" height="520" frameborder="0" style="border:none;border-radius:12px;"></iframe>`
-            const formUrl = `${SITE_URL}/f/${salon.slug}`
             const portalUrl = `${SITE_URL}/portal`
 
             return (
               <div key={salon.id} className="bg-card border border-border rounded-2xl p-5">
                 <div className="flex items-start justify-between gap-3 mb-4">
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-bold text-base">{salon.name}</h3>
+                      {salon.city && <span className="text-xs text-muted-foreground">· {salon.city}</span>}
                       <span className={`text-xs px-2 py-0.5 rounded-full border ${salon.active ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"}`}>
                         {salon.active ? "Aktif" : "Pasif"}
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">/{salon.slug}</p>
-                    {salon.owner_name && <p className="text-xs text-muted-foreground">{salon.owner_name} · {salon.owner_email}</p>}
+                    {salon.offer && <p className="text-xs text-primary mt-0.5">🎁 {salon.offer}</p>}
+                    {salon.owner_name && <p className="text-xs text-muted-foreground mt-0.5">{salon.owner_name} · {salon.owner_email}</p>}
                   </div>
                   <div className="flex items-center gap-1.5 flex-shrink-0">
                     <Users className="w-3.5 h-3.5 text-primary" />
@@ -124,23 +128,23 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
 
                 {/* Links */}
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 p-2.5 rounded-lg bg-secondary/50 border border-border">
-                    <span className="text-xs text-muted-foreground w-20 flex-shrink-0">Form URL</span>
-                    <code className="text-xs text-primary flex-1 truncate">{formUrl}</code>
-                    <CopyButton text={formUrl} />
-                    <a href={formUrl} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded hover:bg-secondary text-muted-foreground hover:text-foreground">
+                  <div className="flex items-center gap-2 p-2.5 rounded-lg bg-primary/5 border border-primary/20">
+                    <span className="text-xs font-semibold text-primary w-24 flex-shrink-0">Landing Page</span>
+                    <code className="text-xs text-primary flex-1 truncate">{landingUrl}</code>
+                    <CopyButton text={landingUrl} />
+                    <a href={landingUrl} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded hover:bg-secondary text-muted-foreground hover:text-foreground">
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                   </div>
 
                   <div className="flex items-start gap-2 p-2.5 rounded-lg bg-secondary/50 border border-border">
-                    <span className="text-xs text-muted-foreground w-20 flex-shrink-0 mt-0.5">Embed Kodu</span>
+                    <span className="text-xs text-muted-foreground w-24 flex-shrink-0 mt-0.5">Embed Kodu</span>
                     <code className="text-xs text-muted-foreground flex-1 truncate">{embedCode}</code>
                     <CopyButton text={embedCode} />
                   </div>
 
                   <div className="flex items-center gap-2 p-2.5 rounded-lg bg-secondary/50 border border-border">
-                    <span className="text-xs text-muted-foreground w-20 flex-shrink-0">Portal</span>
+                    <span className="text-xs text-muted-foreground w-24 flex-shrink-0">Portal</span>
                     <code className="text-xs text-primary flex-1 truncate">{portalUrl}</code>
                     <CopyButton text={portalUrl} />
                   </div>
@@ -159,22 +163,39 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
               <h2 className="text-lg font-bold">Yeni Salon Ekle</h2>
               <button onClick={() => setShowModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
             </div>
-            <form onSubmit={handleCreate} className="space-y-3">
+            <form onSubmit={handleCreate} className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
+              <p className="text-xs font-semibold text-primary uppercase tracking-widest">Salon Bilgileri</p>
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Salon Adı *</label>
                 <Input placeholder="Ankara Fitness Center" value={form.name} onChange={e => handleNameChange(e.target.value)} required className="bg-secondary border-border" />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Slug (URL) *</label>
-                <Input placeholder="ankara-fitness-center" value={form.slug} onChange={e => setForm(p => ({ ...p, slug: e.target.value }))} required className="bg-secondary border-border font-mono text-sm" />
-                <p className="text-xs text-muted-foreground mt-1">gymbooster.tr/f/<strong>{form.slug || "salon-slug"}</strong></p>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Şehir / İlçe</label>
+                <Input placeholder="Ankara, Çankaya" value={form.city} onChange={e => setForm(p => ({ ...p, city: e.target.value }))} className="bg-secondary border-border" />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Salon Sahibi Adı</label>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Slug (URL) *</label>
+                <Input placeholder="ankara-fitness-center" value={form.slug} onChange={e => setForm(p => ({ ...p, slug: e.target.value }))} required className="bg-secondary border-border font-mono text-sm" />
+                <p className="text-xs text-muted-foreground mt-1">gymbooster.tr/p/<strong>{form.slug || "salon-slug"}</strong></p>
+              </div>
+
+              <p className="text-xs font-semibold text-primary uppercase tracking-widest pt-1">Landing Page İçeriği</p>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Tagline</label>
+                <Input placeholder="Ankara'nın en iyi fitness deneyimi" value={form.tagline} onChange={e => setForm(p => ({ ...p, tagline: e.target.value }))} className="bg-secondary border-border" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Özel Teklif</label>
+                <Input placeholder="İlk ay %50 indirim" value={form.offer} onChange={e => setForm(p => ({ ...p, offer: e.target.value }))} className="bg-secondary border-border" />
+              </div>
+
+              <p className="text-xs font-semibold text-primary uppercase tracking-widest pt-1">Salon Sahibi</p>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Ad Soyad</label>
                 <Input placeholder="Ahmet Yılmaz" value={form.owner_name} onChange={e => setForm(p => ({ ...p, owner_name: e.target.value }))} className="bg-secondary border-border" />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Salon Sahibi E-posta</label>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">E-posta</label>
                 <Input type="email" placeholder="ahmet@salon.com" value={form.owner_email} onChange={e => setForm(p => ({ ...p, owner_email: e.target.value }))} className="bg-secondary border-border" />
                 <p className="text-xs text-muted-foreground mt-1">Girilirse portal için davet e-postası gönderilir</p>
               </div>
@@ -182,6 +203,7 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Telefon</label>
                 <Input placeholder="0555 123 45 67" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} className="bg-secondary border-border" />
               </div>
+
               <div className="flex gap-2 pt-2">
                 <Button type="button" variant="outline" className="flex-1" onClick={() => setShowModal(false)}>İptal</Button>
                 <Button type="submit" disabled={isCreating} className="flex-1 bg-primary text-primary-foreground">
