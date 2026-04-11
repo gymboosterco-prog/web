@@ -4,14 +4,14 @@ const forWho = [
   "Aktif bir spor salonu işletiyorsunuz",
   "Her ay düzenli yeni üye kazanmak istiyorsunuz",
   "Aylık en az ₺3.000 reklam bütçesi ayırabilirsiniz",
-  "Gelen lead'leri takip edecek bant genişliğiniz var",
+  "Gelen başvuruları takip edecek bant genişliğiniz var",
   "3 ayda sonuç alamazsam param iade olur diyorsunuz",
 ]
 
 const notForWho = [
   "\"Önce ücretsiz deneyelim\" beklentindesiniz",
   "Kısa vadeli (1-2 ay) düşünüyorsunuz",
-  "Gelen lead'leri arayıp takip etmeyeceksiniz",
+  "Gelen başvuruları arayıp takip etmeyeceksiniz",
   "Reklam bütçesi ayırmak istemiyorsunuz",
   "Sonuçları ölçmeyi sevmiyorsunuz",
 ]

@@ -7,12 +7,12 @@ const included = [
     value: "₺6.000–8.000/ay",
   },
   {
-    title: "30 Garantili Aylık Lead",
+    title: "30 Garantili Aylık Başvuru",
     description: "Telefon numarası doğrulanmış, gerçekten ilgilenen potansiyel üyeler.",
-    value: "₺100–150/lead × 30",
+    value: "₺100–150/başvuru × 30",
   },
   {
-    title: "Lead Takip & CRM Sistemi",
+    title: "Başvuru Takip & CRM Sistemi",
     description: "Kim arandı, kim cevaplamadı, kim düşünüyor — hepsi tek panelde.",
     value: "₺1.500–2.500/ay",
   },
@@ -23,7 +23,7 @@ const included = [
   },
   {
     title: "Landing Page & Form Optimizasyonu",
-    description: "Reklam trafiğini lead'e dönüştüren sayfaları biz kurarız.",
+    description: "Reklam trafiğini başvuruya dönüştüren sayfaları biz kurarız.",
     value: "₺3.000–5.000 tek seferlik",
   },
   {
@@ -89,7 +89,7 @@ export function Services() {
               </div>
             </div>
             <p className="text-center text-sm text-muted-foreground mt-4">
-              + Tüm bunların üstüne: <strong className="text-foreground">30 lead tutturmazsak, tutturana kadar bedava çalışırız.</strong>
+              + Tüm bunların üstüne: <strong className="text-foreground">30 başvuru tutturmazsak, tutturana kadar bedava çalışırız.</strong>
             </p>
           </div>
         </div>

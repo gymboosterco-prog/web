@@ -216,7 +216,7 @@ export function HesaplamaClient() {
             <div className="pt-4 border-t border-border space-y-2">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Gymbooster Garantileri</p>
               {[
-                `Aylık ${GYMBOOSTER_LEADS} nitelikli lead`,
+                `Aylık ${GYMBOOSTER_LEADS} nitelikli potansiyel müşteri`,
                 `%${CONVERSION_RATE * 100} dönüşüm → ${NEW_MEMBERS_PER_MONTH} yeni üye/ay`,
                 `Hizmet bedeli: ₺${fmt(SERVICE_FEE)}/ay`,
                 "30 gün para iade garantisi",

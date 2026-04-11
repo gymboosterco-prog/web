@@ -38,17 +38,17 @@ export function Hero() {
 
             {/* Main Headline */}
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4 md:mb-6 text-balance">
-              <span className="text-foreground">Salonunuzun Telefonu</span>
+              <span className="text-foreground">Spor Salonunuza Her Ay</span>
               <br />
-              <span className="text-primary">Her Ay 30 Garantili Lead</span>
+              <span className="text-primary">30 Garantili Potansiyel Müşteri</span>
               <br />
-              <span className="text-foreground">İle Dursun Diye Çalıştırıyoruz</span>
+              <span className="text-foreground">Ya da Tek Kuruş Ödemezsiniz</span>
             </h1>
 
             {/* Sub-headline */}
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-4 md:mb-6 text-pretty">
               Reklama para harcıyorsunuz ama telefon çalmıyor mu? Yapay zeka destekli sistemimiz salonunuzun çevresindeki aktif potansiyel üyeleri bulur, sizi onlarla tanıştırır.{" "}
-              <strong className="text-foreground">30 lead tutturmazsak, tutturana kadar bedava çalışırız.</strong>
+              <strong className="text-foreground">30 potansiyel müşteri tutturmazsak, tutturana kadar bedava çalışırız.</strong>
             </p>
 
             {/* Trust indicators */}
@@ -88,7 +88,7 @@ export function Hero() {
             </div>
           </div>
 
-          {/* Lead Form */}
+          {/* Başvuru Formu */}
           <div className="order-2 relative w-full max-w-md mx-auto lg:max-w-none" suppressHydrationWarning>
             {/* Glow effect */}
             <div className="absolute -inset-1 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 md:from-primary/20 md:via-primary/10 md:to-primary/20 rounded-2xl blur-xl" />

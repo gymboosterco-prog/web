@@ -15,7 +15,7 @@ const caseStudies = [
     },
     metrics: [
       { label: "Üye Artışı", value: "+217%" },
-      { label: "Lead Artışı", value: "+467%" },
+      { label: "Başvuru Artışı", value: "+467%" },
       { label: "ROI", value: "8.2x" }
     ]
   },
@@ -33,7 +33,7 @@ const caseStudies = [
     },
     metrics: [
       { label: "Üye Artışı", value: "+182%" },
-      { label: "Lead Artışı", value: "+712%" },
+      { label: "Başvuru Artışı", value: "+712%" },
       { label: "ROI", value: "6.8x" }
     ]
   },
@@ -51,7 +51,7 @@ const caseStudies = [
     },
     metrics: [
       { label: "Üye Artışı", value: "+189%" },
-      { label: "Lead Artışı", value: "+700%" },
+      { label: "Başvuru Artışı", value: "+700%" },
       { label: "ROI", value: "7.5x" }
     ]
   }
@@ -98,7 +98,7 @@ export function CaseStudies() {
                     </div>
                     <div className="flex items-center gap-1.5 md:gap-2">
                       <TrendingUp className="w-3.5 h-3.5 md:w-4 md:h-4 text-muted-foreground flex-shrink-0" />
-                      <span className="text-xs md:text-sm">{study.before.monthlyLeads} lead/ay</span>
+                      <span className="text-xs md:text-sm">{study.before.monthlyLeads} başvuru/ay</span>
                     </div>
                   </div>
                 </div>
@@ -111,7 +111,7 @@ export function CaseStudies() {
                     </div>
                     <div className="flex items-center gap-1.5 md:gap-2">
                       <TrendingUp className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary flex-shrink-0" />
-                      <span className="text-xs md:text-sm font-semibold text-primary">{study.after.monthlyLeads} lead/ay</span>
+                      <span className="text-xs md:text-sm font-semibold text-primary">{study.after.monthlyLeads} başvuru/ay</span>
                     </div>
                   </div>
                 </div>

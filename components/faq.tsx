@@ -10,11 +10,11 @@ import {
 const faqs = [
   {
     question: "₺10.000/ay pahalı değil mi?",
-    answer: "Hesaplayalım. Aylık üyelik ücretiniz ₺1.500 ise, sadece 7 yeni üye bu masrafı karşılar. Biz ayda 30 lead garantisi veriyoruz. Siz bu 30 kişinin 7'sini üye yaparsanız kâra geçtiniz — geri kalan 23 lead saf kâr. Bunu kârlı bulmuyorsanız konuşmayalım."
+    answer: "Hesaplayalım. Aylık üyelik ücretiniz ₺1.500 ise, sadece 7 yeni üye bu masrafı karşılar. Biz ayda 30 potansiyel müşteri garantisi veriyoruz. Siz bu 30 kişinin 7'sini üye yaparsanız kâra geçtiniz — geri kalan 23 potansiyel müşteri saf kâr. Bunu kârlı bulmuyorsanız konuşmayalım."
   },
   {
-    question: "30 lead garantisi veriyorsunuz ama satışı ben yapmak zorundayım.",
-    answer: "Doğru. Biz boru hattını doldururuz, satışı siz yaparsınız. Bu yüzden ilk görüşmemizde satış sürecinizi de konuşuruz — arama şablonu, takip süreci. Gelen lead'i doğru takip eden salonlar ortalama %15-25 dönüşüm görüyor."
+    question: "30 potansiyel müşteri garantisi veriyorsunuz ama satışı ben yapmak zorundayım.",
+    answer: "Doğru. Biz boru hattını doldururuz, satışı siz yaparsınız. Bu yüzden ilk görüşmemizde satış sürecinizi de konuşuruz — arama şablonu, takip süreci. Gelen potansiyel müşteri'i doğru takip eden salonlar ortalama %15-25 dönüşüm görüyor."
   },
   {
     question: "Kendi başıma Meta reklamı verebilirim.",
@@ -22,7 +22,7 @@ const faqs = [
   },
   {
     question: "İlk sonucu ne zaman görürüm?",
-    answer: "Anlaştığımız günden 7 gün içinde kampanyalar aktif olur. İlk lead'ler genellikle ilk hafta içinde gelmeye başlar. 30 günlük garantiyi saymak için beklemenize gerek yok — sonuçlar hızlı gelir."
+    answer: "Anlaştığımız günden 7 gün içinde kampanyalar aktif olur. İlk potansiyel müşteri'ler genellikle ilk hafta içinde gelmeye başlar. 30 günlük garantiyi saymak için beklemenize gerek yok — sonuçlar hızlı gelir."
   },
   {
     question: "3 aylık minimum sözleşme çok uzun.",
@@ -67,7 +67,7 @@ export function FAQ() {
                 <AccordionTrigger className="text-left text-sm md:text-base font-semibold hover:no-underline py-3 md:py-4 lg:py-5">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-xs md:text-sm text-muted-foreground pb-3 md:pb-4 lg:pb-5 leading-relaxed">
+                <AccordionContent className="text-xs md:text-sm text-muted-foreground pb-3 md:pb-4 lg:pb-5 potansiyel müşteriing-relaxed">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>

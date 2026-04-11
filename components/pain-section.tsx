@@ -31,7 +31,7 @@ export function PainSection() {
 
           <div className="relative p-6 md:p-8 rounded-2xl bg-primary/5 border border-primary/30 text-center">
             <p className="text-lg md:text-xl font-semibold text-foreground mb-2">
-              Sorun strateji değil, <span className="text-primary">sistematik lead akışının olmaması.</span>
+              Sorun strateji değil, <span className="text-primary">sistematik başvuru akışının olmaması.</span>
             </p>
             <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto">
               Her ay kaç kişinin salonunuzu internette arayıp rakibinize gittiğini hiç hesapladınız mı?
