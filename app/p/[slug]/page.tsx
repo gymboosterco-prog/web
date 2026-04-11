@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { SalonForm } from "./salon-form"
+import { StickyCTA } from "./sticky-cta"
 import { SALON_PRESETS, type SalonType } from "@/lib/salon-presets"
 import { CheckCircle2, Clock, Phone, Quote, Shield, XCircle, Zap } from "lucide-react"
 import Image from "next/image"
@@ -117,6 +118,13 @@ export default async function SalonLandingPage({ params }: Props) {
             )}
           </div>
 
+          {/* Form — hero'nun hemen altında */}
+          <div id="form-section" className="bg-white/[0.04] border border-white/10 rounded-2xl p-6 sm:p-8 mb-12">
+            <h2 className="text-xl font-bold text-center mb-2">{ctaText}</h2>
+            <p className="text-center text-white/50 text-sm mb-6">Formu doldurun, sizi arayalım.</p>
+            <SalonForm salonId={salon.id} salonName={salon.name} ctaText={ctaText} primaryColor={primaryColor} />
+          </div>
+
           {/* Pain Agitation */}
           {painPoints.length > 0 && (
             <div className="mb-12">
@@ -138,13 +146,6 @@ export default async function SalonLandingPage({ params }: Props) {
               </div>
             </div>
           )}
-
-          {/* Form — hero'nun hemen altında */}
-          <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-6 sm:p-8 mb-12">
-            <h2 className="text-xl font-bold text-center mb-2">{ctaText}</h2>
-            <p className="text-center text-white/50 text-sm mb-6">Formu doldurun, sizi arayalım.</p>
-            <SalonForm salonId={salon.id} salonName={salon.name} ctaText={ctaText} primaryColor={primaryColor} />
-          </div>
 
           {/* Stats */}
           {stats.length > 0 && (
@@ -214,9 +215,11 @@ export default async function SalonLandingPage({ params }: Props) {
             ))}
           </div>
 
-          <p className="text-center text-white/20 text-xs mt-8">Powered by <span className="text-white/40">Gymbooster</span></p>
+          <p className="text-center text-white/20 text-xs mt-8 pb-20">Powered by <span className="text-white/40">Gymbooster</span></p>
         </div>
       </div>
+
+      <StickyCTA ctaText={ctaText} primaryColor={primaryColor} />
     </div>
   )
 }
