@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
-import { Plus, Copy, Check, ExternalLink, Building2, Users, X, ChevronDown, ChevronUp, Trash2 } from "lucide-react"
+import { Plus, Copy, Check, ExternalLink, Building2, Users, X, Trash2, Pencil, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { SALON_PRESETS, SALON_TYPE_OPTIONS, type SalonType, type SalonFeature, type SalonStat } from "@/lib/salon-presets"
@@ -77,6 +77,9 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
   const [isCreating, setIsCreating] = useState(false)
   const [activeTab, setActiveTab] = useState<Tab>("salon")
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const applyPreset = (type: SalonType) => {
     const preset = SALON_PRESETS[type]
@@ -125,23 +128,61 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
     setForm(EMPTY_FORM)
     applyPreset("fitness")
     setActiveTab("salon")
+    setEditingId(null)
     setShowModal(true)
+  }
+
+  const openEdit = (salon: Salon) => {
+    setForm({
+      name: salon.name, slug: salon.slug, city: salon.city || "", phone: salon.phone || "",
+      salon_type: (salon.salon_type as SalonType) || "fitness",
+      tagline: salon.tagline || "", hero_headline: salon.hero_headline || "",
+      hero_sub: salon.hero_sub || "", offer: salon.offer || "",
+      urgency_text: salon.urgency_text || "", cta_text: salon.cta_text || "",
+      features: salon.features || [], stats: salon.stats || [],
+      testimonial: salon.testimonial || "", testimonial_author: salon.testimonial_author || "",
+      owner_name: salon.owner_name || "", owner_email: salon.owner_email || "",
+    })
+    setEditingId(salon.id)
+    setActiveTab("salon")
+    setShowModal(true)
+  }
+
+  const handleDelete = async () => {
+    if (!deleteConfirmId) return
+    setIsDeleting(true)
+    try {
+      const res = await fetch(`/api/salons/${deleteConfirmId}`, { method: "DELETE" })
+      if (!res.ok) { toast.error("Silinemedi"); return }
+      setSalons(prev => prev.filter(s => s.id !== deleteConfirmId))
+      toast.success("Salon silindi")
+      setDeleteConfirmId(null)
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsCreating(true)
     try {
-      const res = await fetch("/api/salons", {
-        method: "POST",
+      const method = editingId ? "PATCH" : "POST"
+      const url = editingId ? `/api/salons/${editingId}` : "/api/salons"
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       })
       const data = await res.json()
       if (!res.ok) { toast.error(data.error || "Hata oluştu"); return }
-      setSalons(prev => [{ ...data.data, salon_leads: [{ count: 0 }] }, ...prev])
+      if (editingId) {
+        setSalons(prev => prev.map(s => s.id === editingId ? { ...s, ...data.data } : s))
+        toast.success("Salon güncellendi")
+      } else {
+        setSalons(prev => [{ ...data.data, salon_leads: [{ count: 0 }] }, ...prev])
+        toast.success(`${data.data.name} oluşturuldu!${form.owner_email ? " Davet e-postası gönderildi." : ""}`)
+      }
       setShowModal(false)
-      toast.success(`${data.data.name} oluşturuldu!${form.owner_email ? " Davet e-postası gönderildi." : ""}`)
     } finally {
       setIsCreating(false)
     }
@@ -193,10 +234,18 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
                     {salon.offer && <p className="text-xs text-primary mt-0.5">🎁 {salon.offer}</p>}
                     {salon.owner_name && <p className="text-xs text-muted-foreground">{salon.owner_name} · {salon.owner_email}</p>}
                   </div>
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                    <Users className="w-3.5 h-3.5 text-primary" />
-                    <span className="font-bold text-sm">{leadCount}</span>
-                    <span className="text-xs text-muted-foreground">başvuru</span>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-1">
+                      <Users className="w-3.5 h-3.5 text-primary" />
+                      <span className="font-bold text-sm">{leadCount}</span>
+                      <span className="text-xs text-muted-foreground">başvuru</span>
+                    </div>
+                    <button onClick={() => openEdit(salon)} className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors" title="Düzenle">
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => setDeleteConfirmId(salon.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors" title="Sil">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -220,13 +269,36 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
         </div>
       )}
 
+      {/* Delete Confirm */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setDeleteConfirmId(null)}>
+          <div className="bg-card border border-border rounded-2xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-5 h-5 text-destructive" />
+              </div>
+              <div>
+                <h3 className="font-bold">Salonu Sil</h3>
+                <p className="text-xs text-muted-foreground">Bu işlem geri alınamaz. Tüm başvurular da silinir.</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => setDeleteConfirmId(null)}>İptal</Button>
+              <Button disabled={isDeleting} onClick={handleDelete} className="flex-1 bg-destructive hover:bg-destructive/90 text-white">
+                {isDeleting ? "Siliniyor..." : "Evet, Sil"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowModal(false)}>
           <div className="bg-card border border-border rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
             {/* Modal header */}
             <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-border flex-shrink-0">
-              <h2 className="text-lg font-bold">Yeni Salon Ekle</h2>
+              <h2 className="text-lg font-bold">{editingId ? "Salonu Düzenle" : "Yeni Salon Ekle"}</h2>
               <button onClick={() => setShowModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
             </div>
 
@@ -397,7 +469,7 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
                   <>
                     <Button type="button" variant="outline" onClick={() => setShowModal(false)}>İptal</Button>
                     <Button type="submit" disabled={isCreating} className="flex-1 bg-primary text-primary-foreground">
-                      {isCreating ? "Oluşturuluyor..." : "✓ Oluştur"}
+                      {isCreating ? "Kaydediliyor..." : editingId ? "✓ Güncelle" : "✓ Oluştur"}
                     </Button>
                   </>
                 )}
