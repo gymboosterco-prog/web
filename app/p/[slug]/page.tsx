@@ -32,24 +32,33 @@ export default async function SalonLandingPage({ params }: Props) {
 
   const { data: salon } = await supabase
     .from("salons")
-    .select("id, name, slug, salon_type, city, tagline, offer, hero_headline, hero_sub, urgency_text, cta_text, features, stats, testimonial, testimonial_author, active, primary_color, accent_color, logo_url, pain_points, guarantee_text")
+    .select("id, name, slug, salon_type, city, tagline, offer, hero_headline, hero_sub, urgency_text, cta_text, features, stats, testimonial, testimonial_author, active")
     .eq("slug", slug).eq("active", true).maybeSingle()
 
   if (!salon) notFound()
 
+  // Branding fields (added in migration 023 — gracefully ignored if columns don't exist yet)
+  const brandingResult = await supabase
+    .from("salons")
+    .select("primary_color, accent_color, logo_url, pain_points, guarantee_text")
+    .eq("id", salon.id)
+    .maybeSingle()
+  const branding = brandingResult.error ? null : brandingResult.data
+
   const salonType = (salon.salon_type as SalonType) || "fitness"
   const preset = SALON_PRESETS[salonType]
 
-  const primaryColor: string = salon.primary_color || preset.primary_color
-  const accentColor: string = salon.accent_color || preset.accent_color
+  const primaryColor: string = branding?.primary_color || preset.primary_color
+  const accentColor: string = branding?.accent_color || preset.accent_color
 
   const headline = salon.hero_headline || preset.hero_headline
   const subheadline = salon.hero_sub || preset.hero_sub
   const ctaText = salon.cta_text || preset.cta_text
   const features: { title: string; description: string }[] = salon.features?.length ? salon.features : preset.features
   const stats: { value: string; label: string }[] = salon.stats?.length ? salon.stats : preset.stats
-  const painPoints: string[] = salon.pain_points?.length ? salon.pain_points : preset.pain_points
-  const guaranteeText: string = salon.guarantee_text || preset.guarantee_text
+  const painPoints: string[] = (branding?.pain_points as string[] | null)?.length ? (branding.pain_points as string[]) : preset.pain_points
+  const guaranteeText: string = branding?.guarantee_text || preset.guarantee_text
+  const logoUrl: string | null = branding?.logo_url || null
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
@@ -84,15 +93,13 @@ export default async function SalonLandingPage({ params }: Props) {
           {/* Hero */}
           <div className="text-center mb-12">
             {/* Logo */}
-            {salon.logo_url && (
+            {logoUrl ? (
               <div className="flex justify-center mb-5">
                 <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-white/10 bg-white/5">
-                  <Image src={salon.logo_url} alt={`${salon.name} logo`} fill className="object-contain p-2" unoptimized />
+                  <Image src={logoUrl} alt={`${salon.name} logo`} fill className="object-contain p-2" />
                 </div>
               </div>
-            )}
-
-            {!salon.logo_url && (
+            ) : (
               <div className="inline-block text-4xl mb-4">{preset.emoji}</div>
             )}
 
