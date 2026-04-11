@@ -38,11 +38,11 @@ export function Hero() {
 
             {/* Main Headline */}
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4 md:mb-6 text-balance">
-              <span className="text-foreground">Spor Salonunuza Her Ay</span>
+              <span className="text-foreground">Türkiye'nin İlk ve Tek</span>
               <br />
-              <span className="text-primary">30 Garantili Potansiyel Müşteri</span>
+              <span className="text-primary">Yapay Zeka Destekli</span>
               <br />
-              <span className="text-foreground">Ya da Tek Kuruş Ödemezsiniz</span>
+              <span className="text-foreground">Spor Salonlarına Özel Reklam Ajansı</span>
             </h1>
 
             {/* Sub-headline */}
