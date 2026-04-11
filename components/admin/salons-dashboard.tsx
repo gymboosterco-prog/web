@@ -1,11 +1,39 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { toast } from "sonner"
-import { Plus, Copy, Check, ExternalLink, Building2, Users, X, Trash2, Pencil, AlertTriangle } from "lucide-react"
+import { Plus, Copy, Check, ExternalLink, Building2, Users, X, Trash2, Pencil, AlertTriangle, Upload, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { SALON_PRESETS, SALON_TYPE_OPTIONS, COLOR_PRESETS, type SalonType, type SalonFeature, type SalonStat } from "@/lib/salon-presets"
+
+const LOGO_MAX_PX = 512 // max width/height after resize
+const LOGO_QUALITY = 0.85
+
+function resizeImage(file: File): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      const ratio = Math.min(LOGO_MAX_PX / img.width, LOGO_MAX_PX / img.height, 1)
+      const w = Math.round(img.width * ratio)
+      const h = Math.round(img.height * ratio)
+      const canvas = document.createElement("canvas")
+      canvas.width = w
+      canvas.height = h
+      const ctx = canvas.getContext("2d")!
+      ctx.drawImage(img, 0, 0, w, h)
+      canvas.toBlob(
+        blob => blob ? resolve(blob) : reject(new Error("Canvas boş döndü")),
+        "image/webp",
+        LOGO_QUALITY,
+      )
+    }
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Resim yüklenemedi")) }
+    img.src = url
+  })
+}
 
 type Salon = {
   id: string
@@ -93,6 +121,39 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!fileInputRef.current) return
+    fileInputRef.current.value = ""
+    if (!file) return
+
+    setIsUploadingLogo(true)
+    try {
+      // SVG — skip canvas resize (vector format)
+      let blob: Blob
+      if (file.type === "image/svg+xml") {
+        blob = file
+      } else {
+        blob = await resizeImage(file)
+      }
+
+      const fd = new FormData()
+      fd.append("file", blob, file.type === "image/svg+xml" ? "logo.svg" : "logo.webp")
+
+      const res = await fetch("/api/salons/upload-logo", { method: "POST", body: fd })
+      const data = await res.json()
+      if (!res.ok) { toast.error(data.error || "Yükleme hatası"); return }
+      setForm(p => ({ ...p, logo_url: data.url }))
+      toast.success("Logo yüklendi")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Yükleme hatası")
+    } finally {
+      setIsUploadingLogo(false)
+    }
+  }
 
   const applyPreset = (type: SalonType) => {
     const preset = SALON_PRESETS[type]
@@ -387,16 +448,51 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
                       <label className="text-xs font-medium text-muted-foreground mb-1 block">Telefon</label>
                       <Input placeholder="0555 123 45 67" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} className="bg-secondary border-border" />
                     </div>
+                    {/* Logo Upload */}
                     <div>
-                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Logo URL (opsiyonel)</label>
-                      <Input placeholder="https://..." value={form.logo_url} onChange={e => setForm(p => ({ ...p, logo_url: e.target.value }))} className="bg-secondary border-border" />
-                      <p className="text-xs text-muted-foreground mt-1">Logonuzun URL'ini girin. Yoksa salon türünün emojisi kullanılır.</p>
-                      {form.logo_url && (
-                        <div className="mt-2 flex items-center gap-2">
+                      <label className="text-xs font-medium text-muted-foreground mb-2 block">Logo (opsiyonel)</label>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+                        className="hidden"
+                        onChange={handleLogoUpload}
+                      />
+                      {form.logo_url ? (
+                        <div className="flex items-center gap-3 p-3 bg-secondary/50 border border-border rounded-xl">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={form.logo_url} alt="Logo önizleme" className="w-12 h-12 object-contain rounded-lg border border-border bg-secondary p-1" onError={e => { (e.target as HTMLImageElement).style.display = "none" }} />
-                          <span className="text-xs text-muted-foreground">Önizleme</span>
+                          <img src={form.logo_url} alt="Logo" className="w-14 h-14 object-contain rounded-lg border border-border bg-white p-1 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs text-foreground font-medium">Logo yüklendi</p>
+                            <p className="text-xs text-muted-foreground truncate">{form.logo_url.split("/").pop()}</p>
+                          </div>
+                          <div className="flex flex-col gap-1.5">
+                            <button type="button" disabled={isUploadingLogo}
+                              onClick={() => fileInputRef.current?.click()}
+                              className="text-xs text-primary hover:underline disabled:opacity-50">
+                              Değiştir
+                            </button>
+                            <button type="button"
+                              onClick={() => setForm(p => ({ ...p, logo_url: "" }))}
+                              className="text-xs text-muted-foreground hover:text-destructive">
+                              Kaldır
+                            </button>
+                          </div>
                         </div>
+                      ) : (
+                        <button type="button" disabled={isUploadingLogo}
+                          onClick={() => fileInputRef.current?.click()}
+                          className="w-full h-20 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-1.5 hover:border-primary/40 hover:bg-primary/5 transition-colors disabled:opacity-50">
+                          {isUploadingLogo ? (
+                            <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
+                          ) : (
+                            <Upload className="w-5 h-5 text-muted-foreground" />
+                          )}
+                          <span className="text-xs text-muted-foreground">
+                            {isUploadingLogo ? "Yükleniyor ve optimize ediliyor..." : "Logo yükle (JPG, PNG, WebP, SVG)"}
+                          </span>
+                          {!isUploadingLogo && <span className="text-xs text-muted-foreground/60">Maks. 512×512px — 2 MB</span>}
+                        </button>
                       )}
                     </div>
                   </>
