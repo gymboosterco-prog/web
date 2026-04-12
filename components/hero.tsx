@@ -47,8 +47,7 @@ export function Hero() {
 
             {/* Sub-headline */}
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-4 md:mb-6 text-pretty">
-              Reklama para harcıyorsunuz ama telefon çalmıyor mu? Yapay zeka destekli sistemimiz salonunuzun çevresindeki aktif potansiyel üyeleri bulur, sizi onlarla tanıştırır.{" "}
-              <strong className="text-foreground">30 potansiyel müşteri tutturmazsak, tutturana kadar bedava çalışırız.</strong>
+              Reklama para harcıyorsunuz ama telefon çalmıyor mu? Yapay zeka destekli sistemimiz salonunuzun çevresindeki aktif potansiyel üyeleri bulur, sizi onlarla tanıştırır.
             </p>
 
             {/* Trust indicators */}
