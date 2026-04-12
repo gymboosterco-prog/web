@@ -189,8 +189,8 @@ export function HesaplamaClient() {
               value={membershipFee}
               onChange={setMembershipFee}
               min={100}
-              max={5000}
-              step={50}
+              max={15000}
+              step={250}
               prefix="₺"
             />
 

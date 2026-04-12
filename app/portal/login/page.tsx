@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dumbbell, Lock, Mail, AlertCircle } from "lucide-react"
@@ -13,6 +13,8 @@ export default function PortalLoginPage() {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const inviteExpired = searchParams.get("error") === "invite_expired"
   const supabase = createClient()
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -43,6 +45,12 @@ export default function PortalLoginPage() {
 
         <div className="p-8 rounded-2xl bg-card border border-border">
           <form onSubmit={handleLogin} className="space-y-4">
+            {inviteExpired && (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 text-amber-500 text-sm border border-amber-500/20">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                Davet linkinizin süresi dolmuş. Lütfen e-posta ve şifrenizle giriş yapın veya Gymbooster ile iletişime geçin.
+              </div>
+            )}
             {error && (
               <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
                 <AlertCircle className="w-4 h-4" />

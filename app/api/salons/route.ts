@@ -74,10 +74,11 @@ export async function POST(request: Request) {
     try {
       const adminClient = createAdminClient()
 
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://gymbooster.tr"
       const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
         owner_email,
         {
-          redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "https://gymbooster.tr"}/portal`,
+          redirectTo: `${siteUrl}/auth/callback?next=/portal`,
           data: { salon_id: salon.id, role: "SALON_OWNER" },
         }
       )
