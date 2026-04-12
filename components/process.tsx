@@ -5,7 +5,7 @@ const steps = [
     icon: Phone,
     step: "01",
     title: "Ücretsiz Strateji Görüşmesi",
-    description: "45 dakikalık görüşmede salonunuzu analiz ediyor, büyüme potansiyelinizi belirliyoruz."
+    description: "15 dakikalık görüşmede salonunuzu analiz ediyor, büyüme potansiyelinizi belirliyoruz."
   },
   {
     icon: Target,

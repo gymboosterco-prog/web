@@ -37,8 +37,7 @@ export function CTA() {
               </h2>
 
               <p className="text-sm md:text-base lg:text-lg text-muted-foreground mb-4 md:mb-6 lg:mb-8">
-                45 dakikalık ücretsiz strateji görüşmesinde, salonunuzun mevcut durumunu analiz ediyor 
-                ve size özel büyüme planı sunuyoruz.
+                15 dakikalık ücretsiz görüşmede salonunuzun durumunu analiz ediyor, size özel büyüme planı sunuyoruz.
               </p>
 
               <ul className="space-y-2 md:space-y-3 lg:space-y-4 mb-4 md:mb-6 lg:mb-8 text-left">

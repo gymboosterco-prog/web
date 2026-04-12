@@ -105,7 +105,7 @@ export function Hero() {
                       Ücretsiz Strateji Görüşmesi
                     </h2>
                     <p className="text-muted-foreground text-sm md:text-base">
-                      45 dakikalık birebir görüşmede size özel büyüme planı çıkaralım
+                      15 dakikada salonunuz için ücretsiz büyüme planı çıkaralım
                     </p>
                   </div>
 
