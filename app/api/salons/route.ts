@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     try {
       const adminClient = createAdminClient()
 
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://gymbooster.tr"
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.gymbooster.tr"
       const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
         owner_email,
         {

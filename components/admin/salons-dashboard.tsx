@@ -93,7 +93,7 @@ const EMPTY_FORM: FormState = {
   owner_name: "", owner_email: "",
 }
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://gymbooster.tr"
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.gymbooster.tr"
 
 function slugify(text: string) {
   return text.toLowerCase()
@@ -442,7 +442,7 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
                     <div>
                       <label className="text-xs font-medium text-muted-foreground mb-1 block">Slug (URL) *</label>
                       <Input placeholder="ankara-fitness" value={form.slug} onChange={e => setForm(p => ({ ...p, slug: e.target.value }))} required className="bg-secondary border-border font-mono text-sm" />
-                      <p className="text-xs text-muted-foreground mt-1">gymbooster.tr/p/<strong>{form.slug || "salon-slug"}</strong></p>
+                      <p className="text-xs text-muted-foreground mt-1">www.gymbooster.tr/p/<strong>{form.slug || "salon-slug"}</strong></p>
                     </div>
                     <div>
                       <label className="text-xs font-medium text-muted-foreground mb-1 block">Telefon</label>
