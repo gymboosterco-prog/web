@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter, Space_Grotesk } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -65,6 +65,9 @@ export const metadata: Metadata = {
     statusBarStyle: 'default',
     title: 'GymCRM',
   },
+}
+
+export const viewport: Viewport = {
   themeColor: '#CCFF00',
 }
 
