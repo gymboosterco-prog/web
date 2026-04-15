@@ -78,14 +78,26 @@ export async function POST(request: Request) {
       let userId: string | undefined
 
       if (owner_password) {
-        // Create user directly with password (no invite email)
+        // Try to create user directly with password (no invite email)
         const { data: created, error: createError } = await adminClient.auth.admin.createUser({
           email: owner_email,
           password: owner_password,
           email_confirm: true,
         })
-        if (createError) console.error("Kullanıcı oluşturulamadı:", createError)
-        else if (created?.user) userId = created.user.id
+
+        if (createError) {
+          // User likely already exists — find them and update password
+          const { data: listData } = await adminClient.auth.admin.listUsers()
+          const existingUser = listData?.users?.find(u => u.email === owner_email)
+          if (existingUser) {
+            await adminClient.auth.admin.updateUserById(existingUser.id, { password: owner_password })
+            userId = existingUser.id
+          } else {
+            console.error("Kullanıcı oluşturulamadı:", createError)
+          }
+        } else if (created?.user) {
+          userId = created.user.id
+        }
       } else {
         // Send invite email (existing flow)
         const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
@@ -102,6 +114,7 @@ export async function POST(request: Request) {
       if (userId) {
         await adminClient.from("profiles").upsert({
           id: userId,
+          email: owner_email,
           role: "SALON_OWNER",
           salon_id: salon.id,
         })
