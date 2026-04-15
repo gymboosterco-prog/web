@@ -1,5 +1,24 @@
 "use client"
 
+// ─── Note helpers ─────────────────────────────────────────────────────────────
+type NoteEntry = { text: string; at: string }
+
+function parseNotes(raw: string | null): NoteEntry[] {
+  if (!raw) return []
+  try {
+    const p = JSON.parse(raw)
+    return Array.isArray(p) ? p : [{ text: raw, at: "" }]
+  } catch {
+    return [{ text: raw, at: "" }]
+  }
+}
+
+function appendNote(existing: string | null, text: string): string {
+  const prev = parseNotes(existing)
+  return JSON.stringify([...prev, { text: text.trim(), at: new Date().toISOString() }])
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 import React, { useState, useEffect, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -268,8 +287,11 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
     }
   }
 
-  const updateLeadNotes = async (leadId: string, notes?: string) => {
-    const finalNotes = notes ?? noteText
+  const updateLeadNotes = async (leadId: string, newNoteText?: string) => {
+    const lead = leads.find(l => l.id === leadId)
+    const textToAppend = newNoteText ?? noteText
+    if (!textToAppend.trim()) return
+    const finalNotes = appendNote(lead?.notes || null, textToAppend)
     const response = await fetch(`/api/leads/${leadId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -277,13 +299,14 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
     })
 
     if (response.ok) {
-      setLeads(leads.map(lead =>
-        lead.id === leadId ? { ...lead, notes: finalNotes } : lead
+      setLeads(leads.map(l =>
+        l.id === leadId ? { ...l, notes: finalNotes } : l
       ))
+      if (selectedLead?.id === leadId) setSelectedLead(prev => prev ? { ...prev, notes: finalNotes } : null)
       setEditingNotes(null)
       setInlineEditingId(null)
       setNoteText("")
-      setSelectedLead(null)
+      setInlineNoteValue("")
       toast.success("Not başarıyla kaydedildi ✓")
     } else {
       let errMsg = "Not kaydedilemedi"
@@ -1290,7 +1313,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                                   className="border-purple-500/30 text-purple-500 hover:bg-purple-500/10 text-[10px] md:text-xs font-bold disabled:opacity-30"
                                   onClick={() => {
                                     setSelectedLead(lead)
-                                    setNoteText(lead.notes || "")
+                                    setNoteText("")
                                   }}
                                 >
                                   <Calendar className="w-3.5 h-3.5 mr-1" />
@@ -1375,7 +1398,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                                 <DropdownMenuItem
                                   onClick={() => {
                                     setSelectedLead(lead)
-                                    setNoteText(lead.notes || "")
+                                    setNoteText("")
                                   }}
                                   className="cursor-pointer"
                                 >
@@ -1667,22 +1690,38 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
 
                 <div className="pt-4 border-t border-border space-y-3">
                   <span className="text-xs font-medium text-muted-foreground uppercase block">Görüşme Notları</span>
-                    <textarea
-                      value={noteText}
-                      onChange={(e) => setNoteText(e.target.value)}
-                      disabled={userRole === 'STAFF' && selectedLead.assigned_to === 'Admin'}
-                      placeholder={userRole === 'STAFF' && selectedLead.assigned_to === 'Admin' ? "Admin kontrolündeki lead'lere not eklenemez." : "Görüşme notlarını buraya yazın..."}
-                      className="w-full h-32 bg-secondary/50 border border-border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none disabled:opacity-50"
-                    />
-                    <div className="flex justify-end gap-2">
-                      <Button 
-                        onClick={() => updateLeadNotes(selectedLead.id)}
-                        disabled={userRole === 'STAFF' && selectedLead.assigned_to === 'Admin'}
-                        className="bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50"
-                      >
-                        Notu Kaydet
-                      </Button>
+                  {/* Not geçmişi */}
+                  {parseNotes(selectedLead.notes).length > 0 && (
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {[...parseNotes(selectedLead.notes)].reverse().map((entry, i) => (
+                        <div key={i} className="bg-secondary/60 rounded-xl p-3">
+                          <p className="text-sm leading-relaxed">{entry.text}</p>
+                          {entry.at && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {new Date(entry.at).toLocaleDateString("tr-TR", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                          )}
+                        </div>
+                      ))}
                     </div>
+                  )}
+                  {/* Yeni not girişi */}
+                  <textarea
+                    value={noteText}
+                    onChange={(e) => setNoteText(e.target.value)}
+                    disabled={userRole === 'STAFF' && selectedLead.assigned_to === 'Admin'}
+                    placeholder={userRole === 'STAFF' && selectedLead.assigned_to === 'Admin' ? "Admin kontrolündeki lead'lere not eklenemez." : "Yeni not ekle..."}
+                    className="w-full h-24 bg-secondary/50 border border-border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none disabled:opacity-50"
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      onClick={() => updateLeadNotes(selectedLead.id)}
+                      disabled={!noteText.trim() || (userRole === 'STAFF' && selectedLead.assigned_to === 'Admin')}
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50"
+                    >
+                      Not Ekle
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Status History Timeline */}

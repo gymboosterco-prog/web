@@ -6,12 +6,33 @@ import { toast } from "sonner"
 import {
   Phone, Search, ChevronDown, LogOut, Users, CheckCircle2, Clock, X,
   MessageSquare, TrendingUp, LayoutList, Columns, Instagram, Mail,
-  Bell, CalendarClock,
+  Bell, CalendarClock, Copy, Check, ExternalLink, Settings,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
 
+// ─── Note helpers ────────────────────────────────────────────────────────────
+type NoteEntry = { text: string; at: string }
+
+function parseNotes(raw: string | null): NoteEntry[] {
+  if (!raw) return []
+  try {
+    const p = JSON.parse(raw)
+    return Array.isArray(p) ? p : [{ text: raw, at: "" }]
+  } catch {
+    return [{ text: raw, at: "" }]
+  }
+}
+
+function appendNote(existing: string | null, text: string): string {
+  const prev = parseNotes(existing)
+  return JSON.stringify([...prev, { text: text.trim(), at: new Date().toISOString() }])
+}
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 type SalonLead = {
   id: string
   salon_id: string
@@ -44,6 +65,9 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
 
 const STATUS_ORDER = ["new", "called", "meeting_done", "won", "lost"]
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.gymbooster.tr"
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 function toDatetimeLocal(iso: string | null): string {
   if (!iso) return ""
   const d = new Date(iso)
@@ -56,6 +80,19 @@ function waUrl(phone: string): string {
   return `https://wa.me/90${digits}`
 }
 
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false)
+  return (
+    <button
+      onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
+      className="p-1.5 rounded hover:bg-primary/10 transition-colors text-primary/70 hover:text-primary flex-shrink-0"
+    >
+      {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+    </button>
+  )
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 export function SalonCRM({ salon, initialLeads, initialTotal }: {
   salon: Salon | null
   initialLeads: SalonLead[]
@@ -66,12 +103,14 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
   const [statusFilter, setStatusFilter] = useState("all")
   const [view, setView] = useState<"list" | "kanban">("list")
   const [selectedLead, setSelectedLead] = useState<SalonLead | null>(null)
-  const [noteText, setNoteText] = useState("")
+  const [newNote, setNewNote] = useState("")
   const [nextActionValue, setNextActionValue] = useState("")
   const [detailStatus, setDetailStatus] = useState("")
   const [isSaving, setIsSaving] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+
+  const landingUrl = salon ? `${SITE_URL}/p/${salon.slug}` : null
 
   const filtered = useMemo(() => leads.filter(l => {
     const matchSearch = !search ||
@@ -97,7 +136,25 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
     }
   }, [leads])
 
-  // Bugün veya geçmiş tarihli, aktif statüslerdeki leadler
+  const trendData = useMemo(() => {
+    const days: Record<string, number> = {}
+    const now = new Date()
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now)
+      d.setDate(d.getDate() - i)
+      const key = d.toISOString().slice(0, 10)
+      days[key] = 0
+    }
+    leads.forEach(l => {
+      const key = l.created_at.slice(0, 10)
+      if (key in days) days[key]++
+    })
+    return Object.entries(days).map(([date, count]) => ({
+      date: new Date(date + "T12:00:00").toLocaleDateString("tr-TR", { day: "numeric", month: "short" }),
+      count,
+    }))
+  }, [leads])
+
   const dueLeads = useMemo(() => {
     const endOfToday = new Date()
     endOfToday.setHours(23, 59, 59, 999)
@@ -111,7 +168,6 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
   const updateLead = async (id: string, updates: Partial<SalonLead>) => {
     setLeads(prev => prev.map(l => l.id === id ? { ...l, ...updates } : l))
     if (selectedLead?.id === id) setSelectedLead(prev => prev ? { ...prev, ...updates } : null)
-
     const res = await fetch(`/api/salon-leads/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -133,7 +189,7 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
 
   const openDetail = (lead: SalonLead) => {
     setSelectedLead(lead)
-    setNoteText(lead.notes || "")
+    setNewNote("")
     setNextActionValue(toDatetimeLocal(lead.next_action_at))
     setDetailStatus(lead.status)
   }
@@ -141,13 +197,16 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
   const saveDetail = async () => {
     if (!selectedLead) return
     setIsSaving(true)
-    await updateLead(selectedLead.id, {
-      notes: noteText,
-      next_action_at: nextActionValue ? new Date(nextActionValue).toISOString() : null,
+    const updates: Partial<SalonLead> = {
       status: detailStatus,
-    })
+      next_action_at: nextActionValue ? new Date(nextActionValue).toISOString() : null,
+    }
+    if (newNote.trim()) {
+      updates.notes = appendNote(selectedLead.notes, newNote)
+    }
+    await updateLead(selectedLead.id, updates)
     setIsSaving(false)
-    setSelectedLead(null)
+    setNewNote("")
     toast.success("Kaydedildi")
   }
 
@@ -156,8 +215,11 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
     router.push("/portal/login")
   }
 
+  // ─── Render ───────────────────────────────────────────────────────────────
+
   return (
     <div className="min-h-screen bg-background">
+
       {/* Header */}
       <div className="border-b border-border bg-card px-4 py-3 flex items-center justify-between">
         <div>
@@ -165,7 +227,13 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
           <p className="text-xs text-muted-foreground">Başvuru Yönetimi</p>
         </div>
         <div className="flex items-center gap-2">
-          {/* View toggle */}
+          <Link
+            href="/portal/profil"
+            className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-secondary border border-border text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Settings className="w-3.5 h-3.5" />
+            Profil
+          </Link>
           <div className="flex items-center bg-secondary rounded-lg p-0.5">
             <button
               onClick={() => setView("list")}
@@ -189,13 +257,28 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
         </div>
       </div>
 
+      {/* Landing Page Linki */}
+      {landingUrl && (
+        <div className="px-4 pt-4">
+          <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-primary/5 border border-primary/20">
+            <span className="text-xs font-semibold text-primary flex-shrink-0">Landing Page</span>
+            <code className="text-xs text-primary flex-1 truncate">{landingUrl}</code>
+            <CopyButton text={landingUrl} />
+            <a href={landingUrl} target="_blank" rel="noopener noreferrer"
+              className="p-1.5 rounded hover:bg-primary/10 transition-colors text-primary/70 hover:text-primary flex-shrink-0">
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
+        </div>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4">
         {[
-          { label: "Bu Ay",    value: stats.thisMonth,      icon: Clock },
-          { label: "Toplam",   value: stats.total,          icon: Users },
-          { label: "Üye Oldu", value: stats.won,            icon: CheckCircle2 },
-          { label: "Dönüşüm", value: `%${stats.conversionRate}`, icon: TrendingUp },
+          { label: "Bu Ay",    value: stats.thisMonth,            icon: Clock },
+          { label: "Toplam",   value: stats.total,                icon: Users },
+          { label: "Üye Oldu", value: stats.won,                  icon: CheckCircle2 },
+          { label: "Dönüşüm", value: `%${stats.conversionRate}`,  icon: TrendingUp },
         ].map(({ label, value, icon: Icon }) => (
           <div key={label} className="bg-card border border-border rounded-xl p-3 text-center">
             <Icon className="w-4 h-4 text-primary mx-auto mb-1" />
@@ -203,6 +286,30 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
             <p className="text-xs text-muted-foreground">{label}</p>
           </div>
         ))}
+      </div>
+
+      {/* Trend Grafiği */}
+      <div className="px-4 pb-4">
+        <div className="bg-card border border-border rounded-xl p-4">
+          <p className="text-xs font-semibold text-muted-foreground mb-3">Son 30 Gün — Başvurular</p>
+          <ResponsiveContainer width="100%" height={100}>
+            <BarChart data={trendData} barSize={6}>
+              <XAxis dataKey="date" tick={{ fontSize: 9 }} tickLine={false} axisLine={false} interval={6} />
+              <YAxis hide allowDecimals={false} />
+              <Tooltip
+                contentStyle={{
+                  background: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: 8,
+                  fontSize: 12,
+                }}
+                cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                formatter={(value: number) => [value, "Başvuru"]}
+              />
+              <Bar dataKey="count" name="Başvuru" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       {/* Bugün Aranacaklar */}
@@ -228,12 +335,8 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
                       <Phone className="w-3 h-3" />
                       Ara
                     </button>
-                    <a
-                      href={waUrl(lead.phone)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 px-2.5 h-7 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium hover:bg-green-500/20 transition-colors"
-                    >
+                    <a href={waUrl(lead.phone)} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1 px-2.5 h-7 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium hover:bg-green-500/20 transition-colors">
                       <MessageSquare className="w-3 h-3" />
                       WA
                     </a>
@@ -281,71 +384,73 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
               {leads.length === 0 ? "Henüz başvuru yok" : "Sonuç bulunamadı"}
             </div>
           )}
-          {filtered.map(lead => (
-            <div key={lead.id} className="bg-card border border-border rounded-xl p-4">
-              <div className="flex items-start justify-between gap-2 mb-3">
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate">{lead.name}</p>
-                  <p className="text-sm text-muted-foreground">{lead.phone}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(lead.created_at).toLocaleDateString("tr-TR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                    </p>
-                    {lead.next_action_at && (
-                      <p className="text-xs text-yellow-400 flex items-center gap-1">
-                        <CalendarClock className="w-3 h-3" />
-                        {new Date(lead.next_action_at).toLocaleDateString("tr-TR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+          {filtered.map(lead => {
+            const noteEntries = parseNotes(lead.notes)
+            const lastNote = noteEntries[noteEntries.length - 1]
+            return (
+              <div key={lead.id} className="bg-card border border-border rounded-xl p-4">
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold truncate">{lead.name}</p>
+                    <p className="text-sm text-muted-foreground">{lead.phone}</p>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(lead.created_at).toLocaleDateString("tr-TR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                       </p>
-                    )}
+                      {lead.next_action_at && (
+                        <p className="text-xs text-yellow-400 flex items-center gap-1">
+                          <CalendarClock className="w-3 h-3" />
+                          {new Date(lead.next_action_at).toLocaleDateString("tr-TR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      )}
+                    </div>
                   </div>
+                  <span className={`flex-shrink-0 text-xs px-2 py-1 rounded-full border ${STATUS_CONFIG[lead.status]?.color || ""}`}>
+                    {STATUS_CONFIG[lead.status]?.label || lead.status}
+                  </span>
                 </div>
-                <span className={`flex-shrink-0 text-xs px-2 py-1 rounded-full border ${STATUS_CONFIG[lead.status]?.color || ""}`}>
-                  {STATUS_CONFIG[lead.status]?.label || lead.status}
-                </span>
-              </div>
 
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <select
-                    value={lead.status}
-                    onChange={e => updateLead(lead.id, { status: e.target.value })}
-                    className="w-full text-xs h-8 rounded-lg bg-secondary border border-border px-2 pr-6 appearance-none cursor-pointer"
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <select
+                      value={lead.status}
+                      onChange={e => updateLead(lead.id, { status: e.target.value })}
+                      className="w-full text-xs h-8 rounded-lg bg-secondary border border-border px-2 pr-6 appearance-none cursor-pointer"
+                    >
+                      {STATUS_ORDER.map(s => (
+                        <option key={s} value={s}>{STATUS_CONFIG[s]?.label || s}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+                  </div>
+                  <button
+                    onClick={() => handleCall(lead)}
+                    className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-primary/10 border border-primary/20 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
                   >
-                    {STATUS_ORDER.map(s => (
-                      <option key={s} value={s}>{STATUS_CONFIG[s]?.label || s}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+                    <Phone className="w-3.5 h-3.5" />
+                    Ara {lead.call_count > 0 && `(${lead.call_count})`}
+                  </button>
+                  <a href={waUrl(lead.phone)} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium hover:bg-green-500/20 transition-colors">
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    WA
+                  </a>
+                  <button
+                    onClick={() => openDetail(lead)}
+                    className="px-3 h-8 rounded-lg bg-secondary border border-border text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Detay
+                  </button>
                 </div>
-                <button
-                  onClick={() => handleCall(lead)}
-                  className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-primary/10 border border-primary/20 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
-                >
-                  <Phone className="w-3.5 h-3.5" />
-                  Ara {lead.call_count > 0 && `(${lead.call_count})`}
-                </button>
-                <a
-                  href={waUrl(lead.phone)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium hover:bg-green-500/20 transition-colors"
-                >
-                  <MessageSquare className="w-3.5 h-3.5" />
-                  WA
-                </a>
-                <button
-                  onClick={() => openDetail(lead)}
-                  className="px-3 h-8 rounded-lg bg-secondary border border-border text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Detay
-                </button>
-              </div>
 
-              {lead.notes && (
-                <p className="mt-2 text-xs text-muted-foreground bg-secondary/50 rounded-lg p-2 line-clamp-2">{lead.notes}</p>
-              )}
-            </div>
-          ))}
+                {lastNote && (
+                  <p className="mt-2 text-xs text-muted-foreground bg-secondary/50 rounded-lg p-2 line-clamp-1">
+                    {lastNote.text}
+                  </p>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
 
@@ -414,6 +519,7 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
       {selectedLead && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-4" onClick={() => setSelectedLead(null)}>
           <div className="bg-card border border-border rounded-2xl w-full max-w-md max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+
             {/* Modal header */}
             <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-border flex-shrink-0">
               <h3 className="font-semibold">{selectedLead.name}</h3>
@@ -421,9 +527,11 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
             </div>
 
             <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
-              {/* İletişim bilgileri */}
+
+              {/* İletişim */}
               <div className="space-y-2">
-                <a href={`tel:${selectedLead.phone}`} className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
+                <a href={`tel:${selectedLead.phone}`}
+                  className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
                   <Phone className="w-4 h-4 text-primary flex-shrink-0" />
                   <span className="text-sm font-medium">{selectedLead.phone}</span>
                 </a>
@@ -434,27 +542,26 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
                   </div>
                 )}
                 {selectedLead.instagram_url && (
-                  <a
-                    href={`https://instagram.com/${selectedLead.instagram_url}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
-                  >
+                  <a href={`https://instagram.com/${selectedLead.instagram_url}`} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
                     <Instagram className="w-4 h-4 text-pink-400 flex-shrink-0" />
                     <span className="text-sm text-muted-foreground">@{selectedLead.instagram_url}</span>
                   </a>
                 )}
               </div>
 
-              {/* Meta bilgiler */}
+              {/* Meta */}
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="bg-secondary rounded-lg p-2.5">
                   <p className="text-muted-foreground mb-0.5">Başvuru Tarihi</p>
-                  <p className="font-medium">{new Date(selectedLead.created_at).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })}</p>
+                  <p className="font-medium">{new Date(selectedLead.created_at).toLocaleDateString("tr-TR", { day: "numeric", month: "long" })}</p>
                 </div>
                 <div className="bg-secondary rounded-lg p-2.5">
                   <p className="text-muted-foreground mb-0.5">Aranma Sayısı</p>
-                  <p className="font-medium">{selectedLead.call_count} kez{selectedLead.called_at ? ` · ${new Date(selectedLead.called_at).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}` : ""}</p>
+                  <p className="font-medium">
+                    {selectedLead.call_count} kez
+                    {selectedLead.called_at ? ` · ${new Date(selectedLead.called_at).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}` : ""}
+                  </p>
                 </div>
               </div>
 
@@ -488,23 +595,36 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
                   className="w-full text-sm h-9 rounded-lg bg-secondary border border-border px-3 text-foreground focus:outline-none focus:border-primary/50"
                 />
                 {nextActionValue && (
-                  <button
-                    onClick={() => setNextActionValue("")}
-                    className="mt-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  >
+                  <button onClick={() => setNextActionValue("")} className="mt-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
                     Tarihi temizle
                   </button>
                 )}
               </div>
 
-              {/* Not */}
+              {/* Not Geçmişi */}
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Not</label>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Not Geçmişi</label>
+                {parseNotes(selectedLead.notes).length > 0 ? (
+                  <div className="space-y-2 mb-3 max-h-40 overflow-y-auto">
+                    {[...parseNotes(selectedLead.notes)].reverse().map((entry, i) => (
+                      <div key={i} className="bg-secondary/60 rounded-lg p-2.5">
+                        <p className="text-sm leading-relaxed">{entry.text}</p>
+                        {entry.at && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {new Date(entry.at).toLocaleDateString("tr-TR", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground mb-3">Henüz not eklenmemiş.</p>
+                )}
                 <textarea
-                  value={noteText}
-                  onChange={e => setNoteText(e.target.value)}
-                  placeholder="Not ekleyin..."
-                  rows={3}
+                  value={newNote}
+                  onChange={e => setNewNote(e.target.value)}
+                  placeholder="Yeni not ekle..."
+                  rows={2}
                   className="w-full bg-secondary border border-border rounded-xl p-3 text-sm resize-none focus:outline-none focus:border-primary/50"
                 />
               </div>
