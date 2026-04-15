@@ -42,22 +42,32 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // Update owner password if provided
-  if (owner_password && owner_password.length >= 6) {
+  // Sync owner profile and optionally update password
+  const ownerEmail = data.owner_email
+  if (ownerEmail) {
     try {
       const adminClient = createAdminClient()
-      const { data: profile } = await adminClient
-        .from("profiles")
-        .select("id")
-        .eq("salon_id", id)
-        .eq("role", "SALON_OWNER")
-        .maybeSingle()
 
-      if (profile?.id) {
-        await adminClient.auth.admin.updateUserById(profile.id, { password: owner_password })
+      // Find the auth user by email
+      const { data: listData } = await adminClient.auth.admin.listUsers()
+      const authUser = listData?.users?.find(u => u.email === ownerEmail)
+
+      if (authUser) {
+        // Ensure profile exists with correct role and salon
+        await adminClient.from("profiles").upsert({
+          id: authUser.id,
+          email: ownerEmail,
+          role: "SALON_OWNER",
+          salon_id: id,
+        })
+
+        // Update password if provided
+        if (owner_password && owner_password.length >= 6) {
+          await adminClient.auth.admin.updateUserById(authUser.id, { password: owner_password })
+        }
       }
     } catch (e) {
-      console.error("Şifre güncellenemedi:", e)
+      console.error("Salon sahibi profili güncellenemedi:", e)
     }
   }
 
