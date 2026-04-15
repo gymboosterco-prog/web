@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 
 const OWNER_ALLOWED_FIELDS = [
@@ -8,12 +9,13 @@ const OWNER_ALLOWED_FIELDS = [
   "testimonials", "video_url", "faq",
 ]
 
-async function requireSalonOwner() {
+async function requireSalonOwner(): Promise<string | null> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  const { data: profile } = await supabase
+  const adminClient = createAdminClient()
+  const { data: profile } = await adminClient
     .from("profiles")
     .select("role, salon_id")
     .eq("id", user.id)
@@ -22,17 +24,17 @@ async function requireSalonOwner() {
   if (!profile || !["SALON_OWNER", "ADMIN"].includes(profile.role || "")) return null
   if (!profile.salon_id) return null
 
-  return { supabase, salonId: profile.salon_id }
+  return profile.salon_id
 }
 
 export async function GET() {
-  const ctx = await requireSalonOwner()
-  if (!ctx) return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 })
+  const salonId = await requireSalonOwner()
+  if (!salonId) return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 })
 
-  const { supabase, salonId } = ctx
-  const { data, error } = await supabase
+  const adminClient = createAdminClient()
+  const { data, error } = await adminClient
     .from("salons")
-    .select("id, name, slug, tagline, offer, hero_headline, hero_sub, urgency_text, cta_text, primary_color, phone")
+    .select("id, name, slug, tagline, offer, hero_headline, hero_sub, urgency_text, cta_text, primary_color, phone, video_url, testimonials, faq")
     .eq("id", salonId)
     .maybeSingle()
 
@@ -41,10 +43,9 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
-  const ctx = await requireSalonOwner()
-  if (!ctx) return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 })
+  const salonId = await requireSalonOwner()
+  if (!salonId) return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 })
 
-  const { supabase, salonId } = ctx
   const body = await request.json()
 
   const updates: Record<string, unknown> = {}
@@ -56,7 +57,8 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Güncellenecek alan yok" }, { status: 400 })
   }
 
-  const { data, error } = await supabase
+  const adminClient = createAdminClient()
+  const { data, error } = await adminClient
     .from("salons")
     .update(updates)
     .eq("id", salonId)
