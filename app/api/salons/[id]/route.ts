@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 
 async function requireAdmin() {
@@ -24,14 +25,15 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (!supabase) return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 })
 
   const body = await request.json()
+  const { owner_password, ...rest } = body
 
-  if (body.slug && !/^[a-z0-9-]+$/.test(body.slug)) {
+  if (rest.slug && !/^[a-z0-9-]+$/.test(rest.slug)) {
     return NextResponse.json({ error: "Slug sadece küçük harf, rakam ve tire içerebilir" }, { status: 400 })
   }
 
   const updates: Record<string, unknown> = {}
   for (const key of ALLOWED_FIELDS) {
-    if (key in body) updates[key] = body[key]
+    if (key in rest) updates[key] = rest[key]
   }
 
   const { data, error } = await supabase.from("salons").update(updates).eq("id", id).select().single()
@@ -39,6 +41,26 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (error.code === "23505") return NextResponse.json({ error: "Bu slug zaten kullanılıyor" }, { status: 409 })
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  // Update owner password if provided
+  if (owner_password && owner_password.length >= 6) {
+    try {
+      const adminClient = createAdminClient()
+      const { data: profile } = await adminClient
+        .from("profiles")
+        .select("id")
+        .eq("salon_id", id)
+        .eq("role", "SALON_OWNER")
+        .maybeSingle()
+
+      if (profile?.id) {
+        await adminClient.auth.admin.updateUserById(profile.id, { password: owner_password })
+      }
+    } catch (e) {
+      console.error("Şifre güncellenemedi:", e)
+    }
+  }
+
   return NextResponse.json({ data })
 }
 

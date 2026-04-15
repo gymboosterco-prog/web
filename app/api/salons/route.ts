@@ -30,7 +30,7 @@ export async function POST(request: Request) {
 
   const body = await request.json()
   const {
-    name, slug, owner_name, owner_email, phone,
+    name, slug, owner_name, owner_email, owner_password, phone,
     city, tagline, offer, salon_type,
     hero_headline, hero_sub, urgency_text, cta_text,
     features, stats, testimonial, testimonial_author,
@@ -69,31 +69,46 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: salonError.message }, { status: 500 })
   }
 
-  // Invite salon owner if email provided
+  // Create or invite salon owner if email provided
   if (owner_email) {
     try {
       const adminClient = createAdminClient()
-
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.gymbooster.tr"
-      const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
-        owner_email,
-        {
-          redirectTo: `${siteUrl}/auth/callback?next=/portal`,
-          data: { salon_id: salon.id, role: "SALON_OWNER" },
-        }
-      )
 
-      if (!inviteError && inviteData?.user) {
-        // Create profile for the invited user
+      let userId: string | undefined
+
+      if (owner_password) {
+        // Create user directly with password (no invite email)
+        const { data: created, error: createError } = await adminClient.auth.admin.createUser({
+          email: owner_email,
+          password: owner_password,
+          email_confirm: true,
+        })
+        if (createError) console.error("Kullanıcı oluşturulamadı:", createError)
+        else if (created?.user) userId = created.user.id
+      } else {
+        // Send invite email (existing flow)
+        const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
+          owner_email,
+          {
+            redirectTo: `${siteUrl}/auth/callback?next=/portal`,
+            data: { salon_id: salon.id, role: "SALON_OWNER" },
+          }
+        )
+        if (inviteError) console.error("Invite gönderilemedi:", inviteError)
+        else if (inviteData?.user) userId = inviteData.user.id
+      }
+
+      if (userId) {
         await adminClient.from("profiles").upsert({
-          id: inviteData.user.id,
+          id: userId,
           role: "SALON_OWNER",
           salon_id: salon.id,
         })
       }
     } catch (e) {
-      console.error("Invite gönderilemedi:", e)
-      // Don't fail the salon creation if invite fails
+      console.error("Salon sahibi oluşturulamadı:", e)
+      // Don't fail the salon creation if owner setup fails
     }
   }
 

@@ -77,7 +77,7 @@ type FormState = {
   features: SalonFeature[]; stats: SalonStat[]
   testimonial: string; testimonial_author: string
   // Tab 3: Sahip
-  owner_name: string; owner_email: string
+  owner_name: string; owner_email: string; owner_password: string
 }
 
 const EMPTY_FORM: FormState = {
@@ -90,7 +90,7 @@ const EMPTY_FORM: FormState = {
   guarantee_text: "",
   features: [], stats: [],
   testimonial: "", testimonial_author: "",
-  owner_name: "", owner_email: "",
+  owner_name: "", owner_email: "", owner_password: "",
 }
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.gymbooster.tr"
@@ -235,7 +235,7 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
       guarantee_text: salon.guarantee_text || "",
       features: salon.features || [], stats: salon.stats || [],
       testimonial: salon.testimonial || "", testimonial_author: salon.testimonial_author || "",
-      owner_name: salon.owner_name || "", owner_email: salon.owner_email || "",
+      owner_name: salon.owner_name || "", owner_email: salon.owner_email || "", owner_password: "",
     })
     setEditingId(salon.id)
     setActiveTab("salon")
@@ -274,7 +274,14 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
         toast.success("Salon güncellendi")
       } else {
         setSalons(prev => [{ ...data.data, salon_leads: [{ count: 0 }] }, ...prev])
-        toast.success(`${data.data.name} oluşturuldu!${form.owner_email ? " Davet e-postası gönderildi." : ""}`)
+        toast.success(
+          `${data.data.name} oluşturuldu!` +
+          (form.owner_email && form.owner_password
+            ? " Portal hesabı oluşturuldu."
+            : form.owner_email
+            ? " Davet e-postası gönderildi."
+            : "")
+        )
       }
       setShowModal(false)
     } finally {
@@ -652,7 +659,21 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
                     <div>
                       <label className="text-xs font-medium text-muted-foreground mb-1 block">E-posta</label>
                       <Input type="email" placeholder="ahmet@salon.com" value={form.owner_email} onChange={e => setForm(p => ({ ...p, owner_email: e.target.value }))} className="bg-secondary border-border" />
-                      <p className="text-xs text-muted-foreground mt-1">Girilirse portal için davet e-postası gönderilir</p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">{editingId ? "Yeni Şifre" : "Şifre"}</label>
+                      <Input
+                        type="password"
+                        placeholder={editingId ? "Boş bırakırsanız şifre değişmez" : "En az 6 karakter"}
+                        value={form.owner_password}
+                        onChange={e => setForm(p => ({ ...p, owner_password: e.target.value }))}
+                        className="bg-secondary border-border"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {editingId
+                          ? "Yeni şifre girin veya boş bırakın"
+                          : "Girilirse hesap hemen oluşturulur, girilmezse davet e-postası gönderilir"}
+                      </p>
                     </div>
                   </>
                 )}
