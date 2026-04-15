@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CheckCircle2, AlertCircle, ArrowRight, Shield } from "lucide-react"
@@ -20,9 +20,12 @@ export function SalonForm({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState("")
+  const submittingRef = useRef(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (submittingRef.current) return
+    submittingRef.current = true
     setIsSubmitting(true)
     setError("")
 
@@ -38,6 +41,7 @@ export function SalonForm({
     } catch {
       setError("Bağlantı hatası, lütfen tekrar deneyin.")
     } finally {
+      submittingRef.current = false
       setIsSubmitting(false)
     }
   }
