@@ -34,6 +34,7 @@ export async function POST(request: Request) {
     city, tagline, offer, salon_type,
     hero_headline, hero_sub, urgency_text, cta_text,
     features, stats, testimonial, testimonial_author,
+    testimonials, video_url, faq,
     primary_color, accent_color, logo_url, pain_points, guarantee_text,
   } = body
 
@@ -56,6 +57,7 @@ export async function POST(request: Request) {
       hero_headline, hero_sub, urgency_text, cta_text,
       features: features || [], stats: stats || [],
       testimonial, testimonial_author,
+      testimonials: testimonials || null, video_url: video_url || null, faq: faq || null,
       primary_color, accent_color, logo_url,
       pain_points: pain_points || [], guarantee_text,
     }])

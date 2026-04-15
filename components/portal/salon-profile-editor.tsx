@@ -5,8 +5,11 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Trash2 } from "lucide-react"
 import Link from "next/link"
+
+type Testimonial = { text: string; author: string }
+type FaqItem = { q: string; a: string }
 
 type SalonData = {
   id: string
@@ -20,6 +23,9 @@ type SalonData = {
   cta_text: string | null
   primary_color: string | null
   phone: string | null
+  video_url: string | null
+  testimonials: Testimonial[] | null
+  faq: FaqItem[] | null
 }
 
 export function SalonProfileEditor({ salon }: { salon: SalonData }) {
@@ -32,6 +38,9 @@ export function SalonProfileEditor({ salon }: { salon: SalonData }) {
     cta_text: salon.cta_text || "",
     primary_color: salon.primary_color || "#CCFF00",
     phone: salon.phone || "",
+    video_url: salon.video_url || "",
+    testimonials: salon.testimonials || [] as Testimonial[],
+    faq: salon.faq || [] as FaqItem[],
   })
   const [isSaving, setIsSaving] = useState(false)
   const router = useRouter()
@@ -53,7 +62,7 @@ export function SalonProfileEditor({ salon }: { salon: SalonData }) {
     }
   }
 
-  const field = (label: string, key: keyof typeof form, placeholder = "") => (
+  const field = (label: string, key: "hero_headline" | "hero_sub" | "tagline" | "offer" | "urgency_text" | "cta_text" | "phone" | "video_url", placeholder = "") => (
     <div>
       <label className="text-xs font-medium text-muted-foreground mb-1.5 block">{label}</label>
       <Input
@@ -64,6 +73,16 @@ export function SalonProfileEditor({ salon }: { salon: SalonData }) {
       />
     </div>
   )
+
+  const addTestimonial = () => setForm(p => ({ ...p, testimonials: [...p.testimonials, { text: "", author: "" }] }))
+  const updateTestimonial = (i: number, key: keyof Testimonial, val: string) =>
+    setForm(p => ({ ...p, testimonials: p.testimonials.map((t, idx) => idx === i ? { ...t, [key]: val } : t) }))
+  const removeTestimonial = (i: number) => setForm(p => ({ ...p, testimonials: p.testimonials.filter((_, idx) => idx !== i) }))
+
+  const addFaq = () => setForm(p => ({ ...p, faq: [...p.faq, { q: "", a: "" }] }))
+  const updateFaq = (i: number, key: keyof FaqItem, val: string) =>
+    setForm(p => ({ ...p, faq: p.faq.map((f, idx) => idx === i ? { ...f, [key]: val } : f) }))
+  const removeFaq = (i: number) => setForm(p => ({ ...p, faq: p.faq.filter((_, idx) => idx !== i) }))
 
   return (
     <div className="min-h-screen bg-background">
@@ -84,6 +103,7 @@ export function SalonProfileEditor({ salon }: { salon: SalonData }) {
         <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
           <h2 className="text-sm font-semibold">Temel Bilgiler</h2>
           {field("Telefon", "phone", "0555 123 45 67")}
+          {field("Video URL (YouTube — opsiyonel)", "video_url", "https://youtu.be/...")}
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Ana Renk</label>
             <div className="flex items-center gap-3">
@@ -113,6 +133,72 @@ export function SalonProfileEditor({ salon }: { salon: SalonData }) {
           {field("Özel Teklif", "offer", "İlk ay %50 indirim")}
           {field("Aciliyet Mesajı", "urgency_text", "Bu ay sadece 10 kişi alıyoruz!")}
           {field("Buton Metni (CTA)", "cta_text", "Ücretsiz Deneme Dersi Al")}
+        </div>
+
+        {/* Müşteri Yorumları */}
+        <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold">Müşteri Yorumları</h2>
+            <button type="button" onClick={addTestimonial} className="text-xs text-primary hover:underline">+ Ekle</button>
+          </div>
+          {form.testimonials.length === 0 && (
+            <p className="text-xs text-muted-foreground">Henüz yorum eklenmedi.</p>
+          )}
+          {form.testimonials.map((t, i) => (
+            <div key={i} className="bg-secondary/50 border border-border rounded-xl p-3 space-y-2">
+              <textarea
+                value={t.text}
+                onChange={e => updateTestimonial(i, "text", e.target.value)}
+                placeholder="3 ayda 12 kilo verdim ve hiç bu kadar enerjik hissetmemiştim..."
+                rows={2}
+                className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:border-primary/50"
+              />
+              <div className="flex gap-2">
+                <Input
+                  value={t.author}
+                  onChange={e => updateTestimonial(i, "author", e.target.value)}
+                  placeholder="Ayşe K. — 6 aylık üye"
+                  className="bg-secondary border-border text-sm flex-1"
+                />
+                <button type="button" onClick={() => removeTestimonial(i)} className="text-muted-foreground hover:text-destructive p-2">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Sık Sorulan Sorular */}
+        <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold">Sık Sorulan Sorular (SSS)</h2>
+            <button type="button" onClick={addFaq} className="text-xs text-primary hover:underline">+ Ekle</button>
+          </div>
+          {form.faq.length === 0 && (
+            <p className="text-xs text-muted-foreground">Henüz soru eklenmedi.</p>
+          )}
+          {form.faq.map((f, i) => (
+            <div key={i} className="bg-secondary/50 border border-border rounded-xl p-3 space-y-2">
+              <div className="flex gap-2">
+                <Input
+                  value={f.q}
+                  onChange={e => updateFaq(i, "q", e.target.value)}
+                  placeholder="Deneme dersi ücretsiz mi?"
+                  className="bg-secondary border-border text-sm flex-1"
+                />
+                <button type="button" onClick={() => removeFaq(i)} className="text-muted-foreground hover:text-destructive p-2">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+              <textarea
+                value={f.a}
+                onChange={e => updateFaq(i, "a", e.target.value)}
+                placeholder="Evet, ilk ders tamamen ücretsizdir."
+                rows={2}
+                className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:border-primary/50"
+              />
+            </div>
+          ))}
         </div>
 
         {/* Önizleme linki */}

@@ -15,6 +15,7 @@ const ALLOWED_FIELDS = [
   "name", "slug", "salon_type", "city", "phone", "tagline", "offer",
   "hero_headline", "hero_sub", "urgency_text", "cta_text",
   "features", "stats", "testimonial", "testimonial_author",
+  "testimonials", "video_url", "faq",
   "owner_name", "owner_email", "active",
   "primary_color", "accent_color", "logo_url", "pain_points", "guarantee_text",
 ]

@@ -54,6 +54,9 @@ type Salon = {
   stats: SalonStat[]
   testimonial: string | null
   testimonial_author: string | null
+  testimonials: { text: string; author: string }[] | null
+  video_url: string | null
+  faq: { q: string; a: string }[] | null
   active: boolean
   created_at: string
   primary_color: string | null
@@ -75,7 +78,9 @@ type FormState = {
   pain_points: string[]
   guarantee_text: string
   features: SalonFeature[]; stats: SalonStat[]
-  testimonial: string; testimonial_author: string
+  testimonials: { text: string; author: string }[]
+  video_url: string
+  faq: { q: string; a: string }[]
   // Tab 3: Sahip
   owner_name: string; owner_email: string; owner_password: string
 }
@@ -89,7 +94,9 @@ const EMPTY_FORM: FormState = {
   pain_points: [],
   guarantee_text: "",
   features: [], stats: [],
-  testimonial: "", testimonial_author: "",
+  testimonials: [],
+  video_url: "",
+  faq: [],
   owner_name: "", owner_email: "", owner_password: "",
 }
 
@@ -213,6 +220,26 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
     setForm(p => ({ ...p, pain_points: p.pain_points.filter((_, idx) => idx !== i) }))
   }
 
+  const addTestimonial = () => {
+    setForm(p => ({ ...p, testimonials: [...p.testimonials, { text: "", author: "" }] }))
+  }
+  const updateTestimonial = (i: number, key: "text" | "author", val: string) => {
+    setForm(p => ({ ...p, testimonials: p.testimonials.map((t, idx) => idx === i ? { ...t, [key]: val } : t) }))
+  }
+  const removeTestimonial = (i: number) => {
+    setForm(p => ({ ...p, testimonials: p.testimonials.filter((_, idx) => idx !== i) }))
+  }
+
+  const addFaq = () => {
+    setForm(p => ({ ...p, faq: [...p.faq, { q: "", a: "" }] }))
+  }
+  const updateFaq = (i: number, key: "q" | "a", val: string) => {
+    setForm(p => ({ ...p, faq: p.faq.map((f, idx) => idx === i ? { ...f, [key]: val } : f) }))
+  }
+  const removeFaq = (i: number) => {
+    setForm(p => ({ ...p, faq: p.faq.filter((_, idx) => idx !== i) }))
+  }
+
   const openModal = () => {
     setForm(EMPTY_FORM)
     applyPreset("fitness")
@@ -234,7 +261,13 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
       pain_points: salon.pain_points || [],
       guarantee_text: salon.guarantee_text || "",
       features: salon.features || [], stats: salon.stats || [],
-      testimonial: salon.testimonial || "", testimonial_author: salon.testimonial_author || "",
+      testimonials: salon.testimonials?.length
+        ? salon.testimonials
+        : salon.testimonial
+          ? [{ text: salon.testimonial, author: salon.testimonial_author || "" }]
+          : [],
+      video_url: salon.video_url || "",
+      faq: salon.faq || [],
       owner_name: salon.owner_name || "", owner_email: salon.owner_email || "", owner_password: "",
     })
     setEditingId(salon.id)
@@ -637,14 +670,65 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
                       </div>
                     </div>
 
-                    {/* Testimonial */}
+                    {/* Video URL */}
                     <div>
-                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Müşteri Yorumu (opsiyonel)</label>
-                      <textarea value={form.testimonial} onChange={e => setForm(p => ({ ...p, testimonial: e.target.value }))}
-                        placeholder="3 ayda 12 kilo verdim ve hiç bu kadar enerjik hissetmemiştim..." rows={2}
-                        className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:border-primary/50 mb-2" />
-                      <Input value={form.testimonial_author} onChange={e => setForm(p => ({ ...p, testimonial_author: e.target.value }))}
-                        placeholder="Ayşe K. — 6 aylık üye" className="bg-secondary border-border" />
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Video URL (YouTube — opsiyonel)</label>
+                      <Input
+                        value={form.video_url}
+                        onChange={e => setForm(p => ({ ...p, video_url: e.target.value }))}
+                        placeholder="https://youtu.be/..."
+                        className="bg-secondary border-border"
+                      />
+                    </div>
+
+                    {/* Testimonials */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-xs font-medium text-muted-foreground">Müşteri Yorumları ({form.testimonials.length})</label>
+                        <button type="button" onClick={addTestimonial}
+                          className="text-xs text-primary hover:underline">+ Ekle</button>
+                      </div>
+                      <div className="space-y-2">
+                        {form.testimonials.map((t, i) => (
+                          <div key={i} className="bg-secondary/50 border border-border rounded-lg p-2 space-y-1">
+                            <textarea value={t.text} onChange={e => updateTestimonial(i, "text", e.target.value)}
+                              placeholder="3 ayda 12 kilo verdim..." rows={2}
+                              className="w-full bg-secondary border border-border rounded-lg px-2 py-1.5 text-xs resize-none focus:outline-none focus:border-primary/50" />
+                            <div className="flex gap-1">
+                              <Input value={t.author} onChange={e => updateTestimonial(i, "author", e.target.value)}
+                                placeholder="Ayşe K. — 6 aylık üye" className="bg-secondary border-border h-7 text-xs flex-1" />
+                              <button type="button" onClick={() => removeTestimonial(i)} className="text-muted-foreground hover:text-destructive flex-shrink-0">
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* FAQ */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-xs font-medium text-muted-foreground">SSS / FAQ ({form.faq.length})</label>
+                        <button type="button" onClick={addFaq}
+                          className="text-xs text-primary hover:underline">+ Ekle</button>
+                      </div>
+                      <div className="space-y-2">
+                        {form.faq.map((f, i) => (
+                          <div key={i} className="bg-secondary/50 border border-border rounded-lg p-2 space-y-1">
+                            <div className="flex gap-1">
+                              <Input value={f.q} onChange={e => updateFaq(i, "q", e.target.value)}
+                                placeholder="Soru..." className="bg-secondary border-border h-7 text-xs flex-1" />
+                              <button type="button" onClick={() => removeFaq(i)} className="text-muted-foreground hover:text-destructive flex-shrink-0">
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                            <textarea value={f.a} onChange={e => updateFaq(i, "a", e.target.value)}
+                              placeholder="Cevap..." rows={2}
+                              className="w-full bg-secondary border border-border rounded-lg px-2 py-1.5 text-xs resize-none focus:outline-none focus:border-primary/50" />
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </>
                 )}

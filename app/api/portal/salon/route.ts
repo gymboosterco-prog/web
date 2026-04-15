@@ -5,6 +5,7 @@ const OWNER_ALLOWED_FIELDS = [
   "offer", "urgency_text", "cta_text",
   "hero_headline", "hero_sub", "tagline",
   "primary_color", "phone",
+  "testimonials", "video_url", "faq",
 ]
 
 async function requireSalonOwner() {

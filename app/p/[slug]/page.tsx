@@ -4,7 +4,7 @@ import type { Metadata } from "next"
 import { SalonForm } from "./salon-form"
 import { StickyCTA } from "./sticky-cta"
 import { SALON_PRESETS, type SalonType } from "@/lib/salon-presets"
-import { CheckCircle2, Clock, Phone, Quote, Shield, XCircle, Zap } from "lucide-react"
+import { CheckCircle2, ChevronDown, Clock, Phone, Quote, Shield, XCircle, Zap } from "lucide-react"
 import Image from "next/image"
 
 type Props = { params: Promise<{ slug: string }> }
@@ -33,7 +33,7 @@ export default async function SalonLandingPage({ params }: Props) {
 
   const { data: salon } = await supabase
     .from("salons")
-    .select("id, name, slug, salon_type, city, tagline, offer, hero_headline, hero_sub, urgency_text, cta_text, features, stats, testimonial, testimonial_author, active")
+    .select("id, name, slug, salon_type, city, tagline, offer, hero_headline, hero_sub, urgency_text, cta_text, features, stats, testimonial, testimonial_author, testimonials, video_url, faq, active")
     .eq("slug", slug).eq("active", true).maybeSingle()
 
   if (!salon) notFound()
@@ -60,6 +60,22 @@ export default async function SalonLandingPage({ params }: Props) {
   const painPoints: string[] = (branding?.pain_points as string[] | null)?.length ? (branding!.pain_points as string[]) : preset.pain_points
   const guaranteeText: string = branding?.guarantee_text || preset.guarantee_text
   const logoUrl: string | null = branding?.logo_url || null
+
+  type Testimonial = { text: string; author: string }
+  const testimonials: Testimonial[] =
+    (salon.testimonials as Testimonial[] | null)?.length
+      ? (salon.testimonials as Testimonial[])
+      : salon.testimonial
+        ? [{ text: salon.testimonial, author: salon.testimonial_author || "" }]
+        : []
+
+  type FaqItem = { q: string; a: string }
+  const faqItems: FaqItem[] = (salon.faq as FaqItem[] | null) || []
+
+  function getYouTubeId(url: string): string | null {
+    const m = url.match(/(?:youtu\.be\/|[?&]v=|\/embed\/)([A-Za-z0-9_-]{11})/)
+    return m ? m[1] : null
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
@@ -117,6 +133,25 @@ export default async function SalonLandingPage({ params }: Props) {
               </div>
             )}
           </div>
+
+          {/* Video Embed */}
+          {salon.video_url && (() => {
+            const ytId = getYouTubeId(salon.video_url as string)
+            if (!ytId) return null
+            return (
+              <div className="mb-12">
+                <div className="rounded-2xl overflow-hidden border border-white/10 aspect-video">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${ytId}?rel=0&modestbranding=1`}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full"
+                    loading="lazy"
+                  />
+                </div>
+              </div>
+            )
+          })()}
 
           {/* Form — hero'nun hemen altında */}
           <div id="form-section" className="bg-white/[0.04] border border-white/10 rounded-2xl p-6 sm:p-8 mb-12">
@@ -190,14 +225,35 @@ export default async function SalonLandingPage({ params }: Props) {
             </div>
           )}
 
-          {/* Testimonial */}
-          {salon.testimonial && (
-            <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 mb-8">
-              <Quote className="w-6 h-6 mb-3" style={{ color: `${primaryColor}66` }} />
-              <p className="text-white/70 text-sm italic leading-relaxed mb-3">{salon.testimonial}</p>
-              {salon.testimonial_author && (
-                <p className="text-xs font-semibold text-white/40">{salon.testimonial_author}</p>
-              )}
+          {/* FAQ */}
+          {faqItems.length > 0 && (
+            <div className="mb-12">
+              <h2 className="text-lg font-bold text-center mb-5 text-white/80">Sık Sorulan Sorular</h2>
+              <div className="space-y-2">
+                {faqItems.map((item, i) => (
+                  <details key={i} className="bg-white/[0.03] border border-white/10 rounded-xl group">
+                    <summary className="px-5 py-4 text-sm font-semibold cursor-pointer list-none flex justify-between items-center">
+                      {item.q}
+                      <ChevronDown className="w-4 h-4 text-white/40 flex-shrink-0 transition-transform group-open:rotate-180" />
+                    </summary>
+                    <div className="px-5 pb-4 text-sm text-white/60 leading-relaxed">{item.a}</div>
+                  </details>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Testimonials */}
+          {testimonials.length > 0 && (
+            <div className="space-y-4 mb-8">
+              <h2 className="text-lg font-bold text-center text-white/80">Üyelerimiz Ne Diyor?</h2>
+              {testimonials.map((t, i) => (
+                <div key={i} className="bg-white/[0.03] border border-white/10 rounded-2xl p-6">
+                  <Quote className="w-5 h-5 mb-3" style={{ color: `${primaryColor}66` }} />
+                  <p className="text-white/70 text-sm italic leading-relaxed mb-3">{t.text}</p>
+                  {t.author && <p className="text-xs font-semibold text-white/40">{t.author}</p>}
+                </div>
+              ))}
             </div>
           )}
 
