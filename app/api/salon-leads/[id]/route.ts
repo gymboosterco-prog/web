@@ -18,7 +18,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (error || !supabase || !profile) return NextResponse.json({ error }, { status })
 
   const body = await request.json()
-  const allowed = ["status", "notes", "called_at", "call_count", "meeting_date", "next_action_at"]
+  const allowed = ["status", "notes", "called_at", "call_count", "call_log", "meeting_date", "next_action_at"]
   const updates: Record<string, unknown> = {}
   for (const key of allowed) {
     if (key in body) updates[key] = body[key]

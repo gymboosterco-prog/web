@@ -14,6 +14,29 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
 
+// ─── Call log ────────────────────────────────────────────────────────────────
+type CallEntry = {
+  at: string
+  outcome: "no_answer" | "callback" | "interested" | "not_interested" | "voicemail"
+  note: string
+}
+
+const OUTCOMES: { key: CallEntry["outcome"]; label: string; emoji: string }[] = [
+  { key: "no_answer",      label: "Yanıt Yok",     emoji: "📵" },
+  { key: "callback",       label: "Geri Arayacak", emoji: "🔄" },
+  { key: "interested",     label: "İlgileniyor",   emoji: "🟢" },
+  { key: "not_interested", label: "İlgilenmiyor",  emoji: "🔴" },
+  { key: "voicemail",      label: "Sesli Mesaj",   emoji: "📨" },
+]
+
+function formatCallTime(iso: string): string {
+  const d = new Date(iso)
+  const now = new Date()
+  const isToday = d.toDateString() === now.toDateString()
+  if (isToday) return `Bugün ${d.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}`
+  return d.toLocaleDateString("tr-TR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
+}
+
 // ─── Note helpers ────────────────────────────────────────────────────────────
 type NoteEntry = { text: string; at: string }
 
@@ -43,6 +66,7 @@ type SalonLead = {
   status: string
   notes: string | null
   call_count: number
+  call_log: CallEntry[] | null
   called_at: string | null
   meeting_date: string | null
   next_action_at: string | null
@@ -107,6 +131,8 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
   const [nextActionValue, setNextActionValue] = useState("")
   const [detailStatus, setDetailStatus] = useState("")
   const [isSaving, setIsSaving] = useState(false)
+  const [callNote, setCallNote] = useState("")
+  const [callOutcome, setCallOutcome] = useState<CallEntry["outcome"] | "">("")
   const router = useRouter()
   const supabase = createClient()
 
@@ -176,14 +202,20 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
     if (!res.ok) toast.error("Güncelleme başarısız")
   }
 
-  const handleCall = (lead: SalonLead) => {
-    window.location.href = `tel:${lead.phone}`
-    const newCount = (lead.call_count || 0) + 1
+  const addCall = (lead: SalonLead, outcome: CallEntry["outcome"], note: string) => {
+    const entry: CallEntry = { at: new Date().toISOString(), outcome, note }
+    const newLog = [...(lead.call_log || []), entry]
     updateLead(lead.id, {
-      call_count: newCount,
-      called_at: new Date().toISOString(),
+      call_log: newLog,
+      call_count: newLog.length,
+      called_at: entry.at,
       status: lead.status === "new" ? "called" : lead.status,
     })
+  }
+
+  const handleCall = (lead: SalonLead) => {
+    window.location.href = `tel:${lead.phone}`
+    addCall(lead, "no_answer", "")
     toast.success(`${lead.name} arandı olarak işaretlendi`)
   }
 
@@ -192,6 +224,8 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
     setNewNote("")
     setNextActionValue(toDatetimeLocal(lead.next_action_at))
     setDetailStatus(lead.status)
+    setCallNote("")
+    setCallOutcome("")
   }
 
   const saveDetail = async () => {
@@ -551,17 +585,78 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
               </div>
 
               {/* Meta */}
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="bg-secondary rounded-lg p-2.5">
-                  <p className="text-muted-foreground mb-0.5">Başvuru Tarihi</p>
-                  <p className="font-medium">{new Date(selectedLead.created_at).toLocaleDateString("tr-TR", { day: "numeric", month: "long" })}</p>
-                </div>
-                <div className="bg-secondary rounded-lg p-2.5">
-                  <p className="text-muted-foreground mb-0.5">Aranma Sayısı</p>
-                  <p className="font-medium">
-                    {selectedLead.call_count} kez
-                    {selectedLead.called_at ? ` · ${new Date(selectedLead.called_at).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}` : ""}
-                  </p>
+              <div className="bg-secondary rounded-lg p-2.5 text-xs">
+                <p className="text-muted-foreground mb-0.5">Başvuru Tarihi</p>
+                <p className="font-medium">{new Date(selectedLead.created_at).toLocaleDateString("tr-TR", { day: "numeric", month: "long" })}</p>
+              </div>
+
+              {/* Arama Logu */}
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5" />
+                  Arama Geçmişi ({(selectedLead.call_log || []).length} arama)
+                </label>
+
+                {/* Geçmiş aramalar */}
+                {(selectedLead.call_log || []).length > 0 ? (
+                  <div className="space-y-1.5 mb-3 max-h-36 overflow-y-auto">
+                    {[...(selectedLead.call_log || [])].reverse().map((entry, i) => {
+                      const o = OUTCOMES.find(o => o.key === entry.outcome)
+                      return (
+                        <div key={i} className="bg-secondary/60 rounded-lg px-3 py-2 flex items-start gap-2">
+                          <span className="text-sm">{o?.emoji}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs font-medium">{o?.label}</span>
+                              <span className="text-xs text-muted-foreground flex-shrink-0">{formatCallTime(entry.at)}</span>
+                            </div>
+                            {entry.note && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{entry.note}</p>}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground mb-3">Henüz arama kaydı yok.</p>
+                )}
+
+                {/* Yeni arama kaydet */}
+                <div className="space-y-2">
+                  <div className="flex gap-1.5 flex-wrap">
+                    {OUTCOMES.map(o => (
+                      <button
+                        key={o.key}
+                        onClick={() => setCallOutcome(callOutcome === o.key ? "" : o.key)}
+                        className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                          callOutcome === o.key
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-secondary border-border text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {o.emoji} {o.label}
+                      </button>
+                    ))}
+                  </div>
+                  <Input
+                    value={callNote}
+                    onChange={e => setCallNote(e.target.value)}
+                    placeholder="Ek not (opsiyonel)"
+                    className="h-8 text-xs bg-secondary border-border"
+                  />
+                  <Button
+                    size="sm"
+                    disabled={!callOutcome}
+                    onClick={() => {
+                      if (!callOutcome || !selectedLead) return
+                      addCall(selectedLead, callOutcome, callNote.trim())
+                      setCallNote("")
+                      setCallOutcome("")
+                      toast.success("Arama kaydedildi")
+                    }}
+                    className="w-full h-8 text-xs bg-primary text-primary-foreground disabled:opacity-50"
+                  >
+                    Aramayı Kaydet
+                  </Button>
                 </div>
               </div>
 

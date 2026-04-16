@@ -22,9 +22,18 @@ export function SalonForm({
   const [error, setError] = useState("")
   const submittingRef = useRef(false)
 
+  function isValidTurkishPhone(phone: string): boolean {
+    const d = phone.replace(/\D/g, "")
+    return (d.length === 11 && d.startsWith("0")) || (d.length === 12 && d.startsWith("90"))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (submittingRef.current) return
+    if (!isValidTurkishPhone(formData.phone)) {
+      setError("Geçerli bir Türkiye telefon numarası girin (05xx xxx xx xx)")
+      return
+    }
     submittingRef.current = true
     setIsSubmitting(true)
     setError("")

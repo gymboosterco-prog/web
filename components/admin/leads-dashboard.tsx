@@ -1,5 +1,28 @@
 "use client"
 
+// ─── Call log ─────────────────────────────────────────────────────────────────
+type CallEntry = {
+  at: string
+  outcome: "no_answer" | "callback" | "interested" | "not_interested" | "voicemail"
+  note: string
+}
+
+const CALL_OUTCOMES: { key: CallEntry["outcome"]; label: string; emoji: string }[] = [
+  { key: "no_answer",      label: "Yanıt Yok",     emoji: "📵" },
+  { key: "callback",       label: "Geri Arayacak", emoji: "🔄" },
+  { key: "interested",     label: "İlgileniyor",   emoji: "🟢" },
+  { key: "not_interested", label: "İlgilenmiyor",  emoji: "🔴" },
+  { key: "voicemail",      label: "Sesli Mesaj",   emoji: "📨" },
+]
+
+function formatCallTime(iso: string): string {
+  const d = new Date(iso)
+  const now = new Date()
+  const isToday = d.toDateString() === now.toDateString()
+  if (isToday) return `Bugün ${d.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}`
+  return d.toLocaleDateString("tr-TR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
+}
+
 // ─── Note helpers ─────────────────────────────────────────────────────────────
 type NoteEntry = { text: string; at: string }
 
@@ -90,6 +113,7 @@ type Lead = {
   member_count: number
   lead_goal: number
   call_count: number
+  call_log: CallEntry[] | null
   ad_spend: number
   next_action_at: string | null
   next_action_type: 'CALL' | 'MEETING' | 'WHATSAPP' | 'PROPOSAL_FOLLOWUP' | null
@@ -165,6 +189,8 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const [rejectionState, setRejectionState] = useState<{ leadId: string; targetStatus: string } | null>(null)
   const [rejectionReason, setRejectionReason] = useState("")
+  const [callLogNote, setCallLogNote] = useState("")
+  const [callLogOutcome, setCallLogOutcome] = useState<CallEntry["outcome"] | "">("")
 
   const router = useRouter()
   const supabase = createClient()
@@ -558,6 +584,8 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
   // Fetch status history when detail panel opens
   useEffect(() => {
     if (!selectedLead) { setStatusHistory([]); return }
+    setCallLogNote("")
+    setCallLogOutcome("")
     fetch(`/api/leads/${selectedLead.id}?history=1`)
       .then(r => r.json())
       .then(d => setStatusHistory(d.data ?? []))
@@ -653,11 +681,15 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
 
   const incrementCallCount = async (leadId: string, currentCount: number) => {
     const nextCount = currentCount + 1
-    const updates: Partial<Lead> = { 
-      call_count: nextCount, 
-      status: 'called', 
-      called_at: new Date().toISOString(),
-      last_contact_at: new Date().toISOString()
+    const lead = leads.find(l => l.id === leadId)
+    const entry: CallEntry = { at: new Date().toISOString(), outcome: "no_answer", note: "" }
+    const newLog = [...(lead?.call_log || []), entry]
+    const updates: Partial<Lead> = {
+      call_count: nextCount,
+      call_log: newLog,
+      status: 'called',
+      called_at: entry.at,
+      last_contact_at: entry.at,
     }
 
     if (nextCount === 3) {
@@ -1687,6 +1719,78 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                     </select>
                   </div>
                 )}
+
+                {/* Arama Logu */}
+                <div className="pt-4 border-t border-border space-y-3">
+                  <span className="text-xs font-medium text-muted-foreground uppercase flex items-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5" />
+                    Arama Geçmişi ({(selectedLead.call_log || []).length} arama)
+                  </span>
+
+                  {(selectedLead.call_log || []).length > 0 ? (
+                    <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                      {[...(selectedLead.call_log || [])].reverse().map((entry, i) => {
+                        const o = CALL_OUTCOMES.find(o => o.key === entry.outcome)
+                        return (
+                          <div key={i} className="bg-secondary/60 rounded-xl px-3 py-2 flex items-start gap-2">
+                            <span className="text-sm">{o?.emoji}</span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-xs font-medium">{o?.label}</span>
+                                <span className="text-xs text-muted-foreground flex-shrink-0">{formatCallTime(entry.at)}</span>
+                              </div>
+                              {entry.note && <p className="text-xs text-muted-foreground mt-0.5">{entry.note}</p>}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Henüz arama kaydı yok.</p>
+                  )}
+
+                  <div className="space-y-2">
+                    <div className="flex gap-1.5 flex-wrap">
+                      {CALL_OUTCOMES.map(o => (
+                        <button
+                          key={o.key}
+                          disabled={userRole === 'STAFF' && selectedLead.assigned_to === 'Admin'}
+                          onClick={() => setCallLogOutcome(callLogOutcome === o.key ? "" : o.key)}
+                          className={`text-xs px-2.5 py-1 rounded-full border transition-colors disabled:opacity-50 ${
+                            callLogOutcome === o.key
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-secondary border-border text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          {o.emoji} {o.label}
+                        </button>
+                      ))}
+                    </div>
+                    <Input
+                      value={callLogNote}
+                      onChange={e => setCallLogNote(e.target.value)}
+                      disabled={userRole === 'STAFF' && selectedLead.assigned_to === 'Admin'}
+                      placeholder="Ek not (opsiyonel)"
+                      className="h-9 text-sm bg-secondary/50 border-border disabled:opacity-50"
+                    />
+                    <Button
+                      size="sm"
+                      disabled={!callLogOutcome || (userRole === 'STAFF' && selectedLead.assigned_to === 'Admin')}
+                      onClick={() => {
+                        if (!callLogOutcome || !selectedLead) return
+                        const entry: CallEntry = { at: new Date().toISOString(), outcome: callLogOutcome, note: callLogNote.trim() }
+                        const newLog = [...(selectedLead.call_log || []), entry]
+                        updateLead(selectedLead.id, { call_log: newLog, call_count: newLog.length, called_at: entry.at })
+                        setCallLogNote("")
+                        setCallLogOutcome("")
+                        toast.success("Arama kaydedildi ✓")
+                      }}
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50"
+                    >
+                      Aramayı Kaydet
+                    </Button>
+                  </div>
+                </div>
 
                 <div className="pt-4 border-t border-border space-y-3">
                   <span className="text-xs font-medium text-muted-foreground uppercase block">Görüşme Notları</span>
