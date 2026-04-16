@@ -9,6 +9,7 @@ const OWNER_ALLOWED_FIELDS = [
   "testimonials", "video_url", "faq",
   "meta_pixel_id",
   "logo_url",
+  "gallery_images",
 ]
 
 async function requireSalonOwner(): Promise<string | null> {

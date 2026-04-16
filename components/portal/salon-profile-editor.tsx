@@ -28,6 +28,7 @@ type SalonData = {
   faq: FaqItem[] | null
   meta_pixel_id: string | null
   logo_url: string | null
+  gallery_images: string[] | null
 }
 
 async function resizeImage(file: File, maxPx = 512): Promise<File> {
@@ -66,6 +67,8 @@ export function SalonProfileEditor({ salon }: { salon: SalonData }) {
   })
   const [logoUrl, setLogoUrl] = useState<string | null>(salon.logo_url || null)
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
+  const [galleryImages, setGalleryImages] = useState<string[]>(salon.gallery_images || [])
+  const [isUploadingGallery, setIsUploadingGallery] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const router = useRouter()
 
@@ -99,6 +102,48 @@ export function SalonProfileEditor({ salon }: { salon: SalonData }) {
       body: JSON.stringify({ logo_url: null }),
     })
     toast.success("Logo kaldırıldı")
+  }
+
+  const handleGalleryUpload = async (files: FileList) => {
+    if (galleryImages.length >= 8) { toast.error("Maksimum 8 görsel yükleyebilirsiniz"); return }
+    setIsUploadingGallery(true)
+    try {
+      const toUpload = Array.from(files).slice(0, 8 - galleryImages.length)
+      const urls: string[] = []
+      for (const file of toUpload) {
+        if (file.size > 5 * 1024 * 1024) { toast.error(`${file.name} 5 MB'ı geçiyor`); continue }
+        const resized = await resizeImage(file, 1200)
+        const fd = new FormData()
+        fd.append("file", resized)
+        const res = await fetch("/api/salons/upload-gallery", { method: "POST", body: fd })
+        const data = await res.json()
+        if (!res.ok) { toast.error(data.error || "Yükleme başarısız"); continue }
+        urls.push(data.url)
+      }
+      if (urls.length > 0) {
+        const updated = [...galleryImages, ...urls]
+        setGalleryImages(updated)
+        await fetch("/api/portal/salon", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ gallery_images: updated }),
+        })
+        toast.success(`${urls.length} görsel yüklendi`)
+      }
+    } finally {
+      setIsUploadingGallery(false)
+    }
+  }
+
+  const handleGalleryRemove = async (index: number) => {
+    const updated = galleryImages.filter((_, i) => i !== index)
+    setGalleryImages(updated)
+    await fetch("/api/portal/salon", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ gallery_images: updated }),
+    })
+    toast.success("Görsel kaldırıldı")
   }
 
   const handleSave = async () => {
@@ -193,6 +238,70 @@ export function SalonProfileEditor({ salon }: { salon: SalonData }) {
               onChange={e => { const f = e.target.files?.[0]; if (f) handleLogoUpload(f) }}
             />
           </div>
+        </div>
+
+        {/* İşletme Görselleri */}
+        <div className="bg-card border border-border rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-sm font-semibold">İşletme Görselleri</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {galleryImages.length}/8 görsel · Landing page&apos;de görünür
+              </p>
+            </div>
+            {galleryImages.length < 8 && (
+              <button
+                type="button"
+                onClick={() => document.getElementById("gallery-input")?.click()}
+                disabled={isUploadingGallery}
+                className="text-xs text-primary hover:underline disabled:opacity-50"
+              >
+                {isUploadingGallery ? "Yükleniyor..." : "+ Görsel Ekle"}
+              </button>
+            )}
+          </div>
+
+          {galleryImages.length > 0 && (
+            <div className="grid grid-cols-4 gap-2 mb-3">
+              {galleryImages.map((url, i) => (
+                <div key={i} className="relative aspect-square rounded-lg overflow-hidden group">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={url} alt="" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => handleGalleryRemove(i)}
+                    className="absolute top-1 right-1 p-0.5 rounded bg-red-500/80 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {galleryImages.length < 8 && (
+            <div
+              className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border rounded-xl p-5 bg-secondary/50 cursor-pointer hover:border-primary/40 transition-colors"
+              onDragOver={e => e.preventDefault()}
+              onDrop={e => { e.preventDefault(); if (e.dataTransfer.files.length) handleGalleryUpload(e.dataTransfer.files) }}
+              onClick={() => document.getElementById("gallery-input")?.click()}
+            >
+              <Upload className="w-6 h-6 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground text-center">
+                {isUploadingGallery ? "Yükleniyor..." : "Sürükle bırak veya tıkla"}
+              </p>
+              <p className="text-xs text-muted-foreground/60">JPG, PNG, WebP — max 5 MB · Çoklu seçim desteklenir</p>
+            </div>
+          )}
+
+          <input
+            id="gallery-input"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            multiple
+            className="hidden"
+            onChange={e => { if (e.target.files?.length) handleGalleryUpload(e.target.files) }}
+          />
         </div>
 
         {/* Temel Bilgiler */}

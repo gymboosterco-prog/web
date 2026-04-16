@@ -46,7 +46,7 @@ export default async function SalonLandingPage({ params }: Props) {
   // Branding fields (added in migration 023 — gracefully ignored if columns don't exist yet)
   const brandingResult = await supabase
     .from("salons")
-    .select("primary_color, accent_color, logo_url, pain_points, guarantee_text")
+    .select("primary_color, accent_color, logo_url, pain_points, guarantee_text, gallery_images")
     .eq("id", salon.id)
     .maybeSingle()
   const branding = brandingResult.error ? null : brandingResult.data
@@ -65,6 +65,7 @@ export default async function SalonLandingPage({ params }: Props) {
   const painPoints: string[] = (branding?.pain_points as string[] | null)?.length ? (branding!.pain_points as string[]) : preset.pain_points
   const guaranteeText: string = branding?.guarantee_text || preset.guarantee_text
   const logoUrl: string | null = branding?.logo_url || null
+  const galleryImages: string[] = (branding?.gallery_images as string[] | null) || []
 
   type Testimonial = { text: string; author: string }
   const testimonials: Testimonial[] =
@@ -165,6 +166,32 @@ export default async function SalonLandingPage({ params }: Props) {
             <p className="text-center text-white/50 text-sm mb-6">Formu doldurun, sizi arayalım.</p>
             <SalonForm salonId={salon.id} salonName={salon.name} ctaText={ctaText} primaryColor={primaryColor} instagramUrl={(salon as any).instagram_url ?? null} />
           </div>
+
+          {/* Gallery */}
+          {galleryImages.length > 0 && (
+            <section className="mb-12">
+              <div className={`grid gap-3 ${
+                galleryImages.length === 1 ? "grid-cols-1"
+                : galleryImages.length === 2 ? "grid-cols-2"
+                : galleryImages.length <= 4 ? "grid-cols-2"
+                : "grid-cols-2 sm:grid-cols-3"
+              }`}>
+                {galleryImages.map((url, i) => (
+                  <div
+                    key={i}
+                    className={`overflow-hidden rounded-xl border border-white/10 ${
+                      galleryImages.length === 1 ? "aspect-video"
+                      : galleryImages.length === 3 && i === 0 ? "row-span-2 aspect-square"
+                      : "aspect-square"
+                    }`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Pain Agitation */}
           {painPoints.length > 0 && (
