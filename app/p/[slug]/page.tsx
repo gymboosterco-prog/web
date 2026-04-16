@@ -5,6 +5,7 @@ import type { Metadata } from "next"
 export const dynamic = "force-dynamic"
 export const revalidate = 0
 import { SalonForm } from "./salon-form"
+import { SalonPixel } from "./salon-pixel"
 import { StickyCTA } from "./sticky-cta"
 import { SALON_PRESETS, type SalonType } from "@/lib/salon-presets"
 import { CheckCircle2, ChevronDown, Clock, Phone, Quote, Shield, XCircle, Zap } from "lucide-react"
@@ -36,7 +37,7 @@ export default async function SalonLandingPage({ params }: Props) {
 
   const { data: salon } = await supabase
     .from("salons")
-    .select("id, name, slug, salon_type, city, tagline, offer, hero_headline, hero_sub, urgency_text, cta_text, features, stats, testimonial, testimonial_author, testimonials, video_url, faq, active")
+    .select("id, name, slug, salon_type, city, tagline, offer, hero_headline, hero_sub, urgency_text, cta_text, features, stats, testimonial, testimonial_author, testimonials, video_url, faq, meta_pixel_id, active")
     .eq("slug", slug).eq("active", true).maybeSingle()
 
   if (!salon) notFound()
@@ -82,6 +83,7 @@ export default async function SalonLandingPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
+      <SalonPixel pixelId={(salon.meta_pixel_id as string | null) ?? null} />
       <style>{`
         :root {
           --salon-primary: ${primaryColor};

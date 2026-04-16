@@ -26,6 +26,7 @@ type SalonData = {
   video_url: string | null
   testimonials: Testimonial[] | null
   faq: FaqItem[] | null
+  meta_pixel_id: string | null
 }
 
 export function SalonProfileEditor({ salon }: { salon: SalonData }) {
@@ -36,11 +37,12 @@ export function SalonProfileEditor({ salon }: { salon: SalonData }) {
     offer: salon.offer || "",
     urgency_text: salon.urgency_text || "",
     cta_text: salon.cta_text || "",
-    primary_color: salon.primary_color || "#CCFF00",
+    primary_color: salon.primary_color || "#f2ff00",
     phone: salon.phone || "",
     video_url: salon.video_url || "",
     testimonials: salon.testimonials || [] as Testimonial[],
     faq: salon.faq || [] as FaqItem[],
+    meta_pixel_id: salon.meta_pixel_id || "",
   })
   const [isSaving, setIsSaving] = useState(false)
   const router = useRouter()
@@ -62,7 +64,7 @@ export function SalonProfileEditor({ salon }: { salon: SalonData }) {
     }
   }
 
-  const field = (label: string, key: "hero_headline" | "hero_sub" | "tagline" | "offer" | "urgency_text" | "cta_text" | "phone" | "video_url", placeholder = "") => (
+  const field = (label: string, key: "hero_headline" | "hero_sub" | "tagline" | "offer" | "urgency_text" | "cta_text" | "phone" | "video_url" | "meta_pixel_id", placeholder = "") => (
     <div>
       <label className="text-xs font-medium text-muted-foreground mb-1.5 block">{label}</label>
       <Input
@@ -105,6 +107,10 @@ export function SalonProfileEditor({ salon }: { salon: SalonData }) {
           {field("Telefon", "phone", "0555 123 45 67")}
           {field("Video URL (YouTube — opsiyonel)", "video_url", "https://youtu.be/...")}
           <div>
+            {field("Meta Pixel ID (opsiyonel)", "meta_pixel_id", "796159073358189")}
+            <p className="text-xs text-muted-foreground mt-1">Facebook Ads Manager → Events Manager'dan alın</p>
+          </div>
+          <div>
             <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Ana Renk</label>
             <div className="flex items-center gap-3">
               <input
@@ -116,7 +122,7 @@ export function SalonProfileEditor({ salon }: { salon: SalonData }) {
               <Input
                 value={form.primary_color}
                 onChange={e => setForm(p => ({ ...p, primary_color: e.target.value }))}
-                placeholder="#CCFF00"
+                placeholder="#f2ff00"
                 className="bg-secondary border-border font-mono text-sm flex-1"
               />
               <div className="w-10 h-10 rounded-lg border border-border flex-shrink-0" style={{ background: form.primary_color }} />

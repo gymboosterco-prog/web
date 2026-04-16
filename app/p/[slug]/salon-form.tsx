@@ -9,7 +9,7 @@ export function SalonForm({
   salonId,
   salonName,
   ctaText,
-  primaryColor = "#CCFF00",
+  primaryColor = "#f2ff00",
 }: {
   salonId: string
   salonName: string

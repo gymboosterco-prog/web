@@ -110,7 +110,7 @@ function LeadCard({ lead, statusConfig, isDragging }: {
       </div>
 
       {lead.value > 0 && (
-        <div className="text-xs font-medium text-[#CCFF00]">
+        <div className="text-xs font-medium text-[#f2ff00]">
           ₺{lead.value.toLocaleString('tr-TR')}
         </div>
       )}

@@ -21,7 +21,7 @@ export const SALON_PRESETS: Record<SalonType, SalonPreset> = {
   fitness: {
     label: "Fitness / Spor Salonu",
     emoji: "🏋️",
-    primary_color: "#CCFF00",
+    primary_color: "#f2ff00",
     accent_color: "#ffffff",
     hero_headline: "Hedeflerinize Ulaşmanın En Kısa Yolu",
     hero_sub: "Modern ekipmanlar, uzman eğitmenler ve motive edici bir ortamla fitness yolculuğunuza başlayın.",
@@ -189,7 +189,7 @@ export const SALON_PRESETS: Record<SalonType, SalonPreset> = {
   other: {
     label: "Diğer",
     emoji: "⚡",
-    primary_color: "#CCFF00",
+    primary_color: "#f2ff00",
     accent_color: "#ffffff",
     hero_headline: "Fitness Hedeflerinize Ulaşın",
     hero_sub: "Uzman eğitmenlerimiz ve modern tesisimizle sizi bekliyoruz. Hemen başvurun, ilk adımı birlikte atalım.",
@@ -213,7 +213,7 @@ export const SALON_TYPE_OPTIONS = (Object.entries(SALON_PRESETS) as [SalonType, 
 
 // Preset color swatches for the admin color picker
 export const COLOR_PRESETS = [
-  { label: "Neon Lime", value: "#CCFF00" },
+  { label: "Neon Lime", value: "#f2ff00" },
   { label: "Mor", value: "#a78bfa" },
   { label: "Turuncu", value: "#f97316" },
   { label: "Kırmızı", value: "#ef4444" },

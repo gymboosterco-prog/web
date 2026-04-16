@@ -69,7 +69,7 @@ export async function POST(request: Request) {
         html: `
           <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#0a0a0a;color:#e5e5e5;border-radius:12px;">
             <div style="text-align:center;margin-bottom:24px;">
-              <h1 style="color:#CCFF00;font-size:24px;margin:0;">Gymbooster</h1>
+              <h1 style="color:#f2ff00;font-size:24px;margin:0;">Gymbooster</h1>
               <p style="color:#888;margin:4px 0 0;">Yeni Müşteri Adayı</p>
             </div>
             <div style="background:#1a1a1a;border-radius:8px;padding:20px;margin-bottom:16px;">
@@ -77,12 +77,12 @@ export async function POST(request: Request) {
               <table style="width:100%;border-collapse:collapse;">
                 <tr><td style="color:#888;padding:6px 0;width:130px;">Ad Soyad</td><td style="color:#fff;font-weight:600;">${safeName}</td></tr>
                 <tr><td style="color:#888;padding:6px 0;">Salon Adı</td><td style="color:#fff;font-weight:600;">${safeGymName}</td></tr>
-                <tr><td style="color:#888;padding:6px 0;">Telefon</td><td style="color:#CCFF00;font-weight:600;">${safePhone}</td></tr>
+                <tr><td style="color:#888;padding:6px 0;">Telefon</td><td style="color:#f2ff00;font-weight:600;">${safePhone}</td></tr>
 ${safeInstagram ? `<tr><td style="color:#888;padding:6px 0;">Instagram</td><td style="color:#fff;">@${safeInstagram}</td></tr>` : ''}
               </table>
             </div>
             <div style="text-align:center;">
-              <a href="https://www.gymbooster.tr/admin" style="display:inline-block;background:#CCFF00;color:#000;font-weight:700;padding:12px 32px;border-radius:8px;text-decoration:none;">Dashboard'a Git →</a>
+              <a href="https://www.gymbooster.tr/admin" style="display:inline-block;background:#f2ff00;color:#000;font-weight:700;padding:12px 32px;border-radius:8px;text-decoration:none;">Dashboard'a Git →</a>
             </div>
             <p style="color:#555;font-size:12px;text-align:center;margin-top:24px;">Gymbooster Lead Yönetim Sistemi</p>
           </div>

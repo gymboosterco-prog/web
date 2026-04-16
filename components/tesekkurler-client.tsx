@@ -19,7 +19,7 @@ export function TesekkurlerClient() {
       particleCount: 120,
       spread: 80,
       origin: { y: 0.6 },
-      colors: ["#CCFF00", "#ffffff", "#a3ff47", "#e0ff99"],
+      colors: ["#f2ff00", "#ffffff", "#a3ff47", "#e0ff99"],
     })
 
     // Second burst after 400ms
@@ -29,14 +29,14 @@ export function TesekkurlerClient() {
         angle: 60,
         spread: 55,
         origin: { x: 0, y: 0.65 },
-        colors: ["#CCFF00", "#ffffff", "#a3ff47"],
+        colors: ["#f2ff00", "#ffffff", "#a3ff47"],
       })
       confetti({
         particleCount: 80,
         angle: 120,
         spread: 55,
         origin: { x: 1, y: 0.65 },
-        colors: ["#CCFF00", "#ffffff", "#a3ff47"],
+        colors: ["#f2ff00", "#ffffff", "#a3ff47"],
       })
     }, 400)
   }, [])

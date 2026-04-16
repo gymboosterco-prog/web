@@ -108,13 +108,13 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.E
   meeting_done: { label: "Görüşme Yapıldı", color: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20", icon: CheckCircle2 },
   meeting_planned: { label: "Toplantı Planlandı", color: "bg-purple-500/10 text-purple-500 border-purple-500/20", icon: Calendar },
   proposal: { label: "Teklif Verildi", color: "bg-orange-500/10 text-orange-500 border-orange-500/20", icon: MessageSquare },
-  won: { label: "Ödeme Alındı (Won)", color: "bg-[#CCFF00]/10 text-[#CCFF00] border-[#CCFF00]/20", icon: TrendingUp },
+  won: { label: "Ödeme Alındı (Won)", color: "bg-[#f2ff00]/10 text-[#f2ff00] border-[#f2ff00]/20", icon: TrendingUp },
   lost: { label: "Olumsuz", color: "bg-red-500/10 text-red-500 border-red-500/20", icon: XCircle },
   cool_off: { label: "Beklemede (Cool-off)", color: "bg-purple-500/10 text-purple-500 border-purple-500/20", icon: Clock },
 }
 
 const REJECTION_REASONS = ["Fiyat", "Konum", "İlgisiz", "Bütçe Yok", "Ulaşılamadı", "Vazgeçti"]
-const PRIMARY_NEON = "#CCFF00"
+const PRIMARY_NEON = "#f2ff00"
 
 /** İstanbul (UTC+3) bazlı bugünün tarihini "YYYY-MM-DD" formatında döndürür */
 const todayIST = () =>
@@ -753,11 +753,11 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
       <header className="border-b border-border bg-card">
         <div className="container px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#CCFF00]/10 flex items-center justify-center">
-                <Dumbbell className="w-5 h-5 text-[#CCFF00]" />
+              <div className="w-10 h-10 rounded-xl bg-[#f2ff00]/10 flex items-center justify-center">
+                <Dumbbell className="w-5 h-5 text-[#f2ff00]" />
               </div>
               <div>
-                <h1 className="font-bold text-lg">Gymbooster <span className="text-[#CCFF00] text-xs ml-1 border border-[#CCFF00]/30 px-1.5 py-0.5 rounded">PRO</span></h1>
+                <h1 className="font-bold text-lg">Gymbooster <span className="text-[#f2ff00] text-xs ml-1 border border-[#f2ff00]/30 px-1.5 py-0.5 rounded">PRO</span></h1>
                 <p className="text-sm text-muted-foreground">Gym Name / Branch</p>
               </div>
           </div>
@@ -800,7 +800,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                 Bildirimleri Aç
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={() => setIsEditingTemplate(true)} className="hidden md:flex border-[#CCFF00]/30 text-[#CCFF00] hover:bg-[#CCFF00]/10">
+            <Button variant="outline" size="sm" onClick={() => setIsEditingTemplate(true)} className="hidden md:flex border-[#f2ff00]/30 text-[#f2ff00] hover:bg-[#f2ff00]/10">
               <MessageSquare className="w-4 h-4 mr-2" />
               Mesaj Taslağı
             </Button>
@@ -871,16 +871,16 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
         {/* Günün Skoru - Daily Performance Summary (19:00 TRT Simulation) */}
         {isMounted && (
           <section className="animate-in fade-in slide-in-from-top duration-500">
-            <div className="bg-gradient-to-r from-[#CCFF00]/20 via-[#CCFF00]/5 to-transparent p-1 rounded-2xl border border-[#CCFF00]/10 overflow-hidden">
+            <div className="bg-gradient-to-r from-[#f2ff00]/20 via-[#f2ff00]/5 to-transparent p-1 rounded-2xl border border-[#f2ff00]/10 overflow-hidden">
                <div className="bg-background/80 backdrop-blur-md p-4 rounded-xl flex items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-[#CCFF00] flex items-center justify-center text-black">
+                    <div className="w-12 h-12 rounded-xl bg-[#f2ff00] flex items-center justify-center text-black">
                       <TrendingUp className="w-6 h-6" />
                     </div>
                     <div>
                       <h3 className="text-sm font-bold text-white flex items-center gap-2">
                         Günün Performans Skoru 📈
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#CCFF00]/20 text-[#CCFF00] border border-[#CCFF00]/30">LIVE</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#f2ff00]/20 text-[#f2ff00] border border-[#f2ff00]/30">LIVE</span>
                       </h3>
                       <p className="text-xs text-muted-foreground">Bugünün anlık satış ve takip verileri</p>
                     </div>
@@ -900,7 +900,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                     </div>
                     <div className="text-center">
                       <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Satış</p>
-                      <p className="text-xl font-bold text-[#CCFF00]">{dailyStats.wonCount}</p>
+                      <p className="text-xl font-bold text-[#f2ff00]">{dailyStats.wonCount}</p>
                     </div>
                     {userRole === 'ADMIN' && (
                       <div className="text-center pl-4 border-l border-border">
@@ -918,14 +918,14 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold flex items-center gap-2 text-white">
-                <Zap className="w-5 h-5 text-[#CCFF00]" />
+                <Zap className="w-5 h-5 text-[#f2ff00]" />
                 The Radar: Günlük İş Akışı
               </h2>
               <div className="flex gap-2">
                 <span className="px-2 py-1 rounded-md bg-red-500/10 text-red-500 text-xs font-bold border border-red-500/20">
                   {dailyGrind.slaBreaches.length} Kritik
                 </span>
-                <span className="px-2 py-1 rounded-md bg-[#CCFF00]/10 text-[#CCFF00] text-xs font-bold border border-[#CCFF00]/20">
+                <span className="px-2 py-1 rounded-md bg-[#f2ff00]/10 text-[#f2ff00] text-xs font-bold border border-[#f2ff00]/20">
                   {dailyGrind.dueToday.length} Bugün
                 </span>
               </div>
@@ -975,24 +975,24 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                 }
                 const Icon = actionTypeIcons[lead.next_action_type || 'CALL'] || Phone
                 return (
-                  <div key={lead.id} className="p-4 rounded-xl bg-[#CCFF00]/5 border border-[#CCFF00]/20 flex flex-col justify-between hover:bg-[#CCFF00]/10 transition-colors">
+                  <div key={lead.id} className="p-4 rounded-xl bg-[#f2ff00]/5 border border-[#f2ff00]/20 flex flex-col justify-between hover:bg-[#f2ff00]/10 transition-colors">
                     <div>
                       <div className="flex justify-between items-start mb-2">
-                        <span className="text-[10px] uppercase font-bold text-[#CCFF00] flex items-center gap-1">
+                        <span className="text-[10px] uppercase font-bold text-[#f2ff00] flex items-center gap-1">
                           <Icon className="w-3 h-3" /> {lead.next_action_type || 'AKSİYON'}
                         </span>
-                        <span className="text-[10px] text-[#CCFF00] font-medium">Bugün Bekleniyor</span>
+                        <span className="text-[10px] text-[#f2ff00] font-medium">Bugün Bekleniyor</span>
                       </div>
                       <h3 className="font-bold text-sm text-white">{lead.gym_name}</h3>
                       <p className="text-xs text-muted-foreground mb-3">{lead.name}</p>
                     </div>
                     <div className="flex gap-2">
-                      <Button size="sm" className="flex-1 bg-[#CCFF00] hover:bg-[#CCFF00]/90 text-black font-bold text-xs" onClick={() => completeTask(lead)}>
+                      <Button size="sm" className="flex-1 bg-[#f2ff00] hover:bg-[#f2ff00]/90 text-black font-bold text-xs" onClick={() => completeTask(lead)}>
                         Tamamla
                       </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button size="sm" variant="outline" className="px-2 border-[#CCFF00]/20 text-[#CCFF00] hover:bg-[#CCFF00]/10">
+                          <Button size="sm" variant="outline" className="px-2 border-[#f2ff00]/20 text-[#f2ff00] hover:bg-[#f2ff00]/10">
                             <Clock className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -1085,14 +1085,14 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
           
           {userRole === 'ADMIN' && (
             <>
-              <div className="p-4 rounded-xl bg-card border border-border outline outline-1 outline-[#CCFF00]/20">
+              <div className="p-4 rounded-xl bg-card border border-border outline outline-1 outline-[#f2ff00]/20">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-lg bg-[#CCFF00]/10 flex items-center justify-center">
-                    <TrendingUp className="w-5 h-5 text-[#CCFF00]" />
+                  <div className="w-10 h-10 rounded-lg bg-[#f2ff00]/10 flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-[#f2ff00]" />
                   </div>
                   <span className="text-sm text-muted-foreground">Toplam Ciro</span>
                 </div>
-                <p className="text-2xl font-bold text-[#CCFF00]">{leads.filter(l => l.status === "won").reduce((acc, curr) => acc + (curr.value || 0), 0).toLocaleString('tr-TR')} ₺</p>
+                <p className="text-2xl font-bold text-[#f2ff00]">{leads.filter(l => l.status === "won").reduce((acc, curr) => acc + (curr.value || 0), 0).toLocaleString('tr-TR')} ₺</p>
               </div>
               <div className="p-4 rounded-xl bg-card border border-border">
                 <div className="flex items-center gap-3 mb-2">
@@ -1241,7 +1241,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.95 }}
                           whileHover={!isReadOnly ? { boxShadow: lead.call_count >= 3 ? "0 0 15px rgba(168, 85, 247, 0.2)" : "0 0 15px rgba(204, 255, 0, 0.05)" } : {}}
-                          className={`group relative border-b border-border last:border-0 transition-all ${lead.call_count >= 3 ? 'border-l-4 border-l-purple-500' : ''} ${inlineEditingId === lead.id ? 'bg-[#CCFF00]/5 ring-1 ring-[#CCFF00]/20' : ''}`}
+                          className={`group relative border-b border-border last:border-0 transition-all ${lead.call_count >= 3 ? 'border-l-4 border-l-purple-500' : ''} ${inlineEditingId === lead.id ? 'bg-[#f2ff00]/5 ring-1 ring-[#f2ff00]/20' : ''}`}
                         >
                           <td className="p-4 relative">
                             {/* Hover Actions (Desktop Only) */}
@@ -1426,16 +1426,16 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                               initial={{ opacity: 0, height: 0 }}
                               animate={{ opacity: 1, height: "auto" }}
                               exit={{ opacity: 0, height: 0 }}
-                              className="bg-[#CCFF00]/5 border-b border-border overflow-hidden"
+                              className="bg-[#f2ff00]/5 border-b border-border overflow-hidden"
                             >
                               <td colSpan={6} className="p-4 pt-0">
                                 <motion.div 
                                   initial={{ y: -10 }}
                                   animate={{ y: 0 }}
-                                  className="flex items-center gap-3 bg-card border border-[#CCFF00]/20 rounded-xl p-2 shadow-inner"
+                                  className="flex items-center gap-3 bg-card border border-[#f2ff00]/20 rounded-xl p-2 shadow-inner"
                                 >
                                   <div className="flex-1 flex items-center gap-2">
-                                    <Plus className="w-4 h-4 text-[#CCFF00]" />
+                                    <Plus className="w-4 h-4 text-[#f2ff00]" />
                                     <input 
                                       autoFocus
                                       type="text"
@@ -1460,7 +1460,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                                     </Button>
                                     <Button 
                                       size="sm" 
-                                      className="h-8 bg-[#CCFF00] hover:bg-[#CCFF00]/90 text-black font-bold text-[10px]"
+                                      className="h-8 bg-[#f2ff00] hover:bg-[#f2ff00]/90 text-black font-bold text-[10px]"
                                       onClick={() => updateLeadNotes(lead.id, inlineNoteValue)}
                                     >
                                       Kaydet (Enter)
@@ -1616,7 +1616,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                         type="number"
                         value={selectedLead.value || 0}
                         onChange={(e) => updateLead(selectedLead.id, { value: parseFloat(e.target.value) || 0 })}
-                        className="h-10 bg-secondary/50 border-border border-[#CCFF00]/30"
+                        className="h-10 bg-secondary/50 border-border border-[#f2ff00]/30"
                         placeholder="0.00"
                       />
                     </div>
@@ -1829,9 +1829,9 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
         {/* WhatsApp Template Modal */}
         {isEditingTemplate && (
           <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-background/90 backdrop-blur-md">
-            <div className="bg-card border border-[#CCFF00]/30 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden p-6 space-y-4">
+            <div className="bg-card border border-[#f2ff00]/30 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden p-6 space-y-4">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-xl text-[#CCFF00]">Mesaj Taslağı Düzenle</h3>
+                <h3 className="font-bold text-xl text-[#f2ff00]">Mesaj Taslağı Düzenle</h3>
                 <Button variant="ghost" size="icon" onClick={() => setIsEditingTemplate(false)}>
                   <XCircle className="w-6 h-6" />
                 </Button>
@@ -1846,7 +1846,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                 <textarea
                   value={wsTemplate}
                   onChange={(e) => setWsTemplate(e.target.value)}
-                  className="w-full h-48 bg-secondary/50 border border-border rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#CCFF00]/20 transition-all resize-none"
+                  className="w-full h-48 bg-secondary/50 border border-border rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#f2ff00]/20 transition-all resize-none"
                   placeholder="WhatsApp mesajınızı buraya yazın..."
                 />
               </div>
@@ -1860,7 +1860,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                   Şimdi Özet Gönder (Test)
                 </Button>
                 <Button 
-                  className="flex-[2] bg-[#CCFF00] hover:bg-[#CCFF00]/90 text-black font-bold"
+                  className="flex-[2] bg-[#f2ff00] hover:bg-[#f2ff00]/90 text-black font-bold"
                   onClick={() => saveTemplate(wsTemplate)}
                 >
                   Kaydet

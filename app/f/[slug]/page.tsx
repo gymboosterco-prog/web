@@ -53,7 +53,7 @@ export default function EmbedFormPage({ params }: { params: Promise<{ slug: stri
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-[#CCFF00]/30 border-t-[#CCFF00] rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-[#f2ff00]/30 border-t-[#f2ff00] rounded-full animate-spin" />
       </div>
     )
   }
@@ -70,8 +70,8 @@ export default function EmbedFormPage({ params }: { params: Promise<{ slug: stri
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4">
         <div className="text-center max-w-sm">
-          <div className="w-16 h-16 rounded-full bg-[#CCFF00]/10 flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 className="w-8 h-8 text-[#CCFF00]" />
+          <div className="w-16 h-16 rounded-full bg-[#f2ff00]/10 flex items-center justify-center mx-auto mb-4">
+            <CheckCircle2 className="w-8 h-8 text-[#f2ff00]" />
           </div>
           <h2 className="text-xl font-bold text-white mb-2">Teşekkürler!</h2>
           <p className="text-white/60 text-sm">En kısa sürede sizi arayacağız.</p>
@@ -120,7 +120,7 @@ export default function EmbedFormPage({ params }: { params: Promise<{ slug: stri
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full h-11 bg-[#CCFF00] hover:bg-[#CCFF00]/90 text-black font-bold"
+              className="w-full h-11 bg-[#f2ff00] hover:bg-[#f2ff00]/90 text-black font-bold"
             >
               {isSubmitting ? "Gönderiliyor..." : "Bilgi Al →"}
             </Button>

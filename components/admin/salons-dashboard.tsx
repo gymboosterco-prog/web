@@ -57,6 +57,7 @@ type Salon = {
   testimonials: { text: string; author: string }[] | null
   video_url: string | null
   faq: { q: string; a: string }[] | null
+  meta_pixel_id: string | null
   active: boolean
   created_at: string
   primary_color: string | null
@@ -81,6 +82,7 @@ type FormState = {
   testimonials: { text: string; author: string }[]
   video_url: string
   faq: { q: string; a: string }[]
+  meta_pixel_id: string
   // Tab 3: Sahip
   owner_name: string; owner_email: string; owner_password: string
 }
@@ -88,7 +90,7 @@ type FormState = {
 const EMPTY_FORM: FormState = {
   name: "", slug: "", city: "", phone: "", salon_type: "fitness",
   logo_url: "",
-  primary_color: "#CCFF00", accent_color: "#ffffff",
+  primary_color: "#f2ff00", accent_color: "#ffffff",
   tagline: "", hero_headline: "", hero_sub: "",
   offer: "", urgency_text: "", cta_text: "",
   pain_points: [],
@@ -97,6 +99,7 @@ const EMPTY_FORM: FormState = {
   testimonials: [],
   video_url: "",
   faq: [],
+  meta_pixel_id: "",
   owner_name: "", owner_email: "", owner_password: "",
 }
 
@@ -253,7 +256,7 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
       name: salon.name, slug: salon.slug, city: salon.city || "", phone: salon.phone || "",
       salon_type: (salon.salon_type as SalonType) || "fitness",
       logo_url: salon.logo_url || "",
-      primary_color: salon.primary_color || "#CCFF00",
+      primary_color: salon.primary_color || "#f2ff00",
       accent_color: salon.accent_color || "#ffffff",
       tagline: salon.tagline || "", hero_headline: salon.hero_headline || "",
       hero_sub: salon.hero_sub || "", offer: salon.offer || "",
@@ -268,6 +271,7 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
           : [],
       video_url: salon.video_url || "",
       faq: salon.faq || [],
+      meta_pixel_id: salon.meta_pixel_id || "",
       owner_name: salon.owner_name || "", owner_email: salon.owner_email || "", owner_password: "",
     })
     setEditingId(salon.id)
@@ -563,7 +567,7 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-lg border border-border flex-shrink-0" style={{ background: form.primary_color }} />
                         <Input value={form.primary_color} onChange={e => setForm(p => ({ ...p, primary_color: e.target.value }))}
-                          placeholder="#CCFF00" className="bg-secondary border-border font-mono text-sm h-8" />
+                          placeholder="#f2ff00" className="bg-secondary border-border font-mono text-sm h-8" />
                         <input type="color" value={form.primary_color} onChange={e => setForm(p => ({ ...p, primary_color: e.target.value }))}
                           className="w-8 h-8 rounded cursor-pointer border-0 bg-transparent p-0" />
                       </div>
@@ -736,6 +740,16 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
                 {/* TAB 3: SAHİP */}
                 {activeTab === "sahip" && (
                   <>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Meta Pixel ID</label>
+                      <Input
+                        placeholder="796159073358189"
+                        value={form.meta_pixel_id}
+                        onChange={e => setForm(p => ({ ...p, meta_pixel_id: e.target.value }))}
+                        className="bg-secondary border-border font-mono text-sm"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">Facebook Ads Manager → Events Manager'dan alın</p>
+                    </div>
                     <div>
                       <label className="text-xs font-medium text-muted-foreground mb-1 block">Salon Sahibi Adı</label>
                       <Input placeholder="Ahmet Yılmaz" value={form.owner_name} onChange={e => setForm(p => ({ ...p, owner_name: e.target.value }))} className="bg-secondary border-border" />

@@ -51,7 +51,7 @@ const statusColors: Record<string, string> = {
   meeting_planned: "bg-purple-500",
   meeting_done: "bg-indigo-500",
   proposal: "bg-orange-500",
-  won: "bg-[#CCFF00]",
+  won: "bg-[#f2ff00]",
   lost: "bg-red-500",
   cool_off: "bg-gray-500",
 }
@@ -146,7 +146,7 @@ export function CalendarView({ leads, onSelectLead }: CalendarViewProps) {
               day: "rdp-day-custom",
             }}
             styles={{
-              root: { "--rdp-accent-color": "#CCFF00", "--rdp-accent-background-color": "#CCFF00" } as React.CSSProperties,
+              root: { "--rdp-accent-color": "#f2ff00", "--rdp-accent-background-color": "#f2ff00" } as React.CSSProperties,
             }}
             components={{
               DayButton: ({ day, modifiers, ...props }) => {
@@ -159,8 +159,8 @@ export function CalendarView({ leads, onSelectLead }: CalendarViewProps) {
                   <button
                     {...props}
                     className={`relative w-9 h-9 rounded-lg text-sm font-medium transition-colors flex items-center justify-center
-                      ${modifiers.selected ? "bg-[#CCFF00] text-black font-bold" : "hover:bg-muted"}
-                      ${modifiers.today && !modifiers.selected ? "border border-[#CCFF00]/50 text-[#CCFF00]" : ""}
+                      ${modifiers.selected ? "bg-[#f2ff00] text-black font-bold" : "hover:bg-muted"}
+                      ${modifiers.today && !modifiers.selected ? "border border-[#f2ff00]/50 text-[#f2ff00]" : ""}
                       ${modifiers.outside ? "opacity-30" : ""}
                     `}
                   >
