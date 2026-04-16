@@ -924,6 +924,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
           leads={filteredLeads}
           statusConfig={statusConfig}
           onUpdateLead={updateLead}
+          onSelectLead={setSelectedLead}
           userRole={userRole}
         />
       )}

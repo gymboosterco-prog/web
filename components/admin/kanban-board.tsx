@@ -68,6 +68,7 @@ interface KanbanBoardProps {
   leads: Lead[]
   statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }>
   onUpdateLead: (id: string, updates: Partial<Lead>) => void
+  onSelectLead?: (lead: Lead) => void
   userRole: string
 }
 
@@ -82,18 +83,19 @@ const COLUMN_ORDER = [
   "cool_off",
 ]
 
-function LeadCard({ lead, statusConfig, isDragging }: {
+function LeadCard({ lead, statusConfig, isDragging, onSelect }: {
   lead: Lead
   statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }>
   isDragging?: boolean
+  onSelect?: (lead: Lead) => void
 }) {
-  const config = statusConfig[lead.status]
-  const Icon = config?.icon || Clock
-
   return (
     <div
-      className={`bg-card border border-border rounded-xl p-3 space-y-2 cursor-grab active:cursor-grabbing transition-all ${
-        isDragging ? "opacity-50 shadow-2xl scale-105" : "hover:border-primary/30 hover:shadow-md"
+      onClick={() => onSelect?.(lead)}
+      className={`bg-card border border-border rounded-xl p-3 space-y-2 transition-all ${
+        isDragging
+          ? "opacity-50 shadow-2xl scale-105 cursor-grabbing"
+          : "cursor-pointer hover:border-primary/30 hover:shadow-md"
       }`}
     >
       <div className="flex items-start justify-between gap-2">
@@ -129,9 +131,10 @@ function LeadCard({ lead, statusConfig, isDragging }: {
   )
 }
 
-function SortableLeadCard({ lead, statusConfig }: {
+function SortableLeadCard({ lead, statusConfig, onSelect }: {
   lead: Lead
   statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }>
+  onSelect?: (lead: Lead) => void
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: lead.id,
@@ -145,7 +148,7 @@ function SortableLeadCard({ lead, statusConfig }: {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <LeadCard lead={lead} statusConfig={statusConfig} isDragging={isDragging} />
+      <LeadCard lead={lead} statusConfig={statusConfig} isDragging={isDragging} onSelect={onSelect} />
     </div>
   )
 }
@@ -157,6 +160,7 @@ function KanbanColumn({
   Icon,
   leads,
   statusConfig,
+  onSelectLead,
 }: {
   status: string
   label: string
@@ -164,6 +168,7 @@ function KanbanColumn({
   Icon: React.ElementType
   leads: Lead[]
   statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }>
+  onSelectLead?: (lead: Lead) => void
 }) {
   return (
     <div className="flex flex-col min-w-[260px] max-w-[260px] bg-muted/30 border border-border rounded-2xl overflow-hidden snap-start">
@@ -184,7 +189,7 @@ function KanbanColumn({
       <div className="flex-1 p-2 space-y-2 min-h-[200px] overflow-y-auto max-h-[calc(100vh-280px)]">
         <SortableContext items={leads.map(l => l.id)} strategy={verticalListSortingStrategy}>
           {leads.map(lead => (
-            <SortableLeadCard key={lead.id} lead={lead} statusConfig={statusConfig} />
+            <SortableLeadCard key={lead.id} lead={lead} statusConfig={statusConfig} onSelect={onSelectLead} />
           ))}
         </SortableContext>
         {leads.length === 0 && (
@@ -197,7 +202,7 @@ function KanbanColumn({
   )
 }
 
-export function KanbanBoard({ leads, statusConfig, onUpdateLead, userRole }: KanbanBoardProps) {
+export function KanbanBoard({ leads, statusConfig, onUpdateLead, onSelectLead, userRole }: KanbanBoardProps) {
   const [activeId, setActiveId] = useState<string | null>(null)
 
   const sensors = useSensors(
@@ -279,6 +284,7 @@ export function KanbanBoard({ leads, statusConfig, onUpdateLead, userRole }: Kan
                 Icon={config.icon}
                 leads={getLeadsForStatus(status)}
                 statusConfig={statusConfig}
+                onSelectLead={onSelectLead}
               />
             )
           })}
