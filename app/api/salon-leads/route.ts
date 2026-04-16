@@ -60,8 +60,12 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100)
+    const offset = Math.max(parseInt(searchParams.get("offset") || "0"), 0)
+
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 })
@@ -69,14 +73,16 @@ export async function GET() {
     const { data: profile } = await supabase.from("profiles").select("role, salon_id").eq("id", user.id).maybeSingle()
     if (!profile) return NextResponse.json({ error: "Profil bulunamadı" }, { status: 403 })
 
-    let query = supabase.from("salon_leads").select("*", { count: "exact" }).order("created_at", { ascending: false })
+    let query = supabase.from("salon_leads").select("*", { count: "exact" })
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
 
     // SALON_OWNER: only their salon's leads (RLS handles this, but extra safety)
     if (profile.role === "SALON_OWNER" && profile.salon_id) {
       query = query.eq("salon_id", profile.salon_id)
     }
 
-    const { data, error, count } = await query.range(0, 99)
+    const { data, error, count } = await query.range(offset, offset + limit - 1)
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ data, total: count ?? 0 })

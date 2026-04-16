@@ -52,7 +52,10 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     return NextResponse.json({ error: "Sadece admin silebilir" }, { status: 403 })
   }
 
-  const { error: deleteError } = await supabase.from("salon_leads").delete().eq("id", id)
+  const { error: deleteError } = await supabase
+    .from("salon_leads")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", id)
   if (deleteError) return NextResponse.json({ error: deleteError.message }, { status: 500 })
 
   return NextResponse.json({ success: true })

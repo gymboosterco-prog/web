@@ -452,7 +452,15 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
 
   const requestNotificationPermission = async () => {
     if (typeof window === "undefined" || !("Notification" in window)) return
-    
+
+    if (Notification.permission === "denied") {
+      toast.error("Bildirimler tarayıcı tarafından engellendi.", {
+        description: "Tarayıcı adres çubuğundaki kilit simgesinden izinleri açabilirsiniz.",
+        duration: 6000,
+      })
+      return
+    }
+
     try {
       const permission = await Notification.requestPermission()
       if (permission === "granted") {
@@ -460,6 +468,11 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
         new Notification("Bildirimler Açıldı! 🚀", {
           body: "Yeni lead geldiğinde anlık bildirim alacaksınız.",
           icon: "/icon-192.png"
+        })
+      } else if (permission === "denied") {
+        toast.error("Bildirim izni reddedildi.", {
+          description: "Tarayıcı adres çubuğundaki kilit simgesinden izinleri açabilirsiniz.",
+          duration: 6000,
         })
       }
     } catch (error) {
@@ -855,7 +868,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                 className="hidden md:flex border-primary/30 text-primary hover:bg-primary/10 animate-pulse"
               >
                 <Bell className="w-4 h-4 mr-2" />
-                Bildirimleri Aç
+                {isMounted && Notification.permission === "denied" ? "Bildirim İzni Engellendi" : "Bildirimleri Aç"}
               </Button>
             )}
             <Button variant="outline" size="sm" onClick={() => setIsEditingTemplate(true)} className="hidden md:flex border-[#f2ff00]/30 text-[#f2ff00] hover:bg-[#f2ff00]/10">
@@ -878,7 +891,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                 {!notificationsEnabled && (
                   <DropdownMenuItem onClick={requestNotificationPermission}>
                     <Bell className="w-4 h-4 mr-2" />
-                    Bildirimleri Aç
+                    {isMounted && Notification.permission === "denied" ? "Bildirim İzni Engellendi" : "Bildirimleri Aç"}
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem onClick={() => setIsEditingTemplate(true)}>

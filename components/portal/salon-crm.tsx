@@ -136,6 +136,9 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
   initialTotal: number
 }) {
   const [leads, setLeads] = useState<SalonLead[]>(initialLeads)
+  const [totalLeads, setTotalLeads] = useState(initialTotal)
+  const [serverOffset, setServerOffset] = useState(initialLeads.length)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [view, setView] = useState<"list" | "kanban">("list")
@@ -293,6 +296,26 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
     setCallNote("")
     setCallOutcome("")
     toast.success("Kaydedildi")
+  }
+
+  const loadMore = async () => {
+    if (isLoadingMore || leads.length >= totalLeads) return
+    setIsLoadingMore(true)
+    try {
+      const res = await fetch(`/api/salon-leads?limit=50&offset=${serverOffset}`)
+      if (res.ok) {
+        const { data, total } = await res.json()
+        setLeads(prev => {
+          const existingIds = new Set(prev.map(l => l.id))
+          const fresh = (data as SalonLead[]).filter(l => !existingIds.has(l.id))
+          return [...prev, ...fresh]
+        })
+        setTotalLeads(total)
+        setServerOffset(s => s + 50)
+      }
+    } finally {
+      setIsLoadingMore(false)
+    }
   }
 
   const handleLogout = async () => {
@@ -539,6 +562,15 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
               </div>
             )
           })}
+          {leads.length < totalLeads && (
+            <button
+              onClick={loadMore}
+              disabled={isLoadingMore}
+              className="w-full py-3 text-sm text-muted-foreground border border-dashed border-border rounded-xl hover:border-primary/30 hover:text-foreground transition-colors disabled:opacity-50"
+            >
+              {isLoadingMore ? "Yükleniyor..." : `Daha Fazla Yükle (${totalLeads - leads.length} kaldı)`}
+            </button>
+          )}
         </div>
       )}
 

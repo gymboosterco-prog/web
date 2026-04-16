@@ -24,7 +24,10 @@ export default async function PortalPage() {
     : { data: null }
 
   // Fetch leads (RLS handles filtering)
-  let query = supabase.from("salon_leads").select("*", { count: "exact" }).order("created_at", { ascending: false }).range(0, 99)
+  let query = supabase.from("salon_leads").select("*", { count: "exact" })
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .range(0, 49)
   if (profile?.salon_id) query = query.eq("salon_id", profile.salon_id)
 
   const { data: leads, count } = await query

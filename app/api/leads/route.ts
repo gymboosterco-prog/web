@@ -132,6 +132,7 @@ export async function GET(request: Request) {
     const { data, error, count } = await supabase
       .from("leads")
       .select("*", { count: 'exact' })
+      .is("deleted_at", null)
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1)
 
