@@ -12,6 +12,12 @@ const istFmt = new Intl.DateTimeFormat('tr-TR', {
 import { Phone, Building2, Calendar, Clock, Zap } from "lucide-react"
 import "react-day-picker/style.css"
 
+type CallEntry = {
+  at: string
+  outcome: "no_answer" | "callback" | "interested" | "not_interested" | "voicemail"
+  note: string
+}
+
 type Lead = {
   id: string
   name: string
@@ -28,7 +34,7 @@ type Lead = {
   member_count: number
   lead_goal: number
   call_count: number
-  call_log: unknown[] | null
+  call_log: CallEntry[] | null
   ad_spend: number
   next_action_at: string | null
   next_action_type: 'CALL' | 'MEETING' | 'WHATSAPP' | 'PROPOSAL_FOLLOWUP' | null
