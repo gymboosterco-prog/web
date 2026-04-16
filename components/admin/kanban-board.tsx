@@ -83,15 +83,13 @@ const COLUMN_ORDER = [
   "cool_off",
 ]
 
-function LeadCard({ lead, statusConfig, isDragging, onSelect }: {
+function LeadCard({ lead, statusConfig, isDragging }: {
   lead: Lead
   statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }>
   isDragging?: boolean
-  onSelect?: (lead: Lead) => void
 }) {
   return (
     <div
-      onClick={() => onSelect?.(lead)}
       className={`bg-card border border-border rounded-xl p-3 space-y-2 transition-all ${
         isDragging
           ? "opacity-50 shadow-2xl scale-105 cursor-grabbing"
@@ -147,8 +145,14 @@ function SortableLeadCard({ lead, statusConfig, onSelect }: {
   }
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <LeadCard lead={lead} statusConfig={statusConfig} isDragging={isDragging} onSelect={onSelect} />
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      onClick={() => { if (!isDragging) onSelect?.(lead) }}
+    >
+      <LeadCard lead={lead} statusConfig={statusConfig} isDragging={isDragging} />
     </div>
   )
 }
