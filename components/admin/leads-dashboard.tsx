@@ -1302,7 +1302,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                                   onClick={(e) => { 
                                     e.stopPropagation();
                                     setInlineEditingId(lead.id)
-                                    setInlineNoteValue(lead.notes || "")
+                                    setInlineNoteValue("")
                                   }}
                                 >
                                   <Plus className="w-4 h-4" />
@@ -1412,11 +1412,15 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                               disabled={isReadOnly}
                               onClick={() => {
                                 setInlineEditingId(lead.id)
-                                setInlineNoteValue(lead.notes || "")
+                                setInlineNoteValue("")
                               }}
                               className={`text-sm h-8 flex items-center truncate transition-colors w-full text-left ${isReadOnly ? 'text-muted-foreground cursor-default' : 'text-muted-foreground hover:text-foreground cursor-pointer'}`}
                             >
-                              {lead.notes || "Not ekle..."}
+                              {(() => {
+                                const entries = parseNotes(lead.notes)
+                                const last = entries[entries.length - 1]
+                                return last ? last.text : "Not ekle..."
+                              })()}
                             </button>
                           </td>
                           <td className="p-4 text-right">
