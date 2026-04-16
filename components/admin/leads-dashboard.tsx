@@ -576,6 +576,27 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
         notified[lead.id] = now
       })
 
+      // meeting_date: 1 saat içindeyse bildirim gönder
+      const ONE_HOUR_MS = 60 * 60 * 1000
+      const meetingDue = leads.filter(l => {
+        if (!l.meeting_date || ['won', 'lost'].includes(l.status)) return false
+        const msTillMeeting = new Date(l.meeting_date).getTime() - now
+        return msTillMeeting >= 0 && msTillMeeting <= ONE_HOUR_MS && !notified[`meeting_${l.id}`]
+      })
+
+      meetingDue.forEach(lead => {
+        const minsLeft = Math.round((new Date(lead.meeting_date!).getTime() - now) / 60_000)
+        new Notification(`📅 Toplantı ${minsLeft} dk sonra: ${lead.name}`, {
+          body: `${lead.gym_name} ile toplantı yaklaşıyor.`,
+          icon: "/icon-192.png",
+        })
+        toast.warning(`📅 Toplantı ${minsLeft} dk sonra: ${lead.name}`, {
+          description: `${lead.gym_name} ile toplantı yaklaşıyor.`,
+          duration: 10000,
+        })
+        notified[`meeting_${lead.id}`] = now
+      })
+
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(notified))
       } catch {}

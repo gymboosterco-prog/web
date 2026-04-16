@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
 import {
@@ -92,6 +92,19 @@ const STATUS_ORDER = ["new", "called", "meeting_done", "won", "lost"]
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.gymbooster.tr"
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+function contactIndicator(lead: SalonLead): { color: string; title: string } {
+  const ref = lead.called_at || lead.created_at
+  const diffDays = (Date.now() - new Date(ref).getTime()) / (1000 * 60 * 60 * 24)
+  if (lead.called_at) {
+    if (diffDays < 1)  return { color: "bg-green-500",  title: "Bugün temas edildi" }
+    if (diffDays <= 3) return { color: "bg-yellow-500", title: `${Math.floor(diffDays)} gün önce temas edildi` }
+    return               { color: "bg-red-500",    title: `${Math.floor(diffDays)} gün sessiz` }
+  }
+  if (diffDays < 1)  return { color: "bg-blue-400",  title: "Yeni başvuru" }
+  if (diffDays <= 3) return { color: "bg-yellow-500", title: "Henüz aranmadı" }
+  return               { color: "bg-red-500",    title: `${Math.floor(diffDays)} gün aranmadı` }
+}
+
 function toDatetimeLocal(iso: string | null): string {
   if (!iso) return ""
   const d = new Date(iso)
@@ -137,6 +150,36 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
   const supabase = createClient()
 
   const landingUrl = salon ? `${SITE_URL}/p/${salon.slug}` : null
+
+  useEffect(() => {
+    if (!salon?.id) return
+    const channel = supabase
+      .channel(`salon-crm-${salon.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'salon_leads',
+        filter: `salon_id=eq.${salon.id}`,
+      }, (payload) => {
+        const newLead = payload.new as SalonLead
+        setLeads(prev => [newLead, ...prev])
+        toast.success(`Yeni başvuru: ${newLead.name}`, {
+          description: "Landing page'den yeni bir başvuru geldi.",
+        })
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'salon_leads',
+        filter: `salon_id=eq.${salon.id}`,
+      }, (payload) => {
+        const updated = payload.new as SalonLead
+        setLeads(prev => prev.map(l => l.id === updated.id ? { ...l, ...updated } : l))
+        setSelectedLead(prev => prev?.id === updated.id ? { ...prev, ...updated } : prev)
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [salon?.id])
 
   const filtered = useMemo(() => leads.filter(l => {
     const matchSearch = !search ||
@@ -433,7 +476,10 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
               <div key={lead.id} className="bg-card border border-border rounded-xl p-4">
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold truncate">{lead.name}</p>
+                    <div className="flex items-center gap-2">
+                      {(() => { const ind = contactIndicator(lead); return <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${ind.color}`} title={ind.title} /> })()}
+                      <p className="font-semibold truncate">{lead.name}</p>
+                    </div>
                     <p className="text-sm text-muted-foreground">{lead.phone}</p>
                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                       <p className="text-xs text-muted-foreground">
@@ -516,7 +562,10 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
                       className="bg-card border border-border rounded-xl p-3 cursor-pointer hover:border-primary/30 transition-colors"
                       onClick={() => openDetail(lead)}
                     >
-                      <p className="font-semibold text-sm truncate mb-0.5">{lead.name}</p>
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        {(() => { const ind = contactIndicator(lead); return <span className={`w-2 h-2 rounded-full flex-shrink-0 ${ind.color}`} title={ind.title} /> })()}
+                        <p className="font-semibold text-sm truncate">{lead.name}</p>
+                      </div>
                       <p className="text-xs text-muted-foreground mb-2">{lead.phone}</p>
                       <div className="flex items-center gap-1.5">
                         <button
