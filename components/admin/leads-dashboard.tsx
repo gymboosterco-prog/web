@@ -1571,7 +1571,9 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
             </div>
           )}
         </div>
-        {/* Lead Details Modal */}
+      </main>
+      )} {/* end activeView === 'table' */}
+      {/* Lead Details Modal */}
         {selectedLead && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
             <div className="bg-card border border-border rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
@@ -2024,8 +2026,6 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
             </div>
           </div>
         )}
-      </main>
-      )} {/* end activeView === 'table' */}
     </div>
   )
 }
