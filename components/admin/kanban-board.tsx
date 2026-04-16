@@ -45,6 +45,7 @@ type Lead = {
   member_count: number
   lead_goal: number
   call_count: number
+  call_log: unknown[] | null
   ad_spend: number
   next_action_at: string | null
   next_action_type: 'CALL' | 'MEETING' | 'WHATSAPP' | 'PROPOSAL_FOLLOWUP' | null
