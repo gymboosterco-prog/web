@@ -5,7 +5,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Trash2 } from "lucide-react"
+import { ArrowLeft, Trash2, Upload } from "lucide-react"
 import Link from "next/link"
 
 type Testimonial = { text: string; author: string }
@@ -27,6 +27,26 @@ type SalonData = {
   testimonials: Testimonial[] | null
   faq: FaqItem[] | null
   meta_pixel_id: string | null
+  logo_url: string | null
+}
+
+async function resizeImage(file: File, maxPx = 512): Promise<File> {
+  if (file.type === "image/svg+xml") return file
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => {
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height))
+      const canvas = document.createElement("canvas")
+      canvas.width = Math.round(img.width * scale)
+      canvas.height = Math.round(img.height * scale)
+      canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height)
+      canvas.toBlob(
+        blob => resolve(new File([blob!], file.name, { type: "image/webp" })),
+        "image/webp", 0.85
+      )
+    }
+    img.src = URL.createObjectURL(file)
+  })
 }
 
 export function SalonProfileEditor({ salon }: { salon: SalonData }) {
@@ -44,8 +64,42 @@ export function SalonProfileEditor({ salon }: { salon: SalonData }) {
     faq: salon.faq || [] as FaqItem[],
     meta_pixel_id: salon.meta_pixel_id || "",
   })
+  const [logoUrl, setLogoUrl] = useState<string | null>(salon.logo_url || null)
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const router = useRouter()
+
+  const handleLogoUpload = async (file: File) => {
+    if (file.size > 2 * 1024 * 1024) { toast.error("Dosya 2 MB'ı geçemez"); return }
+    setIsUploadingLogo(true)
+    try {
+      const resized = await resizeImage(file)
+      const fd = new FormData()
+      fd.append("file", resized)
+      const res = await fetch("/api/salons/upload-logo", { method: "POST", body: fd })
+      const data = await res.json()
+      if (!res.ok) { toast.error(data.error || "Yükleme başarısız"); return }
+      setLogoUrl(data.url)
+      await fetch("/api/portal/salon", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ logo_url: data.url }),
+      })
+      toast.success("Logo güncellendi")
+    } finally {
+      setIsUploadingLogo(false)
+    }
+  }
+
+  const handleLogoRemove = async () => {
+    setLogoUrl(null)
+    await fetch("/api/portal/salon", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ logo_url: null }),
+    })
+    toast.success("Logo kaldırıldı")
+  }
 
   const handleSave = async () => {
     setIsSaving(true)
@@ -100,6 +154,46 @@ export function SalonProfileEditor({ salon }: { salon: SalonData }) {
       </div>
 
       <div className="max-w-lg mx-auto p-4 space-y-6">
+
+        {/* Logo */}
+        <div className="bg-card border border-border rounded-2xl p-5">
+          <h2 className="text-sm font-semibold mb-4">Salon Logosu</h2>
+          <div
+            className="relative flex flex-col items-center justify-center gap-3 border-2 border-dashed border-border rounded-xl p-6 bg-secondary/50 transition-colors hover:border-primary/40 cursor-pointer"
+            onDragOver={e => e.preventDefault()}
+            onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleLogoUpload(f) }}
+            onClick={() => document.getElementById("logo-input")?.click()}
+          >
+            {logoUrl ? (
+              <>
+                <img src={logoUrl} alt="Logo" className="h-16 w-auto object-contain rounded" />
+                <button
+                  type="button"
+                  onClick={e => { e.stopPropagation(); handleLogoRemove() }}
+                  className="absolute top-2 right-2 p-1 rounded-md bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+                <p className="text-xs text-muted-foreground">Değiştirmek için tıkla veya sürükle</p>
+              </>
+            ) : (
+              <>
+                <Upload className="w-8 h-8 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground text-center">
+                  {isUploadingLogo ? "Yükleniyor..." : "Sürükle bırak veya tıkla"}
+                </p>
+                <p className="text-xs text-muted-foreground/60">JPG, PNG, WebP, SVG — max 2 MB</p>
+              </>
+            )}
+            <input
+              id="logo-input"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/svg+xml"
+              className="hidden"
+              onChange={e => { const f = e.target.files?.[0]; if (f) handleLogoUpload(f) }}
+            />
+          </div>
+        </div>
 
         {/* Temel Bilgiler */}
         <div className="bg-card border border-border rounded-2xl p-5 space-y-4">

@@ -2,20 +2,19 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 
-async function requireAdmin() {
+async function requireUploader() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+  if (!user) return false
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle()
-  if (profile?.role !== "ADMIN") return null
-  return true
+  return ["ADMIN", "SALON_OWNER"].includes(profile?.role ?? "")
 }
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2 MB
 
 export async function POST(request: Request) {
-  const isAdmin = await requireAdmin()
-  if (!isAdmin) return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 })
+  const allowed = await requireUploader()
+  if (!allowed) return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 })
 
   const formData = await request.formData()
   const file = formData.get("file") as File | null
@@ -25,8 +24,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Dosya 2 MB'ı geçemez" }, { status: 400 })
   }
 
-  const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"]
-  if (!allowed.includes(file.type)) {
+  const allowedMimes = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"]
+  if (!allowedMimes.includes(file.type)) {
     return NextResponse.json({ error: "Sadece JPG, PNG, WebP, GIF veya SVG yüklenebilir" }, { status: 400 })
   }
 
