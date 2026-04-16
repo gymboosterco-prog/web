@@ -3,7 +3,17 @@
 import { useEffect, useState } from "react"
 import { ArrowUp } from "lucide-react"
 
-export function StickyCTA({ ctaText, primaryColor }: { ctaText: string; primaryColor: string }) {
+export function StickyCTA({
+  ctaText,
+  primaryColor,
+  salonId,
+  slug,
+}: {
+  ctaText: string
+  primaryColor: string
+  salonId: string
+  slug: string
+}) {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
@@ -19,6 +29,11 @@ export function StickyCTA({ ctaText, primaryColor }: { ctaText: string; primaryC
   }, [])
 
   const scrollToForm = () => {
+    fetch("/api/page-events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ salon_id: salonId, event_type: "cta_click", slug }),
+    }).catch(() => {})
     document.getElementById("form-section")?.scrollIntoView({ behavior: "smooth" })
   }
 

@@ -1,7 +1,6 @@
 "use client"
 
 import { useRef, useState } from "react"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CheckCircle2, AlertCircle, ArrowRight, Shield } from "lucide-react"
 
@@ -10,11 +9,13 @@ export function SalonForm({
   salonName,
   ctaText,
   primaryColor = "#f2ff00",
+  instagramUrl,
 }: {
   salonId: string
   salonName: string
   ctaText?: string
   primaryColor?: string
+  instagramUrl?: string | null
 }) {
   const [formData, setFormData] = useState({ name: "", phone: "", instagram_url: "" })
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -50,8 +51,10 @@ export function SalonForm({
         return
       }
       if (!res.ok) { setError(data.error || "Bir hata oluştu"); return }
+
       setIsSubmitted(true)
-      // Fire Lead event for the salon's own pixel (initialized by SalonPixel component)
+
+      // Meta Pixel Lead event (salon's own pixel)
       if (typeof window !== "undefined" && (window as any).fbq) {
         const parts = formData.name.trim().split(/\s+/)
         ;(window as any).fbq("track", "Lead", {
@@ -61,6 +64,13 @@ export function SalonForm({
           ph: formData.phone.replace(/\D/g, ""),
         })
       }
+
+      // Analytics event
+      fetch("/api/page-events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ salon_id: salonId, event_type: "form_submit", slug: window.location.pathname.replace("/p/", "") }),
+      }).catch(() => {})
     } catch {
       setError("Bağlantı hatası, lütfen tekrar deneyin.")
     } finally {
@@ -70,16 +80,35 @@ export function SalonForm({
   }
 
   if (isSubmitted) {
+    const igHref = instagramUrl
+      ? instagramUrl.startsWith("http")
+        ? instagramUrl
+        : `https://instagram.com/${instagramUrl.replace(/^@/, "")}`
+      : null
+
     return (
-      <div className="text-center py-10">
-        <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5"
+      <div className="text-center py-10 space-y-4">
+        <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto"
           style={{ background: `${primaryColor}1a`, border: `1px solid ${primaryColor}4d` }}>
           <CheckCircle2 className="w-10 h-10" style={{ color: primaryColor }} />
         </div>
-        <h3 className="text-2xl font-bold text-white mb-2">Başvurunuz Alındı!</h3>
-        <p className="text-white/60">
-          <strong className="text-white">{salonName}</strong> ekibi en kısa sürede sizi arayacak.
-        </p>
+        <div>
+          <h3 className="text-2xl font-bold text-white mb-2">Başvurunuz Alındı!</h3>
+          <p className="text-white/60">
+            <strong className="text-white">{salonName}</strong> ekibi en kısa sürede sizi arayacak.
+          </p>
+        </div>
+        {igHref && (
+          <a
+            href={igHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-opacity hover:opacity-80"
+            style={{ background: `${primaryColor}1a`, border: `1px solid ${primaryColor}40`, color: primaryColor }}
+          >
+            Bizi Instagram&apos;da Takip Edin →
+          </a>
+        )}
       </div>
     )
   }

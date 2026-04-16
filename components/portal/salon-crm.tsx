@@ -130,10 +130,11 @@ function CopyButton({ text }: { text: string }) {
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-export function SalonCRM({ salon, initialLeads, initialTotal }: {
+export function SalonCRM({ salon, initialLeads, initialTotal, pageStats }: {
   salon: Salon | null
   initialLeads: SalonLead[]
   initialTotal: number
+  pageStats?: { views: number; submits: number } | null
 }) {
   const [leads, setLeads] = useState<SalonLead[]>(initialLeads)
   const [totalLeads, setTotalLeads] = useState(initialTotal)
@@ -376,6 +377,31 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
               className="p-1.5 rounded hover:bg-primary/10 transition-colors text-primary/70 hover:text-primary flex-shrink-0">
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
+          </div>
+        </div>
+      )}
+
+      {/* Sayfa Performansı */}
+      {pageStats && (
+        <div className="px-4 pt-3">
+          <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Bu Ay — Landing Page</p>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-card border border-border rounded-xl p-3 text-center">
+              <p className="text-xl font-bold">{pageStats.views}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Görüntüleme</p>
+            </div>
+            <div className="bg-card border border-border rounded-xl p-3 text-center">
+              <p className="text-xl font-bold">{pageStats.submits}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Form Doldurma</p>
+            </div>
+            <div className="bg-card border border-border rounded-xl p-3 text-center">
+              <p className="text-xl font-bold text-primary">
+                {pageStats.views > 0
+                  ? `%${Math.round((pageStats.submits / pageStats.views) * 100)}`
+                  : "—"}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">Dönüşüm</p>
+            </div>
           </div>
         </div>
       )}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useRef, useState, useMemo } from "react"
 import { toast } from "sonner"
 import { Plus, Copy, Check, ExternalLink, Building2, Users, X, Trash2, Pencil, AlertTriangle, Upload, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -122,8 +122,40 @@ function CopyButton({ text }: { text: string }) {
 
 type Tab = "salon" | "icerik" | "sahip"
 
-export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
+type HealthRow = { salon_id: string; status: string; created_at: string }
+type OwnerProfile = { salon_id: string | null; last_seen_at: string | null }
+
+export function SalonsDashboard({ initialSalons, healthData = [], ownerProfiles = [] }: {
+  initialSalons: Salon[]
+  healthData?: HealthRow[]
+  ownerProfiles?: OwnerProfile[]
+}) {
   const [salons, setSalons] = useState<Salon[]>(initialSalons)
+
+  const thisMonthStart = useMemo(() => {
+    const now = new Date()
+    return new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+  }, [])
+
+  const salonHealthMap = useMemo(() => {
+    const map = new Map<string, { thisMonth: number; convRate: number; daysSinceSeen: number | null; trend: number | null }>()
+    for (const salon of initialSalons) {
+      const leads = healthData.filter(l => l.salon_id === salon.id)
+      const thisMonth = leads.filter(l => l.created_at >= thisMonthStart).length
+      const lastMonth = leads.filter(l => l.created_at < thisMonthStart).length
+      const won = leads.filter(l => l.status === "won").length
+      const total = leads.length
+      const convRate = total > 0 ? Math.round((won / total) * 100) : 0
+      const ownerProfile = ownerProfiles.find(p => p.salon_id === salon.id)
+      const lastSeen = ownerProfile?.last_seen_at ?? null
+      const daysSinceSeen = lastSeen
+        ? Math.floor((Date.now() - new Date(lastSeen).getTime()) / 86400000)
+        : null
+      const trend = lastMonth > 0 ? Math.round(((thisMonth - lastMonth) / lastMonth) * 100) : null
+      map.set(salon.id, { thisMonth, convRate, daysSinceSeen, trend })
+    }
+    return map
+  }, [initialSalons, healthData, ownerProfiles, thisMonthStart])
   const [showModal, setShowModal] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [activeTab, setActiveTab] = useState<Tab>("salon")
@@ -411,6 +443,29 @@ export function SalonsDashboard({ initialSalons }: { initialSalons: Salon[] }) {
                     <CopyButton text={embedCode} />
                   </div>
                 </div>
+                {/* Health row */}
+                {(() => {
+                  const h = salonHealthMap.get(salon.id)
+                  if (!h) return null
+                  return (
+                    <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border text-xs text-muted-foreground flex-wrap">
+                      <span>Bu ay: <strong className="text-foreground">{h.thisMonth}</strong> lead</span>
+                      {h.trend !== null && (
+                        <span className={h.trend >= 0 ? "text-green-500 font-medium" : "text-red-400 font-medium"}>
+                          {h.trend >= 0 ? "↑" : "↓"}{Math.abs(h.trend)}% geçen ay
+                        </span>
+                      )}
+                      <span>Dönüşüm: <strong className="text-foreground">%{h.convRate}</strong></span>
+                      {h.daysSinceSeen !== null ? (
+                        <span className={h.daysSinceSeen > 7 ? "text-red-400 font-medium" : ""}>
+                          Portal: {h.daysSinceSeen === 0 ? "bugün" : `${h.daysSinceSeen}g önce`}
+                        </span>
+                      ) : (
+                        <span className="text-red-400">Portal: hiç girmedi</span>
+                      )}
+                    </div>
+                  )
+                })()}
               </div>
             )
           })}

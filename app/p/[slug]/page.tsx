@@ -7,6 +7,7 @@ export const revalidate = 0
 import { SalonForm } from "./salon-form"
 import { SalonPixel } from "./salon-pixel"
 import { StickyCTA } from "./sticky-cta"
+import { PageTracker } from "./page-tracker"
 import { SALON_PRESETS, type SalonType } from "@/lib/salon-presets"
 import { CheckCircle2, ChevronDown, Clock, Phone, Quote, Shield, XCircle, Zap } from "lucide-react"
 import Image from "next/image"
@@ -37,7 +38,7 @@ export default async function SalonLandingPage({ params }: Props) {
 
   const { data: salon } = await supabase
     .from("salons")
-    .select("id, name, slug, salon_type, city, tagline, offer, hero_headline, hero_sub, urgency_text, cta_text, features, stats, testimonial, testimonial_author, testimonials, video_url, faq, meta_pixel_id, active")
+    .select("id, name, slug, salon_type, city, tagline, offer, hero_headline, hero_sub, urgency_text, cta_text, features, stats, testimonial, testimonial_author, testimonials, video_url, faq, meta_pixel_id, active, instagram_url")
     .eq("slug", slug).eq("active", true).maybeSingle()
 
   if (!salon) notFound()
@@ -162,7 +163,7 @@ export default async function SalonLandingPage({ params }: Props) {
           <div id="form-section" className="bg-white/[0.04] border border-white/10 rounded-2xl p-6 sm:p-8 mb-12">
             <h2 className="text-xl font-bold text-center mb-2">{ctaText}</h2>
             <p className="text-center text-white/50 text-sm mb-6">Formu doldurun, sizi arayalım.</p>
-            <SalonForm salonId={salon.id} salonName={salon.name} ctaText={ctaText} primaryColor={primaryColor} />
+            <SalonForm salonId={salon.id} salonName={salon.name} ctaText={ctaText} primaryColor={primaryColor} instagramUrl={(salon as any).instagram_url ?? null} />
           </div>
 
           {/* Pain Agitation */}
@@ -280,7 +281,8 @@ export default async function SalonLandingPage({ params }: Props) {
         </div>
       </div>
 
-      <StickyCTA ctaText={ctaText} primaryColor={primaryColor} />
+      <StickyCTA ctaText={ctaText} primaryColor={primaryColor} salonId={salon.id} slug={slug} />
+      <PageTracker salonId={salon.id} slug={slug} />
     </div>
   )
 }

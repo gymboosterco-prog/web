@@ -18,6 +18,13 @@ export default async function PortalPage() {
     redirect("/portal/login")
   }
 
+  // Update last_seen_at — fire-and-forget, don't block render
+  supabase
+    .from("profiles")
+    .update({ last_seen_at: new Date().toISOString() })
+    .eq("id", user!.id)
+    .then()
+
   // Fetch salon info
   const { data: salon } = profile?.salon_id
     ? await supabase.from("salons").select("*").eq("id", profile.salon_id).maybeSingle()
@@ -32,11 +39,32 @@ export default async function PortalPage() {
 
   const { data: leads, count } = await query
 
+  // Page analytics for this month
+  const firstOfMonth = new Date(
+    new Date().getFullYear(), new Date().getMonth(), 1
+  ).toISOString()
+
+  const { data: events } = profile?.salon_id
+    ? await supabase
+        .from("page_events")
+        .select("event_type")
+        .eq("salon_id", profile.salon_id)
+        .gte("created_at", firstOfMonth)
+    : { data: [] }
+
+  const pageStats = events
+    ? {
+        views: events.filter(e => e.event_type === "page_view").length,
+        submits: events.filter(e => e.event_type === "form_submit").length,
+      }
+    : null
+
   return (
     <SalonCRM
       salon={salon}
       initialLeads={leads || []}
       initialTotal={count ?? 0}
+      pageStats={pageStats}
     />
   )
 }
