@@ -26,10 +26,22 @@ export async function POST(request: Request) {
     const { data: salon } = await supabase.from("salons").select("id, name").eq("id", salon_id).eq("active", true).maybeSingle()
     if (!salon) return NextResponse.json({ error: "Salon bulunamadı" }, { status: 404 })
 
+    // Aynı salon'da aynı telefon numarası daha önce başvurmuş mu?
+    const normalizedPhone = phone.replace(/\D/g, "")
+    const { data: existing } = await supabase
+      .from("salon_leads")
+      .select("id")
+      .eq("salon_id", salon_id)
+      .eq("phone", normalizedPhone)
+      .maybeSingle()
+    if (existing) {
+      return NextResponse.json({ error: "Bu telefon numarası daha önce başvurmuş." }, { status: 409 })
+    }
+
     const { error } = await supabase.from("salon_leads").insert([{
       salon_id,
       name: escape(name.trim()),
-      phone: escape(phone.trim()),
+      phone: normalizedPhone,
       email: email ? escape(email.trim()) : null,
       instagram_url: instagram_url ? escape(instagram_url.trim().replace(/^@/, "")) : null,
       status: "new",

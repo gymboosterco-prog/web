@@ -70,6 +70,13 @@ export async function PATCH(
       return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 })
     }
 
+    // Rol kontrolü: sadece ADMIN ve STAFF erişebilir
+    const { data: profile } = await supabase
+      .from("profiles").select("role").eq("id", user.id).maybeSingle()
+    if (!profile || !["ADMIN", "STAFF"].includes(profile.role ?? "")) {
+      return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 403 })
+    }
+
     // Validate status enum
     const VALID_STATUSES = ['new', 'called', 'meeting_planned', 'meeting_done', 'proposal', 'won', 'lost', 'cool_off']
     if (status !== undefined && !VALID_STATUSES.includes(status)) {
@@ -133,7 +140,11 @@ export async function PATCH(
     if (member_count !== undefined) updateData.member_count = member_count
     if (lead_goal !== undefined) updateData.lead_goal = lead_goal
     if (call_count !== undefined) updateData.call_count = call_count
-    if (call_log !== undefined) updateData.call_log = call_log
+    if (call_log !== undefined) {
+      updateData.call_log = call_log
+      // call_log güncelleniyorsa call_count otomatik senkronize et
+      updateData.call_count = Array.isArray(call_log) ? call_log.length : 0
+    }
     if (ad_spend !== undefined) updateData.ad_spend = ad_spend
     if (next_action_at !== undefined) updateData.next_action_at = next_action_at
     if (next_action_type !== undefined) updateData.next_action_type = next_action_type
@@ -183,6 +194,13 @@ export async function DELETE(
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 })
+    }
+
+    // Sadece ADMIN silebilir
+    const { data: profile } = await supabase
+      .from("profiles").select("role").eq("id", user.id).maybeSingle()
+    if (!profile || profile.role !== "ADMIN") {
+      return NextResponse.json({ error: "Sadece admin silebilir" }, { status: 403 })
     }
 
     const { error } = await supabase

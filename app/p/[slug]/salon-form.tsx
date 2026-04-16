@@ -45,6 +45,10 @@ export function SalonForm({
         body: JSON.stringify({ salon_id: salonId, ...formData }),
       })
       const data = await res.json()
+      if (res.status === 409) {
+        setError("Bu numara daha önce başvurmuştur. Ekibimiz sizinle iletişime geçecek.")
+        return
+      }
       if (!res.ok) { setError(data.error || "Bir hata oluştu"); return }
       setIsSubmitted(true)
       // Fire Lead event for the salon's own pixel (initialized by SalonPixel component)

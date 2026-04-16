@@ -202,10 +202,10 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
     if (!res.ok) toast.error("Güncelleme başarısız")
   }
 
-  const addCall = (lead: SalonLead, outcome: CallEntry["outcome"], note: string) => {
+  const addCall = async (lead: SalonLead, outcome: CallEntry["outcome"], note: string) => {
     const entry: CallEntry = { at: new Date().toISOString(), outcome, note }
     const newLog = [...(lead.call_log || []), entry]
-    updateLead(lead.id, {
+    await updateLead(lead.id, {
       call_log: newLog,
       call_count: newLog.length,
       called_at: entry.at,
@@ -213,10 +213,10 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
     })
   }
 
-  const handleCall = (lead: SalonLead) => {
-    window.location.href = `tel:${lead.phone}`
-    addCall(lead, "no_answer", "")
+  const handleCall = async (lead: SalonLead) => {
+    await addCall(lead, "no_answer", "")
     toast.success(`${lead.name} arandı olarak işaretlendi`)
+    window.location.href = `tel:${lead.phone}`
   }
 
   const openDetail = (lead: SalonLead) => {

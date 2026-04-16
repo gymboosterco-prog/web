@@ -166,6 +166,7 @@ const suggestNextCallTime = (lastContactAt: string | null) => {
 export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initialLeads: Lead[], initialTotal: number, userRole: 'ADMIN' | 'STAFF' }) {
   const [leads, setLeads] = useState<Lead[]>(initialLeads)
   const [totalLeads, setTotalLeads] = useState(initialTotal)
+  const [serverOffset, setServerOffset] = useState(initialLeads.length)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
@@ -199,7 +200,8 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
     if (isLoadingMore || leads.length >= totalLeads) return
     setIsLoadingMore(true)
     try {
-      const res = await fetch(`/api/leads?limit=50&offset=${leads.length}`)
+      // serverOffset kullan — realtime inserts leads.length'i bozmasın
+      const res = await fetch(`/api/leads?limit=50&offset=${serverOffset}`)
       if (res.ok) {
         const { data, total } = await res.json()
         setLeads(prev => {
@@ -208,6 +210,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
           return [...prev, ...fresh]
         })
         setTotalLeads(total)
+        setServerOffset(s => s + 50)
       }
     } finally {
       setIsLoadingMore(false)
@@ -512,6 +515,8 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
             })
           }
           setLeads(prev => prev.map(l => l.id === updated.id ? { ...l, ...updated } : l))
+          // Modal açıksa selectedLead'i de güncelle
+          setSelectedLead(prev => prev?.id === updated.id ? { ...prev, ...updated } : prev)
         }
       )
       .subscribe()

@@ -9,6 +9,15 @@ async function getAuthorizedClient(leadId: string) {
   const { data: profile } = await supabase.from("profiles").select("role, salon_id").eq("id", user.id).maybeSingle()
   if (!profile) return { error: "Profil bulunamadı", status: 403, supabase: null, profile: null }
 
+  // SALON_OWNER: lead'in kendi salonuna ait olduğunu doğrula
+  if (profile.role === "SALON_OWNER") {
+    const { data: lead } = await supabase
+      .from("salon_leads").select("salon_id").eq("id", leadId).maybeSingle()
+    if (!lead) return { error: "Lead bulunamadı", status: 404, supabase: null, profile: null }
+    if (lead.salon_id !== profile.salon_id)
+      return { error: "Yetkisiz erişim", status: 403, supabase: null, profile: null }
+  }
+
   return { supabase, profile, error: null, status: 200 }
 }
 
@@ -22,6 +31,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const updates: Record<string, unknown> = {}
   for (const key of allowed) {
     if (key in body) updates[key] = body[key]
+  }
+  // call_log güncelleniyorsa call_count otomatik senkronize et
+  if ("call_log" in updates && Array.isArray(updates.call_log)) {
+    updates.call_count = updates.call_log.length
   }
 
   const { error: updateError } = await supabase.from("salon_leads").update(updates).eq("id", id)
