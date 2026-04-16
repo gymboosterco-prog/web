@@ -192,6 +192,8 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
   }, [leads])
 
   const updateLead = async (id: string, updates: Partial<SalonLead>) => {
+    const prevLeads = leads
+    const prevSelected = selectedLead
     setLeads(prev => prev.map(l => l.id === id ? { ...l, ...updates } : l))
     if (selectedLead?.id === id) setSelectedLead(prev => prev ? { ...prev, ...updates } : null)
     const res = await fetch(`/api/salon-leads/${id}`, {
@@ -199,7 +201,11 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updates),
     })
-    if (!res.ok) toast.error("Güncelleme başarısız")
+    if (!res.ok) {
+      setLeads(prevLeads)
+      setSelectedLead(prevSelected)
+      toast.error("Güncelleme başarısız")
+    }
   }
 
   const addCall = async (lead: SalonLead, outcome: CallEntry["outcome"], note: string) => {
@@ -241,6 +247,8 @@ export function SalonCRM({ salon, initialLeads, initialTotal }: {
     await updateLead(selectedLead.id, updates)
     setIsSaving(false)
     setNewNote("")
+    setCallNote("")
+    setCallOutcome("")
     toast.success("Kaydedildi")
   }
 

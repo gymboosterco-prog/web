@@ -403,7 +403,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
         `"${statusConfig[lead.status]?.label || lead.status}"`,
         `"${lead.source}"`,
         `"${new Date(lead.created_at).toLocaleDateString('tr-TR')}"`,
-        `"${(lead.notes || "").replace(/"/g, '""')}"`
+        `"${(() => { const entries = parseNotes(lead.notes); return entries.map(e => e.text).join(" | ").replace(/"/g, '""') })()}"`
       ].join(","))
     ].join("\n")
 
@@ -719,12 +719,12 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
       }
     }
 
-    updateLead(leadId, updates)
+    await updateLead(leadId, updates)
   }
 
   const funnelData = [
-    { label: "Yeni", count: leads.length, color: "#3b82f6" },
-    { label: "Arandı", count: leads.filter(l => l.status !== "new").length, color: "#eab308" },
+    { label: "Yeni", count: leads.filter(l => l.status === "new").length, color: "#3b82f6" },
+    { label: "Arandı", count: leads.filter(l => ["called", "meeting_planned", "meeting_done", "proposal", "won"].includes(l.status)).length, color: "#eab308" },
     { label: "Görüşme", count: leads.filter(l => ["meeting_done", "demo_planned", "proposal", "won"].includes(l.status)).length, color: "#a855f7" },
     { label: "Teklif", count: leads.filter(l => ["proposal", "won"].includes(l.status)).length, color: "#f97316" },
     { label: "Satış", count: leads.filter(l => l.status === "won").length, color: PRIMARY_NEON },
