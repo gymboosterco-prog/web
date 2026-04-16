@@ -38,6 +38,16 @@ export function SalonForm({
       const data = await res.json()
       if (!res.ok) { setError(data.error || "Bir hata oluştu"); return }
       setIsSubmitted(true)
+      // Fire Lead event for the salon's own pixel (initialized by SalonPixel component)
+      if (typeof window !== "undefined" && (window as any).fbq) {
+        const parts = formData.name.trim().split(/\s+/)
+        ;(window as any).fbq("track", "Lead", {
+          content_name: "Salon Lead Form",
+          fn: (parts[0] || "").toLowerCase(),
+          ln: (parts.slice(1).join(" ") || "").toLowerCase(),
+          ph: formData.phone.replace(/\D/g, ""),
+        })
+      }
     } catch {
       setError("Bağlantı hatası, lütfen tekrar deneyin.")
     } finally {

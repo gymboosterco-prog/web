@@ -2,9 +2,8 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, Space_Grotesk } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
-import { MetaPixelEvents } from '@/components/meta-pixel-events'
+import { GymboosterPixel } from '@/components/gymbooster-pixel'
 import { PwaHandler } from '@/components/pwa-handler'
-import Script from 'next/script'
 import './globals.css'
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
@@ -152,36 +151,8 @@ export default function RootLayout({
         >
           {children}
           <PwaHandler />
-          <MetaPixelEvents />
+          <GymboosterPixel />
           <Analytics />
-          <Script
-            id="fb-pixel"
-            strategy="lazyOnload"
-            dangerouslySetInnerHTML={{
-              __html: `
-                !function(f,b,e,v,n,t,s)
-                {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-                n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-                if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-                n.queue=[];t=b.createElement(e);t.async=!0;
-                t.src=v;s=b.getElementsByTagName(e)[0];
-                s.parentNode.insertBefore(t,s)}(window, document,'script',
-                'https://connect.facebook.net/en_US/fbevents.js');
-                fbq('set', 'autoConfig', false, '796159073358189');
-                fbq('init', '796159073358189');
-                fbq('track', 'PageView');
-              `,
-            }}
-          />
-          <noscript>
-            <img
-              height="1"
-              width="1"
-              style={{ display: "none" }}
-              src="https://www.facebook.com/tr?id=796159073358189&ev=PageView&noscript=1"
-              alt=""
-            />
-          </noscript>
         </ThemeProvider>
       </body>
     </html>
