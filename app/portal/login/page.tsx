@@ -12,6 +12,8 @@ function LoginForm() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [resetMode, setResetMode] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
   const inviteExpired = searchParams.get("error") === "invite_expired"
@@ -32,10 +34,41 @@ function LoginForm() {
     }
   }
 
+  const handleReset = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email) { setError("Lütfen e-posta adresinizi girin"); return }
+    setIsLoading(true)
+    setError("")
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/portal/reset-password`,
+      })
+      if (error) { setError("E-posta gönderilemedi, tekrar deneyin"); return }
+      setResetSent(true)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (resetSent) {
+    return (
+      <div className="p-8 rounded-2xl bg-card border border-border text-center space-y-4">
+        <div className="w-12 h-12 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center mx-auto">
+          <Mail className="w-6 h-6 text-green-500" />
+        </div>
+        <p className="font-semibold">Şifre sıfırlama linki gönderildi</p>
+        <p className="text-sm text-muted-foreground">{email} adresine gönderilen linke tıklayarak şifrenizi sıfırlayabilirsiniz.</p>
+        <button type="button" onClick={() => { setResetMode(false); setResetSent(false) }} className="text-sm text-primary hover:underline">
+          Giriş sayfasına dön
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div className="p-8 rounded-2xl bg-card border border-border">
-      <form onSubmit={handleLogin} className="space-y-4">
-        {inviteExpired && (
+      <form onSubmit={resetMode ? handleReset : handleLogin} className="space-y-4">
+        {inviteExpired && !resetMode && (
           <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 text-amber-500 text-sm border border-amber-500/20">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             Davet linkinizin süresi dolmuş. Lütfen e-posta ve şifrenizle giriş yapın veya Gymbooster ile iletişime geçin.
@@ -54,16 +87,27 @@ function LoginForm() {
             <Input type="email" placeholder="salon@email.com" value={email} onChange={e => setEmail(e.target.value)} required className="h-12 pl-10 bg-secondary border-border" />
           </div>
         </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Şifre</label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <Input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required className="h-12 pl-10 bg-secondary border-border" />
+        {!resetMode && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Şifre</label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required className="h-12 pl-10 bg-secondary border-border" />
+            </div>
           </div>
-        </div>
+        )}
         <Button type="submit" disabled={isLoading} className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
-          {isLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
+          {isLoading ? (resetMode ? "Gönderiliyor..." : "Giriş yapılıyor...") : (resetMode ? "Sıfırlama Linki Gönder" : "Giriş Yap")}
         </Button>
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={() => { setResetMode(!resetMode); setError("") }}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {resetMode ? "← Giriş sayfasına dön" : "Şifremi Unuttum"}
+          </button>
+        </div>
       </form>
     </div>
   )
