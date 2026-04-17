@@ -11,5 +11,6 @@ VALUES ('salon-gallery', 'salon-gallery', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Herkes okuyabilir (public landing page'lerde gösterilecek)
+DROP POLICY IF EXISTS "Salon görselleri herkese açık" ON storage.objects;
 CREATE POLICY "Salon görselleri herkese açık" ON storage.objects
   FOR SELECT USING (bucket_id = 'salon-gallery');

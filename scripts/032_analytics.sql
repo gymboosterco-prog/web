@@ -20,6 +20,7 @@ CREATE INDEX IF NOT EXISTS page_events_type_idx
 ALTER TABLE public.page_events ENABLE ROW LEVEL SECURITY;
 
 -- Salon sahibi kendi salonunun event'lerini okuyabilir
+DROP POLICY IF EXISTS "salon_owner_read_own_events" ON public.page_events;
 CREATE POLICY "salon_owner_read_own_events"
   ON public.page_events FOR SELECT
   USING (
@@ -31,6 +32,7 @@ CREATE POLICY "salon_owner_read_own_events"
   );
 
 -- Admin her şeyi okuyabilir
+DROP POLICY IF EXISTS "admin_read_all_events" ON public.page_events;
 CREATE POLICY "admin_read_all_events"
   ON public.page_events FOR SELECT
   USING (
