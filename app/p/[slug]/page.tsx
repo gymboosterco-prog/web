@@ -8,6 +8,7 @@ import { SalonForm } from "./salon-form"
 import { SalonPixel } from "./salon-pixel"
 import { StickyCTA } from "./sticky-cta"
 import { PageTracker } from "./page-tracker"
+import { YouTubeEmbed } from "./youtube-embed"
 import { SALON_PRESETS, type SalonType } from "@/lib/salon-presets"
 import { CheckCircle2, ChevronDown, Clock, Phone, Quote, Shield, XCircle, Zap } from "lucide-react"
 import Image from "next/image"
@@ -38,7 +39,7 @@ export default async function SalonLandingPage({ params }: Props) {
 
   const { data: salon } = await supabase
     .from("salons")
-    .select("id, name, slug, salon_type, city, tagline, offer, hero_headline, hero_sub, urgency_text, cta_text, features, stats, testimonial, testimonial_author, testimonials, video_url, faq, meta_pixel_id, active")
+    .select("id, name, slug, salon_type, city, tagline, offer, hero_headline, hero_sub, urgency_text, cta_text, features, stats, testimonial, testimonial_author, testimonials, video_url, faq, meta_pixel_id, active, phone")
     .eq("slug", slug).eq("active", true).maybeSingle()
 
   if (!salon) notFound()
@@ -82,6 +83,15 @@ export default async function SalonLandingPage({ params }: Props) {
     const m = url.match(/(?:youtu\.be\/|[?&]v=|\/embed\/)([A-Za-z0-9_-]{11})/)
     return m ? m[1] : null
   }
+
+  const salonPhone = (salon as any).phone as string | null ?? null
+  const waUrl = salonPhone
+    ? (() => {
+        const d = salonPhone.replace(/\D/g, "")
+        const num = d.startsWith("0") ? "9" + d : d.startsWith("90") ? d : "90" + d
+        return `https://wa.me/${num}?text=${encodeURIComponent("Merhaba, üyelik hakkında bilgi almak istiyorum.")}`
+      })()
+    : null
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
@@ -148,13 +158,7 @@ export default async function SalonLandingPage({ params }: Props) {
             return (
               <div className="mb-12">
                 <div className="rounded-2xl overflow-hidden border border-white/10 aspect-video">
-                  <iframe
-                    src={`https://www.youtube.com/embed/${ytId}?rel=0&modestbranding=1`}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="w-full h-full"
-                    loading="lazy"
-                  />
+                  <YouTubeEmbed ytId={ytId} />
                 </div>
               </div>
             )
@@ -165,6 +169,16 @@ export default async function SalonLandingPage({ params }: Props) {
             <h2 className="text-xl font-bold text-center mb-2">{ctaText}</h2>
             <p className="text-center text-white/50 text-sm mb-6">Formu doldurun, sizi arayalım.</p>
             <SalonForm salonId={salon.id} salonName={salon.name} ctaText={ctaText} primaryColor={primaryColor} instagramUrl={(salon as any).instagram_url ?? null} />
+            {waUrl && (
+              <p className="text-center mt-5 text-sm text-white/40">
+                ya da{" "}
+                <a href={waUrl} target="_blank" rel="noopener noreferrer"
+                  className="hover:opacity-80 transition-opacity font-semibold"
+                  style={{ color: primaryColor }}>
+                  WhatsApp ile yaz →
+                </a>
+              </p>
+            )}
           </div>
 
           {/* Gallery */}
@@ -185,8 +199,9 @@ export default async function SalonLandingPage({ params }: Props) {
                       : "aspect-square"
                     }`}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                    <div className="relative w-full h-full">
+                      <Image src={url} alt="" fill className="object-cover" sizes="(max-width: 640px) 50vw, 33vw" />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -308,7 +323,7 @@ export default async function SalonLandingPage({ params }: Props) {
         </div>
       </div>
 
-      <StickyCTA ctaText={ctaText} primaryColor={primaryColor} salonId={salon.id} slug={slug} />
+      <StickyCTA ctaText={ctaText} primaryColor={primaryColor} salonId={salon.id} slug={slug} phone={salonPhone} />
       <PageTracker salonId={salon.id} slug={slug} />
     </div>
   )

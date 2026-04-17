@@ -17,7 +17,7 @@ export function SalonForm({
   primaryColor?: string
   instagramUrl?: string | null
 }) {
-  const [formData, setFormData] = useState({ name: "", phone: "", instagram_url: "" })
+  const [formData, setFormData] = useState({ name: "", phone: "" })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState("")
@@ -137,12 +137,6 @@ export function SalonForm({
           value={formData.phone}
           onChange={e => setFormData(p => ({ ...p, phone: e.target.value }))}
           required
-          className="h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30"
-        />
-        <Input
-          placeholder="Instagram Kullanıcı Adı (opsiyonel)"
-          value={formData.instagram_url}
-          onChange={e => setFormData(p => ({ ...p, instagram_url: e.target.value }))}
           className="h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30"
         />
         <button
