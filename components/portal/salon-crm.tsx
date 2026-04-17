@@ -134,12 +134,103 @@ function CopyButton({ text }: { text: string }) {
   )
 }
 
+// ─── Onboarding ───────────────────────────────────────────────────────────────
+type SetupSteps = { hasLogo: boolean; hasPhone: boolean; hasOffer: boolean; hasFirstLead: boolean }
+
+function CopyLandingButton({ slug }: { slug: string }) {
+  const [copied, setCopied] = useState(false)
+  const url = `${SITE_URL}/p/${slug}`
+  return (
+    <button
+      onClick={() => { navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
+      className="text-xs text-primary hover:underline font-medium flex-shrink-0 mt-0.5"
+    >
+      {copied ? "✓ Kopyalandı" : "Bağlantıyı Kopyala"}
+    </button>
+  )
+}
+
+function OnboardingChecklist({ steps, salonSlug, salonId }: {
+  steps: SetupSteps; salonSlug: string; salonId: string
+}) {
+  const STORAGE_KEY = `gwb_ob_${salonId}`
+  const [dismissed, setDismissed] = useState(false)
+  const [collapsed, setCollapsed] = useState(false)
+
+  useEffect(() => {
+    if (localStorage.getItem(STORAGE_KEY)) setDismissed(true)
+  }, [STORAGE_KEY])
+
+  const items = [
+    { key: "hasLogo",      label: "Logo yükle",              desc: "Marka kimliğini ziyaretçilere göster",                           href: "/portal/profil", done: steps.hasLogo },
+    { key: "hasPhone",     label: "Telefon numarasını ekle", desc: "Başvuranları arayabilmek için telefon numarası şart",            href: "/portal/profil", done: steps.hasPhone },
+    { key: "hasOffer",     label: "Özel teklif belirle",     desc: '"İlk ay %50 indirim" gibi bir teklif başvuruları 3x artırır',   href: "/portal/profil", done: steps.hasOffer },
+    { key: "hasFirstLead", label: "İlk başvurunu al",        desc: "Landing page bağlantını paylaşmaya başla",                      href: null,             done: steps.hasFirstLead },
+  ]
+
+  const doneCount = items.filter(i => i.done).length
+  const allDone = doneCount === items.length
+
+  if (dismissed) return null
+
+  return (
+    <div className="mb-5 border border-primary/30 rounded-2xl overflow-hidden bg-primary/5">
+      <button
+        onClick={() => setCollapsed(c => !c)}
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-primary/5 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-semibold">
+            {allDone ? "🎉 Kurulum tamamlandı!" : "Kurulum — Başlamak için 4 adım"}
+          </span>
+          {!allDone && <span className="text-xs text-muted-foreground">{doneCount}/4 tamamlandı</span>}
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-24 h-1.5 bg-border rounded-full overflow-hidden hidden sm:block">
+            <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${(doneCount / 4) * 100}%` }} />
+          </div>
+          {allDone && (
+            <button
+              onClick={e => { e.stopPropagation(); localStorage.setItem(STORAGE_KEY, "1"); setDismissed(true) }}
+              className="text-xs text-muted-foreground hover:text-foreground px-2 py-0.5 rounded border border-border hover:bg-secondary transition-colors"
+            >
+              Kapat
+            </button>
+          )}
+          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${collapsed ? "-rotate-90" : ""}`} />
+        </div>
+      </button>
+
+      {!collapsed && (
+        <div className="px-4 pb-4 space-y-2">
+          {items.map(item => (
+            <div key={item.key} className={`flex items-start gap-3 p-3 rounded-xl border transition-colors ${item.done ? "bg-green-500/5 border-green-500/20" : "bg-card border-border"}`}>
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${item.done ? "bg-green-500 text-white" : "border-2 border-border"}`}>
+                {item.done && <Check className="w-3 h-3" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm font-medium ${item.done ? "line-through text-muted-foreground" : ""}`}>{item.label}</p>
+                {!item.done && <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>}
+              </div>
+              {!item.done && item.href && (
+                <a href={item.href} className="text-xs text-primary hover:underline font-medium flex-shrink-0 mt-0.5">Düzenle →</a>
+              )}
+              {!item.done && !item.href && <CopyLandingButton slug={salonSlug} />}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
-export function SalonCRM({ salon, initialLeads, initialTotal, pageStats }: {
+export function SalonCRM({ salon, initialLeads, initialTotal, pageStats, setupSteps }: {
   salon: Salon | null
   initialLeads: SalonLead[]
   initialTotal: number
   pageStats?: { views: number; submits: number } | null
+  setupSteps?: SetupSteps
 }) {
   const [leads, setLeads] = useState<SalonLead[]>(initialLeads)
   const [totalLeads, setTotalLeads] = useState(initialTotal)
@@ -422,6 +513,13 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats }: {
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>
+        </div>
+      )}
+
+      {/* Onboarding Checklist */}
+      {setupSteps && salon && (
+        <div className="px-4 pt-4">
+          <OnboardingChecklist steps={setupSteps} salonSlug={salon.slug} salonId={salon.id} />
         </div>
       )}
 

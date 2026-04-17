@@ -59,12 +59,20 @@ export default async function PortalPage() {
       }
     : null
 
+  const setupSteps = {
+    hasLogo:      !!salon?.logo_url,
+    hasPhone:     !!salon?.phone,
+    hasOffer:     !!salon?.offer,
+    hasFirstLead: (count ?? 0) > 0,
+  }
+
   return (
     <SalonCRM
       salon={salon}
       initialLeads={leads || []}
       initialTotal={count ?? 0}
       pageStats={pageStats}
+      setupSteps={setupSteps}
     />
   )
 }
