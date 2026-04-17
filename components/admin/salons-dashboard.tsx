@@ -122,7 +122,7 @@ function CopyButton({ text }: { text: string }) {
 
 type Tab = "salon" | "icerik" | "sahip"
 
-type HealthRow = { salon_id: string; status: string; created_at: string }
+type HealthRow = { salon_id: string; status: string; created_at: string; called_at: string | null }
 type OwnerProfile = { salon_id: string | null; last_seen_at: string | null; email: string | null }
 
 export function SalonsDashboard({ initialSalons, healthData = [], ownerProfiles = [] }: {
@@ -138,7 +138,7 @@ export function SalonsDashboard({ initialSalons, healthData = [], ownerProfiles 
   }, [])
 
   const salonHealthMap = useMemo(() => {
-    const map = new Map<string, { thisMonth: number; convRate: number; daysSinceSeen: number | null; trend: number | null }>()
+    const map = new Map<string, { thisMonth: number; convRate: number; daysSinceSeen: number | null; trend: number | null; avgResponseHours: number | null }>()
     for (const salon of initialSalons) {
       const leads = healthData.filter(l => l.salon_id === salon.id)
       const thisMonth = leads.filter(l => l.created_at >= thisMonthStart).length
@@ -152,7 +152,15 @@ export function SalonsDashboard({ initialSalons, healthData = [], ownerProfiles 
         ? Math.floor((Date.now() - new Date(lastSeen).getTime()) / 86400000)
         : null
       const trend = lastMonth > 0 ? Math.round(((thisMonth - lastMonth) / lastMonth) * 100) : null
-      map.set(salon.id, { thisMonth, convRate, daysSinceSeen, trend })
+      const respondedLeads = leads.filter(l => l.called_at)
+      const avgResponseHours = respondedLeads.length > 0
+        ? Math.round(
+            respondedLeads.reduce((sum, l) =>
+              sum + (new Date(l.called_at!).getTime() - new Date(l.created_at).getTime()), 0)
+            / respondedLeads.length / 3600000
+          )
+        : null
+      map.set(salon.id, { thisMonth, convRate, daysSinceSeen, trend, avgResponseHours })
     }
     return map
   }, [initialSalons, healthData, ownerProfiles, thisMonthStart])
@@ -493,6 +501,17 @@ export function SalonsDashboard({ initialSalons, healthData = [], ownerProfiles 
                         </span>
                       )}
                       <span>Dönüşüm: <strong className="text-foreground">%{h.convRate}</strong></span>
+                      {h.avgResponseHours !== null && (
+                        <span className={
+                          h.avgResponseHours <= 1 ? "text-green-500 font-medium"
+                          : h.avgResponseHours <= 24 ? ""
+                          : "text-red-400 font-medium"
+                        }>
+                          Yanıt: {h.avgResponseHours < 1 ? "<1sa"
+                            : h.avgResponseHours < 24 ? `${h.avgResponseHours}sa`
+                            : `${Math.round(h.avgResponseHours / 24)}g`}
+                        </span>
+                      )}
                       {h.daysSinceSeen !== null ? (
                         <span className={h.daysSinceSeen > 7 ? "text-red-400 font-medium" : ""}>
                           Portal: {h.daysSinceSeen === 0 ? "bugün" : `${h.daysSinceSeen}g önce`}

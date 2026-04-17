@@ -22,7 +22,7 @@ export default async function AdminSalonsPage() {
 
   const { data: healthData } = await supabase
     .from("salon_leads")
-    .select("salon_id, status, created_at")
+    .select("salon_id, status, created_at, called_at")
     .is("deleted_at", null)
     .gte("created_at", lastMonthStart)
 
