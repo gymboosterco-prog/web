@@ -29,7 +29,7 @@ export default async function AdminSalonsPage() {
   // Portal owner last seen
   const { data: ownerProfiles } = await supabase
     .from("profiles")
-    .select("salon_id, last_seen_at")
+    .select("salon_id, last_seen_at, email")
     .eq("role", "SALON_OWNER")
     .not("salon_id", "is", null)
 

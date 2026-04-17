@@ -123,7 +123,7 @@ function CopyButton({ text }: { text: string }) {
 type Tab = "salon" | "icerik" | "sahip"
 
 type HealthRow = { salon_id: string; status: string; created_at: string }
-type OwnerProfile = { salon_id: string | null; last_seen_at: string | null }
+type OwnerProfile = { salon_id: string | null; last_seen_at: string | null; email: string | null }
 
 export function SalonsDashboard({ initialSalons, healthData = [], ownerProfiles = [] }: {
   initialSalons: Salon[]
@@ -156,6 +156,12 @@ export function SalonsDashboard({ initialSalons, healthData = [], ownerProfiles 
     }
     return map
   }, [initialSalons, healthData, ownerProfiles, thisMonthStart])
+
+  const hasAccountSet = useMemo(() =>
+    new Set(ownerProfiles.map(p => p.salon_id).filter(Boolean) as string[]),
+    [ownerProfiles]
+  )
+
   const [showModal, setShowModal] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [activeTab, setActiveTab] = useState<Tab>("salon")
@@ -163,8 +169,34 @@ export function SalonsDashboard({ initialSalons, healthData = [], ownerProfiles 
   const [editingId, setEditingId] = useState<string | null>(null)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [createAccountModal, setCreateAccountModal] = useState<{ salonId: string; salonName: string } | null>(null)
+  const [accountEmail, setAccountEmail] = useState("")
+  const [accountPassword, setAccountPassword] = useState("")
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false)
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleCreateAccount = async () => {
+    if (!createAccountModal || !accountEmail) return
+    setIsCreatingAccount(true)
+    try {
+      const res = await fetch(`/api/salons/${createAccountModal.salonId}/create-owner`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: accountEmail, password: accountPassword || undefined }),
+      })
+      const data = await res.json()
+      if (!res.ok) { toast.error(data.error || "Hesap oluşturulamadı"); return }
+      toast.success(data.method === "created" ? "Portal hesabı oluşturuldu" : "Davet e-postası gönderildi")
+      setCreateAccountModal(null)
+      setAccountEmail("")
+      setAccountPassword("")
+      // Sayfayı yenileyerek badge'i güncelle
+      window.location.reload()
+    } finally {
+      setIsCreatingAccount(false)
+    }
+  }
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -408,6 +440,11 @@ export function SalonsDashboard({ initialSalons, healthData = [], ownerProfiles 
                         <span className={`text-xs px-2 py-0.5 rounded-full border ${salon.active ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"}`}>
                           {salon.active ? "Aktif" : "Pasif"}
                         </span>
+                        {!hasAccountSet.has(salon.id) && (
+                          <span className="text-xs bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded-full">
+                            Portal hesabı yok
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5">{preset.label}</p>
                       {salon.offer && <p className="text-xs mt-0.5" style={{ color: primaryColor }}>🎁 {salon.offer}</p>}
@@ -460,6 +497,13 @@ export function SalonsDashboard({ initialSalons, healthData = [], ownerProfiles 
                         <span className={h.daysSinceSeen > 7 ? "text-red-400 font-medium" : ""}>
                           Portal: {h.daysSinceSeen === 0 ? "bugün" : `${h.daysSinceSeen}g önce`}
                         </span>
+                      ) : !hasAccountSet.has(salon.id) ? (
+                        <button
+                          onClick={() => { setCreateAccountModal({ salonId: salon.id, salonName: salon.name }); setAccountEmail(salon.owner_email || "") }}
+                          className="text-xs text-primary hover:underline font-medium"
+                        >
+                          + Hesap Oluştur
+                        </button>
                       ) : (
                         <span className="text-red-400">Portal: hiç girmedi</span>
                       )}
@@ -469,6 +513,53 @@ export function SalonsDashboard({ initialSalons, healthData = [], ownerProfiles 
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* Create Account Modal */}
+      {createAccountModal && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setCreateAccountModal(null)}>
+          <div className="bg-card border border-border rounded-2xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold">Portal Hesabı Oluştur</h3>
+              <button onClick={() => setCreateAccountModal(null)} className="p-1 rounded hover:bg-secondary">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">{createAccountModal.salonName}</p>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">E-posta</label>
+                <Input
+                  type="email"
+                  placeholder="salon@email.com"
+                  value={accountEmail}
+                  onChange={e => setAccountEmail(e.target.value)}
+                  className="h-9 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Şifre <span className="text-muted-foreground/60">(boş bırakırsan davet e-postası gönderilir)</span></label>
+                <Input
+                  type="password"
+                  placeholder="En az 6 karakter"
+                  value={accountPassword}
+                  onChange={e => setAccountPassword(e.target.value)}
+                  className="h-9 text-sm"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 mt-5">
+              <button onClick={() => setCreateAccountModal(null)} className="flex-1 h-9 rounded-lg border border-border text-sm hover:bg-secondary transition-colors">İptal</button>
+              <button
+                onClick={handleCreateAccount}
+                disabled={isCreatingAccount || !accountEmail}
+                className="flex-1 h-9 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {isCreatingAccount ? "Oluşturuluyor..." : accountPassword ? "Hesap Oluştur" : "Davet Gönder"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
