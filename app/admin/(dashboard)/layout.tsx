@@ -9,7 +9,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!user) redirect("/admin/login")
 
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle()
-  const isAdmin = profile?.role === "ADMIN"
+
+  if (!profile || !["ADMIN", "STAFF"].includes(profile.role || "")) redirect("/portal")
+
+  const isAdmin = profile.role === "ADMIN"
 
   return (
     <div className="min-h-screen bg-background">
