@@ -116,13 +116,16 @@ export async function GET(request: Request) {
   try {
     const supabase = await createClient()
 
-    // Check for authentication
+    // Check for authentication and role
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
-      return NextResponse.json(
-        { error: "Yetkisiz erişim" },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 })
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles").select("role").eq("id", user.id).maybeSingle()
+    if (!profile || !["ADMIN", "STAFF"].includes(profile.role || "")) {
+      return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 403 })
     }
 
     const { searchParams } = new URL(request.url)

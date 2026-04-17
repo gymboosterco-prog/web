@@ -14,6 +14,11 @@ export async function POST(request: Request) {
     if (!VALID_EVENTS.includes(event_type)) {
       return NextResponse.json({ error: "Invalid event_type" }, { status: 400 })
     }
+    // UUID format validation — FK constraint catches fake UUIDs but this avoids a DB roundtrip error
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (!UUID_RE.test(salon_id)) {
+      return NextResponse.json({ error: "Invalid salon_id" }, { status: 400 })
+    }
 
     const admin = createAdminClient()
     await admin.from("page_events").insert({ salon_id, event_type, slug })

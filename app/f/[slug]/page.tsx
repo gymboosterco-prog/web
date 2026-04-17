@@ -18,7 +18,7 @@ export default function EmbedFormPage({ params }: { params: Promise<{ slug: stri
   const [notFound, setNotFound] = useState(false)
 
   // Fetch salon on mount
-  useState(() => {
+  useEffect(() => {
     const supabase = createClient()
     supabase.from("salons").select("id, name, instagram_url").eq("slug", slug).eq("active", true).maybeSingle().then(({ data }) => {
       if (!data) { setNotFound(true); setLoading(false); return }
@@ -27,7 +27,7 @@ export default function EmbedFormPage({ params }: { params: Promise<{ slug: stri
       setInstagramUrl((data as any).instagram_url ?? null)
       setLoading(false)
     })
-  })
+  }, [slug])
 
   // Track page_view once salon is loaded
   useEffect(() => {
