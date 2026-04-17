@@ -71,12 +71,14 @@ type SalonLead = {
   meeting_date: string | null
   next_action_at: string | null
   created_at: string
+  value: number
 }
 
 type Salon = {
   id: string
   name: string
   slug: string
+  whatsapp_template: string | null
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
@@ -112,9 +114,12 @@ function toDatetimeLocal(iso: string | null): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-function waUrl(phone: string): string {
+const DEFAULT_WS_TEMPLATE = "Merhaba {name}, {salon} için başvurunuzu aldık! Size uygun paketleri görüşmek ister misiniz?"
+
+function buildWaUrl(phone: string, template: string, name: string, salonName: string): string {
   const digits = phone.replace(/\D/g, "").replace(/^0/, "")
-  return `https://wa.me/90${digits}`
+  const msg = template.replace(/\{name\}/g, name).replace(/\{salon\}/g, salonName)
+  return `https://wa.me/90${digits}?text=${encodeURIComponent(msg)}`
 }
 
 function CopyButton({ text }: { text: string }) {
@@ -150,6 +155,11 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats }: {
   const [isSaving, setIsSaving] = useState(false)
   const [callNote, setCallNote] = useState("")
   const [callOutcome, setCallOutcome] = useState<CallEntry["outcome"] | "">("")
+  const [detailValue, setDetailValue] = useState(0)
+  const [wsTemplate, setWsTemplate] = useState(salon?.whatsapp_template || DEFAULT_WS_TEMPLATE)
+  const [showWsEditor, setShowWsEditor] = useState(false)
+  const [wsEditing, setWsEditing] = useState("")
+  const [isSavingWs, setIsSavingWs] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -196,6 +206,9 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats }: {
   const stats = useMemo(() => {
     const total = leads.length
     const won = leads.filter(l => l.status === "won").length
+    const totalRevenue = leads
+      .filter(l => l.status === "won")
+      .reduce((sum, l) => sum + (l.value || 0), 0)
     return {
       total,
       new: leads.filter(l => l.status === "new").length,
@@ -206,25 +219,30 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats }: {
         return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
       }).length,
       conversionRate: total > 0 ? Math.round((won / total) * 100) : 0,
+      totalRevenue,
     }
   }, [leads])
 
   const trendData = useMemo(() => {
-    const days: Record<string, number> = {}
+    const days: Record<string, { count: number; won: number }> = {}
     const now = new Date()
     for (let i = 29; i >= 0; i--) {
       const d = new Date(now)
       d.setDate(d.getDate() - i)
       const key = d.toISOString().slice(0, 10)
-      days[key] = 0
+      days[key] = { count: 0, won: 0 }
     }
     leads.forEach(l => {
       const key = l.created_at.slice(0, 10)
-      if (key in days) days[key]++
+      if (key in days) {
+        days[key].count++
+        if (l.status === "won") days[key].won++
+      }
     })
-    return Object.entries(days).map(([date, count]) => ({
+    return Object.entries(days).map(([date, { count, won }]) => ({
       date: new Date(date + "T12:00:00").toLocaleDateString("tr-TR", { day: "numeric", month: "short" }),
       count,
+      won,
     }))
   }, [leads])
 
@@ -277,6 +295,7 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats }: {
     setNewNote("")
     setNextActionValue(toDatetimeLocal(lead.next_action_at))
     setDetailStatus(lead.status)
+    setDetailValue(lead.value || 0)
     setCallNote("")
     setCallOutcome("")
   }
@@ -287,6 +306,7 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats }: {
     const updates: Partial<SalonLead> = {
       status: detailStatus,
       next_action_at: nextActionValue ? new Date(nextActionValue).toISOString() : null,
+      value: detailValue,
     }
     if (newNote.trim()) {
       updates.notes = appendNote(selectedLead.notes, newNote)
@@ -297,6 +317,22 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats }: {
     setCallNote("")
     setCallOutcome("")
     toast.success("Kaydedildi")
+  }
+
+  const saveWsTemplate = async () => {
+    setIsSavingWs(true)
+    try {
+      await fetch("/api/portal/salon", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ whatsapp_template: wsEditing }),
+      })
+      setWsTemplate(wsEditing)
+      setShowWsEditor(false)
+      toast.success("WhatsApp şablonu kaydedildi")
+    } finally {
+      setIsSavingWs(false)
+    }
   }
 
   const loadMore = async () => {
@@ -336,6 +372,14 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats }: {
           <p className="text-xs text-muted-foreground">Başvuru Yönetimi</p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => { setWsEditing(wsTemplate); setShowWsEditor(true) }}
+            className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-secondary border border-border text-xs text-muted-foreground hover:text-foreground transition-colors"
+            title="WhatsApp Şablonu"
+          >
+            <MessageSquare className="w-3.5 h-3.5 text-green-400" />
+            WA Şablon
+          </button>
           <Link
             href="/portal/profil"
             className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-secondary border border-border text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -407,12 +451,13 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats }: {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-4">
         {[
-          { label: "Bu Ay",    value: stats.thisMonth,            icon: Clock },
-          { label: "Toplam",   value: stats.total,                icon: Users },
-          { label: "Üye Oldu", value: stats.won,                  icon: CheckCircle2 },
-          { label: "Dönüşüm", value: `%${stats.conversionRate}`,  icon: TrendingUp },
+          { label: "Bu Ay",    value: stats.thisMonth,                                                            icon: Clock },
+          { label: "Toplam",   value: stats.total,                                                                icon: Users },
+          { label: "Üye Oldu", value: stats.won,                                                                  icon: CheckCircle2 },
+          { label: "Dönüşüm",  value: `%${stats.conversionRate}`,                                                 icon: TrendingUp },
+          { label: "Ciro",     value: stats.totalRevenue > 0 ? `₺${stats.totalRevenue.toLocaleString("tr-TR")}` : "—", icon: TrendingUp },
         ].map(({ label, value, icon: Icon }) => (
           <div key={label} className="bg-card border border-border rounded-xl p-3 text-center">
             <Icon className="w-4 h-4 text-primary mx-auto mb-1" />
@@ -425,9 +470,15 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats }: {
       {/* Trend Grafiği */}
       <div className="px-4 pb-4">
         <div className="bg-card border border-border rounded-xl p-4">
-          <p className="text-xs font-semibold text-muted-foreground mb-3">Son 30 Gün — Başvurular</p>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-semibold text-muted-foreground">Son 30 Gün — Başvuru & Dönüşüm</p>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block" style={{ background: "hsl(var(--primary))" }} />Başvuru</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block bg-green-500" />Üye Oldu</span>
+            </div>
+          </div>
           <ResponsiveContainer width="100%" height={100}>
-            <BarChart data={trendData} barSize={6}>
+            <BarChart data={trendData} barSize={5} barCategoryGap="20%">
               <XAxis dataKey="date" tick={{ fontSize: 9 }} tickLine={false} axisLine={false} interval={6} />
               <YAxis hide allowDecimals={false} />
               <Tooltip
@@ -438,9 +489,9 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats }: {
                   fontSize: 12,
                 }}
                 cursor={{ fill: "rgba(255,255,255,0.04)" }}
-                formatter={(value: number) => [value, "Başvuru"]}
               />
               <Bar dataKey="count" name="Başvuru" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="won" name="Üye Oldu" fill="#22c55e" radius={[3, 3, 0, 0]} opacity={0.85} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -469,7 +520,7 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats }: {
                       <Phone className="w-3 h-3" />
                       Ara
                     </button>
-                    <a href={waUrl(lead.phone)} target="_blank" rel="noopener noreferrer"
+                    <a href={buildWaUrl(lead.phone, wsTemplate, lead.name, salon?.name || "")} target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-1 px-2.5 h-7 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium hover:bg-green-500/20 transition-colors">
                       <MessageSquare className="w-3 h-3" />
                       WA
@@ -567,7 +618,7 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats }: {
                     <Phone className="w-3.5 h-3.5" />
                     Ara {lead.call_count > 0 && `(${lead.call_count})`}
                   </button>
-                  <a href={waUrl(lead.phone)} target="_blank" rel="noopener noreferrer"
+                  <a href={buildWaUrl(lead.phone, wsTemplate, lead.name, salon?.name || "")} target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium hover:bg-green-500/20 transition-colors">
                     <MessageSquare className="w-3.5 h-3.5" />
                     WA
@@ -634,7 +685,7 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats }: {
                           {lead.call_count > 0 ? lead.call_count : "Ara"}
                         </button>
                         <a
-                          href={waUrl(lead.phone)}
+                          href={buildWaUrl(lead.phone, wsTemplate, lead.name, salon?.name || "")}
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={e => e.stopPropagation()}
@@ -661,6 +712,48 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats }: {
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* WhatsApp Şablon Editörü */}
+      {showWsEditor && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setShowWsEditor(false)}>
+          <div className="bg-card border border-border rounded-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-border">
+              <h3 className="font-semibold flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-green-400" />
+                WhatsApp Mesaj Şablonu
+              </h3>
+              <button onClick={() => setShowWsEditor(false)}><X className="w-4 h-4 text-muted-foreground" /></button>
+            </div>
+            <div className="px-5 py-4 space-y-3">
+              <p className="text-xs text-muted-foreground">
+                Kullanılabilir değişkenler: <code className="bg-secondary px-1 py-0.5 rounded text-primary">{"{name}"}</code> — müşteri adı, <code className="bg-secondary px-1 py-0.5 rounded text-primary">{"{salon}"}</code> — salon adı
+              </p>
+              <textarea
+                value={wsEditing}
+                onChange={e => setWsEditing(e.target.value)}
+                rows={4}
+                className="w-full bg-secondary border border-border rounded-xl p-3 text-sm resize-none focus:outline-none focus:border-primary/50"
+              />
+              <div className="bg-green-500/5 border border-green-500/20 rounded-lg px-3 py-2">
+                <p className="text-xs text-muted-foreground mb-0.5 font-medium">Önizleme:</p>
+                <p className="text-xs text-green-400">
+                  {wsEditing.replace(/\{name\}/g, "Ahmet").replace(/\{salon\}/g, salon?.name || "Salonunuz")}
+                </p>
+              </div>
+            </div>
+            <div className="px-5 pb-5 flex gap-2">
+              <button onClick={() => setShowWsEditor(false)} className="flex-1 h-9 rounded-lg border border-border text-sm hover:bg-secondary transition-colors">İptal</button>
+              <button
+                onClick={saveWsTemplate}
+                disabled={isSavingWs || !wsEditing.trim()}
+                className="flex-1 h-9 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {isSavingWs ? "Kaydediliyor..." : "Kaydet"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -810,6 +903,22 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats }: {
                   </button>
                 )}
               </div>
+
+              {/* Üyelik Değeri */}
+              {(detailStatus === "won" || selectedLead.status === "won") && (
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Aylık Üyelik Değeri (₺)</label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step={50}
+                    value={detailValue || ""}
+                    onChange={e => setDetailValue(parseFloat(e.target.value) || 0)}
+                    placeholder="ör. 750"
+                    className="h-9 text-sm bg-secondary border-border"
+                  />
+                </div>
+              )}
 
               {/* Not Geçmişi */}
               <div>

@@ -10,6 +10,7 @@ const OWNER_ALLOWED_FIELDS = [
   "meta_pixel_id",
   "logo_url",
   "gallery_images",
+  "whatsapp_template",
 ]
 
 async function requireSalonOwner(): Promise<string | null> {
