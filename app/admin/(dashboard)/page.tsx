@@ -25,6 +25,7 @@ export default async function AdminPage() {
   }
 
   const { data: leads, count } = await query
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .range(0, 49)
 

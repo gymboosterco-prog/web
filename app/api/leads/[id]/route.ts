@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 
 export async function GET(
@@ -203,7 +204,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Sadece admin silebilir" }, { status: 403 })
     }
 
-    const { error } = await supabase
+    const adminClient = createAdminClient()
+    const { error } = await adminClient
       .from("leads")
       .update({ deleted_at: new Date().toISOString() })
       .eq("id", id)
