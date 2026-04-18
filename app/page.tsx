@@ -12,7 +12,7 @@ const Guarantee = dynamic(() => import("@/components/guarantee").then(m => ({ de
 const ForWho = dynamic(() => import("@/components/for-who").then(m => ({ default: m.ForWho })))
 const Process = dynamic(() => import("@/components/process").then(m => ({ default: m.Process })))
 const FAQ = dynamic(() => import("@/components/faq").then(m => ({ default: m.FAQ })))
-const HesaplamaClient = dynamic(() => import("@/components/hesaplama-client").then(m => ({ default: m.HesaplamaClient })), { ssr: false })
+const HesaplamaClient = dynamic(() => import("@/components/hesaplama-client").then(m => ({ default: m.HesaplamaClient })))
 const Footer = dynamic(() => import("@/components/footer").then(m => ({ default: m.Footer })))
 
 export default function Home() {
