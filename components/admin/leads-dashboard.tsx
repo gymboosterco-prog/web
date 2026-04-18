@@ -110,6 +110,8 @@ type Lead = {
   value: number
   assigned_to: string | null
   instagram_url: string | null
+  ad_budget: string | null
+  preferred_call_time: string | null
   member_count: number
   lead_goal: number
   call_count: number
@@ -1662,6 +1664,27 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                     />
                   </div>
                 </div>
+
+                {(selectedLead.ad_budget || selectedLead.preferred_call_time) && (
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
+                    {selectedLead.ad_budget && (
+                      <div className="space-y-1">
+                        <span className="text-xs font-medium text-muted-foreground uppercase block">Reklam Bütçesi</span>
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-primary/10 text-primary text-sm font-semibold">
+                          ₺{selectedLead.ad_budget.replace('-', ' – ₺')}
+                        </span>
+                      </div>
+                    )}
+                    {selectedLead.preferred_call_time && (
+                      <div className="space-y-1">
+                        <span className="text-xs font-medium text-muted-foreground uppercase block">Aranma Saati</span>
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-secondary text-foreground text-sm font-semibold">
+                          {selectedLead.preferred_call_time}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {userRole === 'ADMIN' && (
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
