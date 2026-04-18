@@ -107,24 +107,13 @@ export function CTA() {
                     <div>
                       <Input
                         type="text"
-                        placeholder="Spor Salonu Adı"
-                        value={formData.gymName}
-                        onChange={(e) => updateField('gymName', e.target.value)}
+                        placeholder="Salonunuzun Instagram Kullanıcı Adı"
+                        value={formData.instagramUrl}
+                        onChange={(e) => updateField("instagramUrl", e.target.value)}
                         required
                         className="h-10 md:h-11 lg:h-12 bg-secondary border-border text-sm md:text-base"
                       />
                     </div>
-
-                    <div className="space-y-2">
-              <label className="text-sm font-medium text-white/70">Instagram Profil Adresi</label>
-              <Input
-                type="text"
-                placeholder="https://instagram.com/salonunuz"
-                value={formData.instagramUrl}
-                onChange={(e) => updateField("instagramUrl", e.target.value)}
-                className="bg-white/10 border-white/20 text-white h-12 placeholder:text-white/40 focus:bg-white/20 transition-all font-medium"
-              />
-            </div>
 
             <Button 
                       type="submit" 

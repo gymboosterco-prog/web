@@ -134,23 +134,14 @@ export function Hero() {
                         required
                         className="h-11 md:h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 text-sm md:text-base focus:border-primary/50 transition-colors"
                       />
-                      <Input
-                        type="text"
-                        placeholder="Spor Salonu Adı"
-                        value={formData.gymName}
-                        onChange={(e) => updateField('gymName', e.target.value)}
-                        required
-                        className="h-11 md:h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 text-sm md:text-base focus:border-primary/50 transition-colors"
-                      />
-
-                      {/* Instagram Kısmı - Diğerleriyle Aynı Yapıda */}
                       <div className="relative group">
                         <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-white/30 group-focus-within:text-primary transition-colors" />
                         <Input
                           type="text"
-                          placeholder="Instagram Kullanıcı Adı"
+                          placeholder="Salonunuzun Instagram Kullanıcı Adı"
                           value={formData.instagramUrl}
                           onChange={(e) => updateField("instagramUrl", e.target.value)}
+                          required
                           className="pl-10 h-11 md:h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 text-sm md:text-base focus:border-primary/50 transition-all"
                         />
                       </div>

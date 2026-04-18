@@ -5,9 +5,9 @@ import { Resend } from "resend"
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, phone, gymName, instagramUrl } = body
+    const { name, phone, instagramUrl } = body
 
-    if (!name || !phone || !gymName) {
+    if (!name || !phone || !instagramUrl) {
       return NextResponse.json(
         { error: "Tüm alanlar zorunludur" },
         { status: 400 }
@@ -18,11 +18,11 @@ export async function POST(request: Request) {
     if (typeof name !== 'string' || name.trim().length < 2 || name.length > 100) {
       return NextResponse.json({ error: "Ad en az 2 karakter olmalıdır" }, { status: 400 })
     }
-    if (typeof gymName !== 'string' || gymName.trim().length < 2 || gymName.length > 150) {
-      return NextResponse.json({ error: "Salon adı en az 2 karakter olmalıdır" }, { status: 400 })
-    }
     if (typeof phone !== 'string' || phone.replace(/\D/g, '').length < 10) {
       return NextResponse.json({ error: "Geçersiz telefon numarası" }, { status: 400 })
+    }
+    if (typeof instagramUrl !== 'string' || instagramUrl.trim().length < 2) {
+      return NextResponse.json({ error: "Geçerli bir Instagram kullanıcı adı girin" }, { status: 400 })
     }
 
     // Sanitize for HTML output (email template)
@@ -30,10 +30,9 @@ export async function POST(request: Request) {
       str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
     const safeName = escapeHtml(name.trim())
-    const safeGymName = escapeHtml(gymName.trim())
+    const safeInstagram = escapeHtml(instagramUrl.trim().replace(/^@/, ''))
+    const safeGymName = `@${safeInstagram}`
     const safePhone = escapeHtml(phone.trim())
-
-    const safeInstagram = instagramUrl ? escapeHtml(instagramUrl.trim().replace(/^@/, '')) : null
 
     const supabase = await createClient()
 
@@ -44,7 +43,7 @@ export async function POST(request: Request) {
           name: safeName,
           phone: safePhone,
           gym_name: safeGymName,
-          instagram_url: safeInstagram,
+          instagram_url: safeInstagram || null,
           status: "new",
           source: "website"
         }
@@ -76,9 +75,8 @@ export async function POST(request: Request) {
               <h2 style="color:#fff;font-size:18px;margin:0 0 16px;">📋 Lead Bilgileri</h2>
               <table style="width:100%;border-collapse:collapse;">
                 <tr><td style="color:#888;padding:6px 0;width:130px;">Ad Soyad</td><td style="color:#fff;font-weight:600;">${safeName}</td></tr>
-                <tr><td style="color:#888;padding:6px 0;">Salon Adı</td><td style="color:#fff;font-weight:600;">${safeGymName}</td></tr>
+                <tr><td style="color:#888;padding:6px 0;">Instagram</td><td style="color:#fff;font-weight:600;">@${safeInstagram}</td></tr>
                 <tr><td style="color:#888;padding:6px 0;">Telefon</td><td style="color:#f2ff00;font-weight:600;">${safePhone}</td></tr>
-${safeInstagram ? `<tr><td style="color:#888;padding:6px 0;">Instagram</td><td style="color:#fff;">@${safeInstagram}</td></tr>` : ''}
               </table>
             </div>
             <div style="text-align:center;">

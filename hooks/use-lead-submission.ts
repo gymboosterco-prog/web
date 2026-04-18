@@ -4,8 +4,7 @@ import { useRouter } from "next/navigation"
 export type LeadFormData = {
   name: string
   phone: string
-  gymName: string
-  instagramUrl?: string
+  instagramUrl: string
 }
 
 export function useLeadSubmission() {
@@ -13,7 +12,6 @@ export function useLeadSubmission() {
   const [formData, setFormData] = useState<LeadFormData>({
     name: "",
     phone: "",
-    gymName: "",
     instagramUrl: ""
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -36,12 +34,6 @@ export function useLeadSubmission() {
       setIsSubmitting(false)
       return
     }
-    if (!formData.gymName.trim() || formData.gymName.trim().length < 2) {
-      setError("Salon adı en az 2 karakter olmalıdır")
-      setIsSubmitting(false)
-      return
-    }
-
     try {
       const response = await fetch("/api/leads", {
         method: "POST",
