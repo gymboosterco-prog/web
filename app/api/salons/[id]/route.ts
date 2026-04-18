@@ -49,9 +49,15 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     try {
       const adminClient = createAdminClient()
 
-      // Find the auth user by email
-      const { data: listData } = await adminClient.auth.admin.listUsers()
-      const authUser = listData?.users?.find(u => u.email === ownerEmail)
+      // Find the auth user by email — fast path via profiles, fallback to listUsers
+      const { data: profileRow } = await adminClient
+        .from("profiles").select("id").eq("email", ownerEmail).maybeSingle()
+      let authUserId = profileRow?.id
+      if (!authUserId) {
+        const { data: listData } = await adminClient.auth.admin.listUsers()
+        authUserId = listData?.users?.find(u => u.email === ownerEmail)?.id
+      }
+      const authUser = authUserId ? { id: authUserId } : null
 
       if (authUser) {
         // Ensure profile exists with correct role and salon
@@ -77,10 +83,29 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+
+  // Auth kontrolü (rol check için regular client)
   const supabase = await requireAdmin()
   if (!supabase) return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 })
 
-  const { error } = await supabase.from("salons").delete().eq("id", id)
+  const adminClient = createAdminClient()
+
+  // 1. Salon'a ait tüm leadleri soft-delete et (veri kaybını önle)
+  await adminClient
+    .from("salon_leads")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("salon_id", id)
+    .is("deleted_at", null)
+
+  // 2. profiles.salon_id'yi null yap (FK kısıtlamasını kaldır)
+  await adminClient
+    .from("profiles")
+    .update({ salon_id: null })
+    .eq("salon_id", id)
+
+  // 3. Salonu sil (adminClient — RLS bypass)
+  const { error } = await adminClient.from("salons").delete().eq("id", id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
   return NextResponse.json({ success: true })
 }

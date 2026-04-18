@@ -71,6 +71,7 @@ type SalonLead = {
   meeting_date: string | null
   next_action_at: string | null
   created_at: string
+  deleted_at: string | null
   value: number
 }
 
@@ -279,8 +280,14 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats, setupSt
         filter: `salon_id=eq.${salon.id}`,
       }, (payload) => {
         const updated = payload.new as SalonLead
-        setLeads(prev => prev.map(l => l.id === updated.id ? { ...l, ...updated } : l))
-        setSelectedLead(prev => prev?.id === updated.id ? { ...prev, ...updated } : prev)
+        if (updated.deleted_at) {
+          // Soft-delete — listeden çıkar
+          setLeads(prev => prev.filter(l => l.id !== updated.id))
+          setSelectedLead(prev => prev?.id === updated.id ? null : prev)
+        } else {
+          setLeads(prev => prev.map(l => l.id === updated.id ? { ...l, ...updated } : l))
+          setSelectedLead(prev => prev?.id === updated.id ? { ...prev, ...updated } : prev)
+        }
       })
       .subscribe()
     return () => { supabase.removeChannel(channel) }

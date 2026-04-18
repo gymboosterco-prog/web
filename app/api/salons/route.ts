@@ -89,9 +89,11 @@ export async function POST(request: Request) {
         })
 
         if (createError) {
-          // User likely already exists — find them and update password
-          const { data: listData } = await adminClient.auth.admin.listUsers()
-          const existingUser = listData?.users?.find(u => u.email === owner_email)
+          // User likely already exists — find them via profiles first, fallback to listUsers
+          const { data: profileRow } = await adminClient
+            .from("profiles").select("id").eq("email", owner_email).maybeSingle()
+          const existingUser = profileRow
+            ?? (await adminClient.auth.admin.listUsers()).data?.users?.find(u => u.email === owner_email)
           if (existingUser) {
             await adminClient.auth.admin.updateUserById(existingUser.id, { password: owner_password })
             userId = existingUser.id
