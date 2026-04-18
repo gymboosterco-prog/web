@@ -1318,39 +1318,6 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                           className={`group relative border-b border-border last:border-0 transition-all ${lead.call_count >= 3 ? 'border-l-4 border-l-purple-500' : ''} ${inlineEditingId === lead.id ? 'bg-[#f2ff00]/5 ring-1 ring-[#f2ff00]/20' : ''}`}
                         >
                           <td className="p-4 relative">
-                            {/* Hover Actions (Desktop Only) */}
-                            {!isReadOnly && (
-                              <div className="absolute left-0 top-0 bottom-0 flex items-center gap-1 px-2 opacity-0 group-hover:opacity-100 transition-all -translate-x-full group-hover:translate-x-0 z-10 bg-gradient-to-r from-background to-transparent pr-8">
-                                <Button 
-                                  size="icon" 
-                                  variant="ghost" 
-                                  className="h-8 w-8 rounded-full bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500 hover:text-white"
-                                  onClick={(e) => { e.stopPropagation(); handleQuickCall(lead); }}
-                                >
-                                  <Phone className="w-4 h-4" />
-                                </Button>
-                                <Button 
-                                  size="icon" 
-                                  variant="ghost" 
-                                  className="h-8 w-8 rounded-full bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white"
-                                  onClick={(e) => { e.stopPropagation(); openWhatsApp(lead); }}
-                                >
-                                  <MessageSquare className="w-4 h-4" />
-                                </Button>
-                                <Button 
-                                  size="icon" 
-                                  variant="ghost" 
-                                  className="h-8 w-8 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-black transition-all active:scale-95"
-                                  onClick={(e) => { 
-                                    e.stopPropagation();
-                                    setInlineEditingId(lead.id)
-                                    setInlineNoteValue("")
-                                  }}
-                                >
-                                  <Plus className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            )}
 
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
