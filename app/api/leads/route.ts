@@ -5,7 +5,7 @@ import { Resend } from "resend"
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, phone, instagramUrl } = body
+    const { name, phone, instagramUrl, adBudget, preferredCallTime } = body
 
     if (!name || !phone || !instagramUrl) {
       return NextResponse.json(
@@ -33,6 +33,8 @@ export async function POST(request: Request) {
     const safeInstagram = escapeHtml(instagramUrl.trim().replace(/^@/, ''))
     const safeGymName = `@${safeInstagram}`
     const safePhone = escapeHtml(phone.trim())
+    const safeAdBudget = adBudget ? escapeHtml(String(adBudget)) : null
+    const safeCallTime = preferredCallTime ? escapeHtml(String(preferredCallTime)) : null
 
     const supabase = await createClient()
 
@@ -44,6 +46,8 @@ export async function POST(request: Request) {
           phone: safePhone,
           gym_name: safeGymName,
           instagram_url: safeInstagram || null,
+          ad_budget: safeAdBudget,
+          preferred_call_time: safeCallTime,
           status: "new",
           source: "website"
         }
@@ -77,6 +81,8 @@ export async function POST(request: Request) {
                 <tr><td style="color:#888;padding:6px 0;width:130px;">Ad Soyad</td><td style="color:#fff;font-weight:600;">${safeName}</td></tr>
                 <tr><td style="color:#888;padding:6px 0;">Instagram</td><td style="color:#fff;font-weight:600;">@${safeInstagram}</td></tr>
                 <tr><td style="color:#888;padding:6px 0;">Telefon</td><td style="color:#f2ff00;font-weight:600;">${safePhone}</td></tr>
+                ${safeAdBudget ? `<tr><td style="color:#888;padding:6px 0;">Reklam Bütçesi</td><td style="color:#fff;font-weight:600;">₺${safeAdBudget.replace('-', ' – ₺')}</td></tr>` : ''}
+                ${safeCallTime ? `<tr><td style="color:#888;padding:6px 0;">Aranma Saati</td><td style="color:#fff;font-weight:600;">${safeCallTime}</td></tr>` : ''}
               </table>
             </div>
             <div style="text-align:center;">

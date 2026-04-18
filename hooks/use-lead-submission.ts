@@ -5,6 +5,8 @@ export type LeadFormData = {
   name: string
   phone: string
   instagramUrl: string
+  adBudget: string
+  preferredCallTime: string
 }
 
 export function useLeadSubmission() {
@@ -12,7 +14,9 @@ export function useLeadSubmission() {
   const [formData, setFormData] = useState<LeadFormData>({
     name: "",
     phone: "",
-    instagramUrl: ""
+    instagramUrl: "",
+    adBudget: "",
+    preferredCallTime: "",
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
@@ -31,6 +35,16 @@ export function useLeadSubmission() {
     }
     if (formData.phone.replace(/\D/g, '').length < 10) {
       setError("Geçerli bir telefon numarası girin")
+      setIsSubmitting(false)
+      return
+    }
+    if (!formData.adBudget) {
+      setError("Lütfen aylık reklam bütçenizi seçin")
+      setIsSubmitting(false)
+      return
+    }
+    if (!formData.preferredCallTime) {
+      setError("Lütfen aranmak istediğiniz saati seçin")
       setIsSubmitting(false)
       return
     }

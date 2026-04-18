@@ -145,6 +145,29 @@ export function Hero() {
                           className="pl-10 h-11 md:h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 text-sm md:text-base focus:border-primary/50 transition-all"
                         />
                       </div>
+                      <select
+                        value={formData.adBudget}
+                        onChange={(e) => updateField("adBudget", e.target.value)}
+                        required
+                        className="w-full h-11 md:h-12 rounded-md border border-white/10 bg-white/5 px-3 text-sm md:text-base text-white focus:border-primary/50 focus:outline-none transition-colors appearance-none"
+                      >
+                        <option value="" disabled className="bg-zinc-900">Aylık Reklam Bütçeniz</option>
+                        <option value="5000-10000" className="bg-zinc-900">₺5.000 – ₺10.000</option>
+                        <option value="10000-20000" className="bg-zinc-900">₺10.000 – ₺20.000</option>
+                        <option value="20000+" className="bg-zinc-900">₺20.000+</option>
+                      </select>
+                      <select
+                        value={formData.preferredCallTime}
+                        onChange={(e) => updateField("preferredCallTime", e.target.value)}
+                        required
+                        className="w-full h-11 md:h-12 rounded-md border border-white/10 bg-white/5 px-3 text-sm md:text-base text-white focus:border-primary/50 focus:outline-none transition-colors appearance-none"
+                      >
+                        <option value="" disabled className="bg-zinc-900">Hangi saatte aranmak istersiniz?</option>
+                        <option value="09:00-12:00" className="bg-zinc-900">09:00 – 12:00 (Sabah)</option>
+                        <option value="12:00-15:00" className="bg-zinc-900">12:00 – 15:00 (Öğle)</option>
+                        <option value="15:00-18:00" className="bg-zinc-900">15:00 – 18:00 (İkindi)</option>
+                        <option value="18:00-21:00" className="bg-zinc-900">18:00 – 21:00 (Akşam)</option>
+                      </select>
                     </div>
 
                     <Button
