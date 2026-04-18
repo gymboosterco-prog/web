@@ -4,8 +4,8 @@ import Link from "next/link"
 const guarantees = [
   {
     icon: BadgeCheck,
-    title: "30+ Başvuru Garantisi",
-    description: "Her ay minimum 30 nitelikli potansiyel müşteri. Bu hedefe ulaşamazsak, tutturana kadar ücretsiz çalışmaya devam ederiz. Sözleşmede yazılı."
+    title: "50+ Başvuru Garantisi",
+    description: "Her ay minimum 50 nitelikli potansiyel müşteri. Bu hedefe ulaşamazsak, tutturana kadar ücretsiz çalışmaya devam ederiz. Sözleşmede yazılı."
   },
   {
     icon: Banknote,
@@ -42,12 +42,12 @@ export function Guarantee() {
               </div>
 
               <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 text-balance">
-                Ya 30 Potansiyel Müşteri Alırsınız,{" "}
+                Ya 50 Potansiyel Müşteri Alırsınız,{" "}
                 <span className="text-primary">Ya da Bedava Çalışırız.</span>
               </h2>
 
               <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-                Bu kadar basit. 30 potansiyel müşteri garantisi tutmazsa, tutturana kadar ücret almıyoruz. Risk tamamen bizde.
+                Bu kadar basit. 50 potansiyel müşteri garantisi tutmazsa, tutturana kadar ücret almıyoruz. Risk tamamen bizde.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">

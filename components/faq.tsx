@@ -10,10 +10,10 @@ import {
 const faqs = [
   {
     question: "₺10.000/ay pahalı değil mi?",
-    answer: "Hesaplayalım. Aylık üyelik ücretiniz ₺1.500 ise, sadece 7 yeni üye bu masrafı karşılar. Biz ayda 30 potansiyel müşteri garantisi veriyoruz. Siz bu 30 kişinin 7'sini üye yaparsanız kâra geçtiniz — geri kalan 23 potansiyel müşteri saf kâr. Bunu kârlı bulmuyorsanız konuşmayalım."
+    answer: "Hesaplayalım. Aylık üyelik ücretiniz ₺1.500 ise, sadece 7 yeni üye bu masrafı karşılar. Biz ayda 50 potansiyel müşteri garantisi veriyoruz. Siz bu 50 kişinin 7'sini üye yaparsanız kâra geçtiniz — geri kalan 43 potansiyel müşteri saf kâr. Bunu kârlı bulmuyorsanız konuşmayalım."
   },
   {
-    question: "30 potansiyel müşteri garantisi veriyorsunuz ama satışı ben yapmak zorundayım.",
+    question: "50 potansiyel müşteri garantisi veriyorsunuz ama satışı ben yapmak zorundayım.",
     answer: "Doğru. Biz boru hattını doldururuz, satışı siz yaparsınız. Bu yüzden ilk görüşmemizde satış sürecinizi de konuşuruz — arama şablonu, takip süreci. Gelen potansiyel müşteri'i doğru takip eden salonlar ortalama %15-25 dönüşüm görüyor."
   },
   {

@@ -15,9 +15,9 @@ const fmt = (n: number) =>
 const fmtCurrency = (n: number) =>
   new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 0 }).format(n)
 
-const GYMBOOSTER_LEADS = 30
+const GYMBOOSTER_LEADS = 50
 const CONVERSION_RATE = 0.20
-const NEW_MEMBERS_PER_MONTH = GYMBOOSTER_LEADS * CONVERSION_RATE // 6
+const NEW_MEMBERS_PER_MONTH = GYMBOOSTER_LEADS * CONVERSION_RATE // 10
 const SERVICE_FEE = 10000
 
 function SliderInput({
