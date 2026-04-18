@@ -149,7 +149,8 @@ export function Hero() {
                         value={formData.adBudget}
                         onChange={(e) => updateField("adBudget", e.target.value)}
                         required
-                        className="w-full h-11 md:h-12 rounded-md border border-white/10 bg-white/5 px-3 text-sm md:text-base text-white focus:border-primary/50 focus:outline-none transition-colors appearance-none [color-scheme:dark]"
+                        className="w-full h-11 md:h-12 rounded-md border border-white/10 px-3 text-sm md:text-base text-white focus:border-primary/50 focus:outline-none transition-colors appearance-none [color-scheme:dark]"
+                        style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
                       >
                         <option value="" disabled>Aylık Reklam Bütçeniz</option>
                         <option value="5000-10000">₺5.000 – ₺10.000</option>
@@ -161,7 +162,8 @@ export function Hero() {
                         value={formData.preferredCallTime}
                         onChange={(e) => updateField("preferredCallTime", e.target.value)}
                         required
-                        className="w-full h-11 md:h-12 rounded-md border border-white/10 bg-white/5 px-3 text-sm md:text-base text-white focus:border-primary/50 focus:outline-none transition-colors appearance-none [color-scheme:dark]"
+                        className="w-full h-11 md:h-12 rounded-md border border-white/10 px-3 text-sm md:text-base text-white focus:border-primary/50 focus:outline-none transition-colors appearance-none [color-scheme:dark]"
+                        style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
                       >
                         <option value="" disabled>Hangi saatte aranmak istersiniz?</option>
                         <option value="09:00-12:00">09:00 – 12:00 (Sabah)</option>

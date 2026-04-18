@@ -119,7 +119,8 @@ export function CTA() {
                         value={formData.adBudget}
                         onChange={(e) => updateField("adBudget", e.target.value)}
                         required
-                        className="w-full h-10 md:h-11 lg:h-12 rounded-md border border-border bg-secondary px-3 text-sm md:text-base focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors appearance-none [color-scheme:dark]"
+                        className="w-full h-10 md:h-11 lg:h-12 rounded-md border border-border px-3 text-sm md:text-base focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors appearance-none [color-scheme:dark]"
+                        style={{ backgroundColor: 'hsl(var(--secondary))' }}
                       >
                         <option value="" disabled>Aylık Reklam Bütçeniz</option>
                         <option value="5000-10000">₺5.000 – ₺10.000</option>
@@ -133,7 +134,8 @@ export function CTA() {
                         value={formData.preferredCallTime}
                         onChange={(e) => updateField("preferredCallTime", e.target.value)}
                         required
-                        className="w-full h-10 md:h-11 lg:h-12 rounded-md border border-border bg-secondary px-3 text-sm md:text-base focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors appearance-none [color-scheme:dark]"
+                        className="w-full h-10 md:h-11 lg:h-12 rounded-md border border-border px-3 text-sm md:text-base focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors appearance-none [color-scheme:dark]"
+                        style={{ backgroundColor: 'hsl(var(--secondary))' }}
                       >
                         <option value="" disabled>Hangi saatte aranmak istersiniz?</option>
                         <option value="09:00-12:00">09:00 – 12:00 (Sabah)</option>
