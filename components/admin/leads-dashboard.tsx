@@ -1365,6 +1365,20 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                                   <a href={`tel:${lead.phone}`} className="text-[10px] text-primary hover:underline">{lead.phone}</a>
                                   <a href={`mailto:${lead.email}`} className="text-[10px] text-muted-foreground hover:underline truncate max-w-[100px]">{lead.email}</a>
                                 </div>
+                                {(lead.ad_budget || lead.preferred_call_time) && (
+                                  <div className="flex flex-wrap gap-1 mt-1.5">
+                                    {lead.ad_budget && (
+                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-semibold">
+                                        ₺{lead.ad_budget.replace('-', '–₺')}
+                                      </span>
+                                    )}
+                                    {lead.preferred_call_time && (
+                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-secondary text-muted-foreground font-medium">
+                                        🕐 {lead.preferred_call_time}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </td>
@@ -1377,7 +1391,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                                 onClick={() => openWhatsApp(lead)}
                               >
                                 <MessageSquare className="w-3.5 h-3.5 mr-1" />
-                                WhatsApp
+                                WA
                               </Button>
                               {!isReadOnly && (
                                 <Button 
