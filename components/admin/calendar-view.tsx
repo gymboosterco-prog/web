@@ -31,6 +31,8 @@ type Lead = {
   value: number
   assigned_to: string | null
   instagram_url: string | null
+  ad_budget: string | null
+  preferred_call_time: string | null
   member_count: number
   lead_goal: number
   call_count: number
