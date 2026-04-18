@@ -3,7 +3,7 @@ import { CheckCircle2, XCircle } from "lucide-react"
 const forWho = [
   "Aktif bir spor salonu işletiyorsunuz",
   "Her ay düzenli yeni üye kazanmak istiyorsunuz",
-  "Aylık en az ₺3.000 reklam bütçesi ayırabilirsiniz",
+  "Aylık en az ₺10.000 reklam bütçesi ayırabilirsiniz",
   "Gelen başvuruları takip edecek bant genişliğiniz var",
   "3 ayda sonuç alamazsam param iade olur diyorsunuz",
 ]

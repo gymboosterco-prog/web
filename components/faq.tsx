@@ -38,7 +38,7 @@ const faqs = [
   },
   {
     question: "Reklam bütçesi ayrı mı ödeniyor?",
-    answer: "Evet. ₺10.000/ay hizmet bedeli — reklam yönetimi, strateji, CRM, raporlama. Reklam harcaması ayrıca Meta veya Google hesabınızdan doğrudan çıkar. Minimum ₺3.000/ay reklam bütçesi öneriyoruz."
+    answer: "Evet. ₺10.000/ay hizmet bedeli — reklam yönetimi, strateji, CRM, raporlama. Reklam harcaması ayrıca Meta veya Google hesabınızdan doğrudan çıkar. Minimum ₺10.000/ay reklam bütçesi öneriyoruz."
   },
 ]
 
