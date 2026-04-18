@@ -117,7 +117,7 @@ function ResultCard({
   )
 }
 
-export function HesaplamaClient() {
+export function HesaplamaClient({ embedded = false }: { embedded?: boolean } = {}) {
   const [membershipFee, setMembershipFee] = useState(800)
   const [avgMonthsStay, setAvgMonthsStay] = useState(6)
   const [currentMonthlyNew, setCurrentMonthlyNew] = useState(5)
@@ -148,34 +148,8 @@ export function HesaplamaClient() {
     }
   }, [membershipFee, avgMonthsStay])
 
-  return (
-    <main className="min-h-screen bg-background relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-background pointer-events-none" />
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(204,255,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(204,255,0,0.02)_1px,transparent_1px)] bg-[size:60px_60px] pointer-events-none" />
-
-      <div className="relative z-10 container px-4 py-12 md:py-20 max-w-5xl mx-auto">
-
-        {/* Header */}
-        <div className="text-center mb-10 md:mb-14">
-          <Link href="/" className="inline-flex items-center gap-2 mb-8 text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <Dumbbell className="w-4 h-4 text-primary" />
-            <span className="font-bold text-foreground">Gymbooster</span>
-          </Link>
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4">
-            <TrendingUp className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold text-primary">ROI Hesaplayıcı</span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
-            Salonunuz İçin<br />
-            <span className="text-primary">Ne Kadar Kazanırsınız?</span>
-          </h1>
-          <p className="text-muted-foreground text-base md:text-lg max-w-xl mx-auto">
-            Kendi rakamlarınızı girin, Gymbooster'ın salonunuza katkısını gerçek zamanlı hesaplayın.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-start">
+  const grid = (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-start">
 
           {/* Inputs */}
           <div className="space-y-6 bg-card border border-border rounded-2xl p-6 md:p-8">
@@ -319,7 +293,51 @@ export function HesaplamaClient() {
               </p>
             </div>
           </div>
+    </div>
+  )
+
+  if (embedded) {
+    return (
+      <section className="py-16 md:py-24 bg-background">
+        <div className="container px-4 max-w-5xl mx-auto">
+          <div className="text-center mb-10">
+            <p className="text-sm font-semibold text-primary uppercase tracking-widest mb-3">ROI Hesaplayıcı</p>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
+              Salonunuz İçin <span className="text-primary">Ne Kadar Kazanırsınız?</span>
+            </h2>
+            <p className="text-muted-foreground text-base md:text-lg max-w-xl mx-auto">
+              Kendi rakamlarınızı girin, Gymbooster&apos;ın katkısını gerçek zamanlı görün.
+            </p>
+          </div>
+          {grid}
         </div>
+      </section>
+    )
+  }
+
+  return (
+    <main className="min-h-screen bg-background relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-background pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(204,255,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(204,255,0,0.02)_1px,transparent_1px)] bg-[size:60px_60px] pointer-events-none" />
+      <div className="relative z-10 container px-4 py-12 md:py-20 max-w-5xl mx-auto">
+        <div className="text-center mb-10 md:mb-14">
+          <Link href="/" className="inline-flex items-center gap-2 mb-8 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <Dumbbell className="w-4 h-4 text-primary" />
+            <span className="font-bold text-foreground">Gymbooster</span>
+          </Link>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4">
+            <TrendingUp className="w-4 h-4 text-primary" />
+            <span className="text-sm font-semibold text-primary">ROI Hesaplayıcı</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
+            Salonunuz İçin<br />
+            <span className="text-primary">Ne Kadar Kazanırsınız?</span>
+          </h1>
+          <p className="text-muted-foreground text-base md:text-lg max-w-xl mx-auto">
+            Kendi rakamlarınızı girin, Gymbooster&apos;ın salonunuza katkısını gerçek zamanlı hesaplayın.
+          </p>
+        </div>
+        {grid}
       </div>
     </main>
   )
