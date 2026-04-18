@@ -3,28 +3,33 @@ import { CheckCircle2 } from "lucide-react"
 const included = [
   {
     title: "Meta & Google Reklam Yönetimi",
-    description: "Günlük optimizasyon, A/B test, hiperlokal hedefleme. 7/24 aktif.",
+    description: "Yapay zeka destekli günlük optimizasyon, A/B test, hiperlokal hedefleme. 7/24 aktif.",
     value: "₺6.000–8.000/ay",
   },
   {
-    title: "30 Garantili Aylık Başvuru",
+    title: "50 Garantili Aylık Başvuru",
     description: "Telefon numarası doğrulanmış, gerçekten ilgilenen potansiyel üyeler.",
-    value: "₺100–150/başvuru × 30",
+    value: "₺100–150/başvuru × 50",
   },
   {
-    title: "Başvuru Takip & CRM Sistemi",
-    description: "Kim arandı, kim cevaplamadı, kim düşünüyor — hepsi tek panelde.",
-    value: "₺1.500–2.500/ay",
+    title: "Video Kreatif Danışmanlık",
+    description: "Dönüşüm odaklı video reklamlar için senaryo, yön ve geri bildirim.",
+    value: "₺3.000–5.000/ay",
+  },
+  {
+    title: "Statik Kreatif Üretimi",
+    description: "Her kampanya için özel tasarlanmış, test edilmiş reklam görselleri.",
+    value: "₺2.000–3.000/ay",
+  },
+  {
+    title: "Landing Page & CRM Sistemi",
+    description: "Reklam trafiğini başvuruya çeviren sayfa + kim arandı, kim cevaplamadı tek panelde.",
+    value: "₺2.500–4.000/ay",
   },
   {
     title: "Haftalık Strateji Görüşmesi",
     description: "Her hafta rakamları birlikte inceliyor, kampanyaları ayarlıyoruz.",
     value: "₺2.000+/görüşme",
-  },
-  {
-    title: "Landing Page & Form Optimizasyonu",
-    description: "Reklam trafiğini başvuruya dönüştüren sayfaları biz kurarız.",
-    value: "₺3.000–5.000 tek seferlik",
   },
   {
     title: "30 Günlük Para İadesi Garantisi",
@@ -78,7 +83,7 @@ export function Services() {
             <div className="grid sm:grid-cols-3 gap-6 text-center">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Ayrı ayrı piyasa değeri</p>
-                <p className="text-2xl md:text-3xl font-bold line-through text-muted-foreground">₺17.500+</p>
+                <p className="text-2xl md:text-3xl font-bold line-through text-muted-foreground">₺25.000+</p>
               </div>
               <div className="flex items-center justify-center">
                 <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-lg">→</div>
@@ -89,7 +94,7 @@ export function Services() {
               </div>
             </div>
             <p className="text-center text-sm text-muted-foreground mt-4">
-              + Tüm bunların üstüne: <strong className="text-foreground">30 başvuru tutturmazsak, tutturana kadar bedava çalışırız.</strong>
+              + Tüm bunların üstüne: <strong className="text-foreground">50 başvuru tutturmazsak, tutturana kadar bedava çalışırız.</strong>
             </p>
           </div>
         </div>
