@@ -8,15 +8,18 @@ export function StickyCTA() {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
-    const submitBtn = document.querySelector<HTMLElement>("#hero-form button[type='submit']")
-    if (!submitBtn) return
+    const handleScroll = () => {
+      const submitBtn = document.querySelector<HTMLElement>("#hero-form button[type='submit']")
+      if (!submitBtn) {
+        setIsVisible(false)
+        return
+      }
+      // Yalnızca buton viewport'un üstüne çıktığında (scroll ile geçildiyse) göster
+      setIsVisible(submitBtn.getBoundingClientRect().bottom < 0)
+    }
 
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsVisible(!entry.isIntersecting),
-      { threshold: 0 }
-    )
-    observer.observe(submitBtn)
-    return () => observer.disconnect()
+    window.addEventListener("scroll", handleScroll, { passive: true })
+    return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
   const scrollToForm = () => {
