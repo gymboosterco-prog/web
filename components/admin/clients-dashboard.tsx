@@ -198,6 +198,20 @@ export function ClientsDashboard({ leads }: { leads: Client[] }) {
     setMarkingPaid(null)
   }
 
+  async function unmarkPaid(clientId: string, month: string) {
+    const rec = (payments[clientId] ?? []).find(p => p.month === month)
+    if (!rec) return
+    const { error } = await supabase.from('client_payments').delete().eq('id', rec.id)
+    if (error) { toast.error('Geri alınamadı', { description: error.message }) }
+    else {
+      setPayments(prev => ({
+        ...prev,
+        [clientId]: (prev[clientId] ?? []).filter(p => p.id !== rec.id)
+      }))
+      toast.success('Ödeme geri alındı')
+    }
+  }
+
   // ── Add client ──
   async function addClient() {
     if (!newForm.name.trim() || !newForm.phone.trim() || !newForm.gym_name.trim()) {
@@ -357,7 +371,7 @@ export function ClientsDashboard({ leads }: { leads: Client[] }) {
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${statusCfg.color}`}>
                             {statusCfg.label}
                           </span>
-                          {thisMonthStatus !== 'paid' && (
+                          {thisMonthStatus !== 'paid' ? (
                             <Button
                               size="sm"
                               variant="outline"
@@ -366,6 +380,15 @@ export function ClientsDashboard({ leads }: { leads: Client[] }) {
                               onClick={() => markPaid(client, cm)}
                             >
                               {isPaying ? '...' : 'Ödendi'}
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 px-2 text-[10px] text-muted-foreground hover:text-red-400"
+                              onClick={() => unmarkPaid(client.id, cm)}
+                            >
+                              Geri Al
                             </Button>
                           )}
                         </div>
@@ -431,9 +454,13 @@ export function ClientsDashboard({ leads }: { leads: Client[] }) {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${cfg.color}`}>{cfg.label}</span>
-                      {status !== 'paid' && (
+                      {status !== 'paid' ? (
                         <Button size="sm" variant="outline" className="h-6 px-2 text-[10px] font-semibold border-green-500/30 text-green-500 hover:bg-green-500/10" disabled={isPaying} onClick={() => markPaid(historyClient, month)}>
                           {isPaying ? '...' : 'Ödendi'}
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px] text-muted-foreground hover:text-red-400" onClick={() => unmarkPaid(historyClient.id, month)}>
+                          Geri Al
                         </Button>
                       )}
                     </div>
