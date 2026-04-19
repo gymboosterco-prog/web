@@ -202,19 +202,25 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
     if (isLoadingMore || leads.length >= totalLeads) return
     setIsLoadingMore(true)
     try {
-      const res = await fetch(`/api/leads?limit=50&offset=${serverOffset}`)
-      if (!res.ok) {
-        toast.error("Leadler yüklenemedi", { description: `Hata ${res.status}` })
+      const { data, error, count } = await supabase
+        .from("leads")
+        .select("*", { count: "exact" })
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false })
+        .range(serverOffset, serverOffset + 49)
+
+      if (error) {
+        toast.error("Leadler yüklenemedi", { description: error.message })
         return
       }
-      const { data, total } = await res.json()
-      setTotalLeads(total)
+
+      const batch = (data ?? []) as Lead[]
+      setTotalLeads(count ?? totalLeads)
       setLeads(prev => {
         const existingIds = new Set(prev.map(l => l.id))
-        const fresh = (data as Lead[]).filter(l => !existingIds.has(l.id))
-        return [...prev, ...fresh]
+        return [...prev, ...batch.filter(l => !existingIds.has(l.id))]
       })
-      setServerOffset(s => s + (data as Lead[]).length)
+      setServerOffset(s => s + batch.length)
     } finally {
       setIsLoadingMore(false)
     }
