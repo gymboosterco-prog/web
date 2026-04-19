@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { TrendingUp, Users, Wallet, Calendar, ArrowRight, CheckCircle2, AlertTriangle, Dumbbell, MessageCircle } from "lucide-react"
 import Link from "next/link"
 
-const GYMBOOSTER_WA = "905XXXXXXXXX" // ← kendi WhatsApp numaranızla değiştirin
+const GYMBOOSTER_WA = "905452802612"
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 0 }).format(n)
