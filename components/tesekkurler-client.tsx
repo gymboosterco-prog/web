@@ -2,10 +2,12 @@
 
 import { useEffect, useRef } from "react"
 import { motion } from "framer-motion"
-import { CheckCircle2, Phone, Calendar, TrendingUp, ArrowLeft, Clock, Users, Star } from "lucide-react"
+import { CheckCircle2, Phone, Calendar, TrendingUp, ArrowLeft, Clock, Users, Star, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import confetti from "canvas-confetti"
+
+const WA_URL = `https://wa.me/905452802612?text=${encodeURIComponent("Merhaba, az önce Gymbooster'dan görüşme talep ettim. Sizinle iletişime geçmek istedim.")}`
 
 export function TesekkurlerClient() {
   const fired = useRef(false)
@@ -144,7 +146,7 @@ export function TesekkurlerClient() {
           </div>
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-primary" />
-            <span>Ortalama yanıt: <strong className="text-foreground">2 saat</strong></span>
+            <span>Ortalama yanıt: <strong className="text-foreground">24 saat</strong></span>
           </div>
         </motion.div>
 
@@ -153,7 +155,14 @@ export function TesekkurlerClient() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.85 }}
+          className="flex flex-col sm:flex-row items-center justify-center gap-3"
         >
+          <Button asChild size="lg" className="gap-2 bg-[#25D366] hover:bg-[#25D366]/90 text-white font-bold px-6">
+            <a href={WA_URL} target="_blank" rel="noopener noreferrer">
+              <MessageCircle className="w-5 h-5" />
+              WhatsApp&apos;tan Yazın
+            </a>
+          </Button>
           <Button asChild variant="outline" className="gap-2">
             <Link href="/">
               <ArrowLeft className="w-4 h-4" />
