@@ -6,8 +6,10 @@ import { Slider } from "@/components/ui/slider"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { TrendingUp, Users, Wallet, Calendar, ArrowRight, CheckCircle2, AlertTriangle, Dumbbell } from "lucide-react"
+import { TrendingUp, Users, Wallet, Calendar, ArrowRight, CheckCircle2, AlertTriangle, Dumbbell, MessageCircle } from "lucide-react"
 import Link from "next/link"
+
+const GYMBOOSTER_WA = "905XXXXXXXXX" // ← kendi WhatsApp numaranızla değiştirin
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 0 }).format(n)
@@ -283,10 +285,20 @@ export function HesaplamaClient({ embedded = false }: { embedded?: boolean } = {
             {/* CTA */}
             <div className="pt-2 space-y-3">
               <Button asChild className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base">
-                <Link href="/#hero-form">
-                  Bu Hesabı Görüşmede Görelim
+                <Link href="/#iletisim">
+                  Ücretsiz Görüşme Talep Et
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full h-11 border-[#25D366]/40 text-[#25D366] hover:bg-[#25D366]/10 font-semibold text-sm">
+                <a
+                  href={`https://wa.me/${GYMBOOSTER_WA}?text=${encodeURIComponent("Merhaba, ROI hesaplayıcısını kullandım. Salonumun büyüme planı hakkında görüşmek istiyorum.")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  WhatsApp&apos;tan Yaz
+                </a>
               </Button>
               <p className="text-center text-xs text-muted-foreground">
                 Ücretsiz 45 dk strateji görüşmesi · Satış baskısı yok

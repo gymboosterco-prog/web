@@ -1300,6 +1300,142 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
 
         {/* Leads Table */}
         <div className="rounded-xl border border-border overflow-hidden bg-card">
+
+          {/* Mobile card list */}
+          <div className="block md:hidden divide-y divide-border">
+            {!isMounted ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="p-4 space-y-2">
+                  <Skeleton className="h-4 w-3/4 rounded" />
+                  <Skeleton className="h-3 w-1/2 rounded" />
+                </div>
+              ))
+            ) : filteredLeads.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground">
+                {searchQuery || statusFilter !== "all" ? "Filtrelere uygun lead bulunamadı" : "Henüz lead yok"}
+              </div>
+            ) : (
+              filteredLeads.map((lead) => {
+                const status = statusConfig[lead.status] || statusConfig.new
+                const StatusIcon = status.icon
+                const isReadOnly = userRole === 'STAFF' && lead.assigned_to === 'Admin'
+                return (
+                  <div key={lead.id} className="p-4 space-y-3">
+                    {/* Row 1: avatar + name + status badge */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <span className="text-primary font-semibold text-sm">{lead.name.charAt(0).toUpperCase()}</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-sm truncate">{lead.gym_name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{lead.name}</p>
+                        </div>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild disabled={isReadOnly}>
+                          <button
+                            disabled={isReadOnly}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border shrink-0 ${status.color} ${isReadOnly ? 'opacity-70' : ''}`}
+                          >
+                            <StatusIcon className="w-3 h-3" />
+                            {status.label}
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {Object.entries(statusConfig).map(([key, config]) => (
+                            <DropdownMenuItem
+                              key={key}
+                              onClick={() => {
+                                if (key === 'called') {
+                                  incrementCallCount(lead.id, lead.call_count || 0)
+                                } else {
+                                  updateLeadStatus(lead.id, key)
+                                }
+                              }}
+                              className="cursor-pointer"
+                            >
+                              <config.icon className="w-4 h-4 mr-2" />
+                              {config.label}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+
+                    {/* Row 2: phone + date */}
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <a href={`tel:${lead.phone}`} className="text-primary hover:underline">{lead.phone}</a>
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        <ClientDate dateString={lead.created_at} />
+                      </span>
+                    </div>
+
+                    {/* Row 3: action buttons */}
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="bg-green-500/10 hover:bg-green-500/20 text-green-500 border-green-500/20 text-xs font-bold h-8"
+                        onClick={() => openWhatsApp(lead)}
+                      >
+                        <MessageSquare className="w-3.5 h-3.5 mr-1" />
+                        WA
+                      </Button>
+                      {!isReadOnly && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-purple-500/30 text-purple-500 hover:bg-purple-500/10 text-xs font-bold h-8"
+                          onClick={() => { setSelectedLead(lead); setNoteText("") }}
+                        >
+                          <Search className="w-3.5 h-3.5 mr-1" />
+                          Detay
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 text-xs text-muted-foreground ml-auto"
+                        onClick={() => { setInlineEditingId(lead.id); setInlineNoteValue("") }}
+                        disabled={isReadOnly}
+                      >
+                        {(() => {
+                          const entries = parseNotes(lead.notes)
+                          const last = entries[entries.length - 1]
+                          return last ? last.text.slice(0, 30) + (last.text.length > 30 ? "…" : "") : "Not ekle"
+                        })()}
+                      </Button>
+                    </div>
+
+                    {/* Inline note editing */}
+                    {inlineEditingId === lead.id && (
+                      <div className="flex items-center gap-2 bg-card border border-[#f2ff00]/20 rounded-xl p-2">
+                        <input
+                          autoFocus
+                          type="text"
+                          value={inlineNoteValue}
+                          onChange={(e) => setInlineNoteValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') updateLeadNotes(lead.id, inlineNoteValue)
+                            if (e.key === 'Escape') setInlineEditingId(null)
+                          }}
+                          placeholder="Notunuzu yazın..."
+                          className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-1"
+                        />
+                        <Button size="sm" className="h-7 bg-[#f2ff00] hover:bg-[#f2ff00]/90 text-black font-bold text-[10px]" onClick={() => updateLeadNotes(lead.id, inlineNoteValue)}>Kaydet</Button>
+                        <Button size="sm" variant="ghost" className="h-7 text-[10px]" onClick={() => setInlineEditingId(null)}>İptal</Button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })
+            )}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -1567,6 +1703,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
               </tbody>
             </table>
           </div>
+          </div>{/* end hidden md:block */}
 
           {/* Load More */}
           {isMounted && leads.length < totalLeads && (
