@@ -1,6 +1,18 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+@keyframes shake {
+  0%, 8%, 100% { transform: translateX(0) rotate(0deg); }
+  1%  { transform: translateX(-5px) rotate(-1deg); }
+  3%  { transform: translateX(5px)  rotate(1deg); }
+  5%  { transform: translateX(-3px) rotate(-0.5deg); }
+  7%  { transform: translateX(3px)  rotate(0.5deg); }
+}
+
+.btn-shake {
+  animation: shake 4s ease-in-out infinite;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {

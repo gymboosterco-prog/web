@@ -187,7 +187,7 @@ export function Hero() {
                       type="submit"
                       size="lg"
                       disabled={isSubmitting}
-                      className="w-full h-12 md:h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base md:text-lg"
+                      className="w-full h-12 md:h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base md:text-lg btn-shake"
                     >
                       {isSubmitting ? (
                         "Gönderiliyor..."

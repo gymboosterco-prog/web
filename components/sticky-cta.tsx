@@ -33,7 +33,7 @@ export function StickyCTA() {
     <div className="fixed bottom-0 left-0 right-0 z-50 p-3 bg-background/95 backdrop-blur-sm border-t border-border lg:hidden">
       <Button
         onClick={scrollToForm}
-        className="w-full h-12 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
+        className="w-full h-12 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground gap-2 btn-shake"
       >
         <Phone className="w-5 h-5" />
         Ücretsiz Görüşme Talep Et
