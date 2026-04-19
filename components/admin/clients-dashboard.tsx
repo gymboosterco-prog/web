@@ -354,7 +354,7 @@ export function ClientsDashboard({ leads }: { leads: Client[] }) {
                 />
                 <Bar dataKey="total" radius={[4, 4, 0, 0]}>
                   {revenueChartData.map((entry, i) => (
-                    <Cell key={i} fill={entry.isCurrent ? 'hsl(var(--primary))' : 'hsl(var(--primary)/0.35)'} />
+                    <Cell key={i} fill={entry.isCurrent ? '#f2ff00' : 'rgba(242,255,0,0.35)'} />
                   ))}
                 </Bar>
               </BarChart>
