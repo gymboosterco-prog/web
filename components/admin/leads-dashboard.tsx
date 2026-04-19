@@ -202,18 +202,19 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
     if (isLoadingMore || leads.length >= totalLeads) return
     setIsLoadingMore(true)
     try {
-      // serverOffset kullan — realtime inserts leads.length'i bozmasın
       const res = await fetch(`/api/leads?limit=50&offset=${serverOffset}`)
-      if (res.ok) {
-        const { data, total } = await res.json()
-        setLeads(prev => {
-          const existingIds = new Set(prev.map(l => l.id))
-          const fresh = (data as Lead[]).filter(l => !existingIds.has(l.id))
-          return [...prev, ...fresh]
-        })
-        setTotalLeads(total)
-        setServerOffset(s => s + 50)
+      if (!res.ok) {
+        toast.error("Leadler yüklenemedi", { description: `Hata ${res.status}` })
+        return
       }
+      const { data, total } = await res.json()
+      setTotalLeads(total)
+      setLeads(prev => {
+        const existingIds = new Set(prev.map(l => l.id))
+        const fresh = (data as Lead[]).filter(l => !existingIds.has(l.id))
+        return [...prev, ...fresh]
+      })
+      setServerOffset(s => s + (data as Lead[]).length)
     } finally {
       setIsLoadingMore(false)
     }
@@ -511,6 +512,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
             })
           }
           setLeads(prev => [newLead, ...prev])
+          setTotalLeads(prev => prev + 1)
         }
       )
       .on(
