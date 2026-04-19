@@ -4,8 +4,9 @@ import { useState, useEffect, useMemo, useCallback } from "react"
 import { toast } from "sonner"
 import {
   TrendingUp, Users, AlertCircle, Pencil, Check, X, Plus,
-  History, Trash2
+  History, Trash2, MessageCircle
 } from "lucide-react"
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createClient } from "@/lib/supabase/client"
@@ -41,6 +42,11 @@ function monthLabel(m: string) {
   return new Date(parseInt(y), parseInt(mo) - 1).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })
 }
 
+function shortMonthLabel(m: string) {
+  const [y, mo] = m.split('-')
+  return new Date(parseInt(y), parseInt(mo) - 1).toLocaleDateString('tr-TR', { month: 'short' })
+}
+
 function monthsSince(startDate: string | null): string[] {
   const start = startDate ? new Date(startDate) : new Date()
   const now = new Date()
@@ -73,6 +79,13 @@ function formatFee(fee: number | null) {
 function formatDate(date: string | null) {
   if (!date) return '—'
   return new Date(date).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
+function formatPhone(phone: string) {
+  let cleaned = phone.replace(/[\s\-\(\)\+]/g, '')
+  if (cleaned.startsWith('0')) cleaned = '90' + cleaned.slice(1)
+  if (!cleaned.startsWith('90')) cleaned = '90' + cleaned
+  return cleaned
 }
 
 type EditState = { monthly_fee: string; payment_day: string; client_start_date: string }
@@ -143,6 +156,29 @@ export function ClientsDashboard({ leads }: { leads: Client[] }) {
       return computeStatus(c.payment_day, cm, rec) === 'overdue'
     }).length
   }, [localClients, payments])
+
+  // Last 6 months revenue chart data
+  const last6Months = useMemo(() => {
+    const months: string[] = []
+    const now = new Date()
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      months.push(d.toISOString().slice(0, 7))
+    }
+    return months
+  }, [])
+
+  const revenueChartData = useMemo(() => {
+    return last6Months.map(month => {
+      const total = localClients.reduce((sum, c) => {
+        const rec = (payments[c.id] ?? []).find(p => p.month === month && p.status === 'paid')
+        return sum + (rec?.amount ?? 0)
+      }, 0)
+      return { month: shortMonthLabel(month), total, isCurrent: month === currentMonth() }
+    })
+  }, [last6Months, localClients, payments])
+
+  const hasChartData = revenueChartData.some(d => d.total > 0)
 
   // ── Edit ──
   function startEdit(client: Client) {
@@ -289,6 +325,44 @@ export function ClientsDashboard({ leads }: { leads: Client[] }) {
         </Button>
       </div>
 
+      {/* Revenue Chart */}
+      {localClients.length > 0 && (
+        <div className="rounded-xl border border-border bg-card p-5">
+          <p className="text-xs font-semibold text-muted-foreground mb-4 flex items-center gap-1.5">
+            <TrendingUp className="w-3.5 h-3.5 text-primary" /> Son 6 Ay Tahsilat
+          </p>
+          {hasChartData ? (
+            <ResponsiveContainer width="100%" height={160}>
+              <BarChart data={revenueChartData} barSize={28} margin={{ top: 8, right: 0, left: 0, bottom: 0 }}>
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <YAxis hide />
+                <Tooltip
+                  cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null
+                    const val = payload[0].value as number
+                    return (
+                      <div className="bg-card border border-border rounded-lg px-3 py-2 text-xs shadow-lg">
+                        <span className="font-semibold text-primary">₺{val.toLocaleString('tr-TR')}</span>
+                      </div>
+                    )
+                  }}
+                />
+                <Bar dataKey="total" radius={[4, 4, 0, 0]}>
+                  {revenueChartData.map((entry, i) => (
+                    <Cell key={i} fill={entry.isCurrent ? 'hsl(var(--primary))' : 'hsl(var(--primary)/0.35)'} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-[160px] flex items-center justify-center text-muted-foreground text-sm">
+              Henüz tahsil edilmiş ödeme yok
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Empty */}
       {localClients.length === 0 && (
         <div className="rounded-xl border border-border bg-card p-12 text-center text-muted-foreground">
@@ -321,6 +395,9 @@ export function ClientsDashboard({ leads }: { leads: Client[] }) {
                   const thisMonthStatus = computeStatus(client.payment_day, cm, thisMonthRec)
                   const statusCfg = STATUS_CONFIG[thisMonthStatus]
                   const isPaying = markingPaid === `${client.id}-${cm}`
+                  const waText = encodeURIComponent(
+                    `Merhaba ${client.gym_name}, ${monthLabel(cm)} ayı hizmet ödemeniz bekleniyor. İyi günler 🙏`
+                  )
 
                   return (
                     <tr key={client.id} className={`border-b border-border last:border-0 transition-colors ${thisMonthStatus === 'overdue' ? 'bg-red-500/5' : ''}`}>
@@ -367,7 +444,7 @@ export function ClientsDashboard({ leads }: { leads: Client[] }) {
 
                       {/* Bu Ay */}
                       <td className="p-4">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${statusCfg.color}`}>
                             {statusCfg.label}
                           </span>
@@ -390,6 +467,21 @@ export function ClientsDashboard({ leads }: { leads: Client[] }) {
                             >
                               Geri Al
                             </Button>
+                          )}
+                          {thisMonthStatus === 'overdue' && client.phone && (
+                            <a
+                              href={`https://wa.me/${formatPhone(client.phone)}?text=${waText}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-6 px-2 text-[10px] font-semibold border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/10 gap-1"
+                              >
+                                <MessageCircle className="w-3 h-3" /> WA
+                              </Button>
+                            </a>
                           )}
                         </div>
                       </td>
