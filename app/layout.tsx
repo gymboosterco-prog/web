@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import { GymboosterPixel } from '@/components/gymbooster-pixel'
 import { PwaHandler } from '@/components/pwa-handler'
+import { SentryInit } from '@/components/sentry-init'
 import './globals.css'
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
@@ -151,6 +152,7 @@ export default function RootLayout({
         >
           {children}
           <PwaHandler />
+          <SentryInit />
           <GymboosterPixel />
           <Analytics />
         </ThemeProvider>
