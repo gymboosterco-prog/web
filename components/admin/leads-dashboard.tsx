@@ -971,7 +971,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
 
       {/* Clients View */}
       {activeView === 'clients' && (
-        <ClientsDashboard leads={leads as any} supabase={supabase} />
+        <ClientsDashboard leads={leads as any} />
       )}
 
       {/* Table View */}

@@ -5,7 +5,7 @@ import { toast } from "sonner"
 import { Zap, TrendingUp, Users, AlertCircle, Pencil, Check, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import type { SupabaseClient } from "@supabase/supabase-js"
+import { createClient } from "@/lib/supabase/client"
 
 type Client = {
   id: string
@@ -43,11 +43,10 @@ type EditState = { monthly_fee: string; payment_day: string; client_start_date: 
 
 export function ClientsDashboard({
   leads,
-  supabase,
 }: {
   leads: Client[]
-  supabase: SupabaseClient
 }) {
+  const supabase = createClient()
   const clients = useMemo(() => leads.filter(l => (l as any).status === 'won'), [leads])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValues, setEditValues] = useState<EditState>({ monthly_fee: "", payment_day: "", client_start_date: "" })
