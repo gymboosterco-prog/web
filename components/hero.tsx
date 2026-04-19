@@ -134,43 +134,53 @@ export function Hero() {
                         required
                         className="h-11 md:h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 text-sm md:text-base focus:border-primary/50 transition-colors"
                       />
-                      <div className="relative group">
-                        <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-white/30 group-focus-within:text-primary transition-colors" />
-                        <Input
-                          type="text"
-                          placeholder="Salonunuzun Instagram Kullanıcı Adı"
-                          value={formData.instagramUrl}
-                          onChange={(e) => updateField("instagramUrl", e.target.value)}
-                          required
-                          className="pl-10 h-11 md:h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 text-sm md:text-base focus:border-primary/50 transition-all"
-                        />
+
+                      {/* Progressive reveal — görünür olduğunda yavaşça açılır */}
+                      <div
+                        className="space-y-3 overflow-hidden transition-all duration-500 ease-in-out"
+                        style={{
+                          maxHeight: formData.name.trim().length > 1 && formData.phone.replace(/\D/g, '').length >= 10 ? '300px' : '0px',
+                          opacity: formData.name.trim().length > 1 && formData.phone.replace(/\D/g, '').length >= 10 ? 1 : 0,
+                        }}
+                      >
+                        <div className="relative group">
+                          <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-white/30 group-focus-within:text-primary transition-colors" />
+                          <Input
+                            type="text"
+                            placeholder="Salonunuzun Instagram Kullanıcı Adı"
+                            value={formData.instagramUrl}
+                            onChange={(e) => updateField("instagramUrl", e.target.value)}
+                            tabIndex={formData.name.trim().length > 1 && formData.phone.replace(/\D/g, '').length >= 10 ? 0 : -1}
+                            className="pl-10 h-11 md:h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 text-sm md:text-base focus:border-primary/50 transition-all"
+                          />
+                        </div>
+                        <select
+                          value={formData.adBudget}
+                          onChange={(e) => updateField("adBudget", e.target.value)}
+                          tabIndex={formData.name.trim().length > 1 && formData.phone.replace(/\D/g, '').length >= 10 ? 0 : -1}
+                          className="w-full h-11 md:h-12 rounded-md border border-white/10 px-3 text-sm md:text-base text-white focus:border-primary/50 focus:outline-none transition-colors appearance-none [color-scheme:dark]"
+                          style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
+                        >
+                          <option value="" disabled>Aylık Reklam Bütçeniz</option>
+                          <option value="5000-10000">₺5.000 – ₺10.000</option>
+                          <option value="10000-20000">₺10.000 – ₺20.000</option>
+                          <option value="20000-30000">₺20.000 – ₺30.000</option>
+                          <option value="50000+">₺50.000+</option>
+                        </select>
+                        <select
+                          value={formData.preferredCallTime}
+                          onChange={(e) => updateField("preferredCallTime", e.target.value)}
+                          tabIndex={formData.name.trim().length > 1 && formData.phone.replace(/\D/g, '').length >= 10 ? 0 : -1}
+                          className="w-full h-11 md:h-12 rounded-md border border-white/10 px-3 text-sm md:text-base text-white focus:border-primary/50 focus:outline-none transition-colors appearance-none [color-scheme:dark]"
+                          style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
+                        >
+                          <option value="" disabled>Hangi saatte aranmak istersiniz?</option>
+                          <option value="09:00-12:00">09:00 – 12:00 (Sabah)</option>
+                          <option value="12:00-15:00">12:00 – 15:00 (Öğle)</option>
+                          <option value="15:00-18:00">15:00 – 18:00 (Öğleden Sonra)</option>
+                          <option value="18:00-21:00">18:00 – 21:00 (Akşam)</option>
+                        </select>
                       </div>
-                      <select
-                        value={formData.adBudget}
-                        onChange={(e) => updateField("adBudget", e.target.value)}
-                        required
-                        className="w-full h-11 md:h-12 rounded-md border border-white/10 px-3 text-sm md:text-base text-white focus:border-primary/50 focus:outline-none transition-colors appearance-none [color-scheme:dark]"
-                        style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
-                      >
-                        <option value="" disabled>Aylık Reklam Bütçeniz</option>
-                        <option value="5000-10000">₺5.000 – ₺10.000</option>
-                        <option value="10000-20000">₺10.000 – ₺20.000</option>
-                        <option value="20000-30000">₺20.000 – ₺30.000</option>
-                        <option value="50000+">₺50.000+</option>
-                      </select>
-                      <select
-                        value={formData.preferredCallTime}
-                        onChange={(e) => updateField("preferredCallTime", e.target.value)}
-                        required
-                        className="w-full h-11 md:h-12 rounded-md border border-white/10 px-3 text-sm md:text-base text-white focus:border-primary/50 focus:outline-none transition-colors appearance-none [color-scheme:dark]"
-                        style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
-                      >
-                        <option value="" disabled>Hangi saatte aranmak istersiniz?</option>
-                        <option value="09:00-12:00">09:00 – 12:00 (Sabah)</option>
-                        <option value="12:00-15:00">12:00 – 15:00 (Öğle)</option>
-                        <option value="15:00-18:00">15:00 – 18:00 (Öğleden Sonra)</option>
-                        <option value="18:00-21:00">18:00 – 21:00 (Akşam)</option>
-                      </select>
                     </div>
 
                     <Button
