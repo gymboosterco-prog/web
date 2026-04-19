@@ -8,27 +8,27 @@ export function StickyCTA() {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
-    const handleScroll = () => {
-      // Show after scrolling past hero section (roughly 500px)
-      setIsVisible(window.scrollY > 500)
-    }
+    const submitBtn = document.querySelector<HTMLElement>("#hero-form button[type='submit']")
+    if (!submitBtn) return
 
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(!entry.isIntersecting),
+      { threshold: 0 }
+    )
+    observer.observe(submitBtn)
+    return () => observer.disconnect()
   }, [])
 
   const scrollToForm = () => {
     const heroForm = document.getElementById("hero-form")
-    if (heroForm) {
-      heroForm.scrollIntoView({ behavior: "smooth" })
-    }
+    if (heroForm) heroForm.scrollIntoView({ behavior: "smooth" })
   }
 
   if (!isVisible) return null
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 p-3 bg-background/95 backdrop-blur-sm border-t border-border lg:hidden">
-      <Button 
+      <Button
         onClick={scrollToForm}
         className="w-full h-12 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
       >
