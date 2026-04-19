@@ -35,7 +35,10 @@ type PaymentRecord = {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function currentMonth() { return new Date().toISOString().slice(0, 7) }
+function toYearMonth(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+function currentMonth() { return toYearMonth(new Date()) }
 
 function monthLabel(m: string) {
   const [y, mo] = m.split('-')
@@ -53,7 +56,7 @@ function monthsSince(startDate: string | null): string[] {
   const months: string[] = []
   const cur = new Date(start.getFullYear(), start.getMonth(), 1)
   while (cur <= now) {
-    months.unshift(cur.toISOString().slice(0, 7))
+    months.unshift(toYearMonth(cur))
     cur.setMonth(cur.getMonth() + 1)
   }
   return months
@@ -163,7 +166,7 @@ export function ClientsDashboard({ leads }: { leads: Client[] }) {
     const now = new Date()
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      months.push(d.toISOString().slice(0, 7))
+      months.push(toYearMonth(d))
     }
     return months
   }, [])
