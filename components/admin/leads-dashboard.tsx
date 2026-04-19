@@ -76,6 +76,7 @@ import {
 } from "lucide-react"
 import { KanbanBoard } from "./kanban-board"
 import { CalendarView } from "./calendar-view"
+import { ClientsDashboard } from "./clients-dashboard"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
 import {
@@ -124,6 +125,9 @@ type Lead = {
   called_at: string | null
   meeting_planned_at: string | null
   won_at: string | null
+  monthly_fee: number | null
+  payment_day: number | null
+  client_start_date: string | null
   created_at: string
   updated_at: string
 }
@@ -185,7 +189,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
   const [nextActionType, setNextActionType] = useState<Lead['next_action_type']>(null)
   const [inlineEditingId, setInlineEditingId] = useState<string | null>(null)
   const [inlineNoteValue, setInlineNoteValue] = useState("")
-  const [activeView, setActiveView] = useState<'table' | 'kanban' | 'calendar'>('table')
+  const [activeView, setActiveView] = useState<'table' | 'kanban' | 'calendar' | 'clients'>('table')
   const [statusHistory, setStatusHistory] = useState<{
     id: string; old_status: string | null; new_status: string; changed_at: string; changed_by: string | null
   }[]>([])
@@ -444,6 +448,12 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
 
     return matchesSearch && matchesStatus
   })
+
+  const clientsDueCount = useMemo(() => {
+    const today = new Date().getDate()
+    return leads.filter(l => l.status === 'won' && l.payment_day !== null &&
+      Math.abs((l.payment_day ?? 0) - today) <= 3).length
+  }, [leads])
 
   // Admin Priority Sections
   const adminPriority = React.useMemo(() => {
@@ -867,6 +877,18 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
               >
                 <CalendarDays className="w-4 h-4" />
               </button>
+              <button
+                onClick={() => setActiveView('clients')}
+                className={`relative p-2 transition-colors ${activeView === 'clients' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+                title="Müşteriler"
+              >
+                <Users className="w-4 h-4" />
+                {clientsDueCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 text-[9px] font-bold bg-red-500 text-white rounded-full flex items-center justify-center">
+                    {clientsDueCount}
+                  </span>
+                )}
+              </button>
             </div>
 
             {/* Secondary actions — visible on md+ */}
@@ -945,6 +967,11 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
           leads={leads}
           onSelectLead={(lead) => setSelectedLead(lead)}
         />
+      )}
+
+      {/* Clients View */}
+      {activeView === 'clients' && (
+        <ClientsDashboard leads={leads as any} supabase={supabase} />
       )}
 
       {/* Table View */}

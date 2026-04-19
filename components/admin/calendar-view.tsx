@@ -33,6 +33,9 @@ type Lead = {
   instagram_url: string | null
   ad_budget: string | null
   preferred_call_time: string | null
+  monthly_fee: number | null
+  payment_day: number | null
+  client_start_date: string | null
   member_count: number
   lead_goal: number
   call_count: number
