@@ -172,7 +172,8 @@ export function ClientsDashboard({ leads }: { leads: Client[] }) {
     return last6Months.map(month => {
       const total = localClients.reduce((sum, c) => {
         const rec = (payments[c.id] ?? []).find(p => p.month === month && p.status === 'paid')
-        return sum + (rec?.amount ?? 0)
+        if (!rec) return sum
+        return sum + (rec.amount ?? c.monthly_fee ?? 0)
       }, 0)
       return { month: shortMonthLabel(month), total, isCurrent: month === currentMonth() }
     })
