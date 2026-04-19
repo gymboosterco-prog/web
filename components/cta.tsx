@@ -32,30 +32,30 @@ export function CTA() {
               </div>
 
               <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-5xl font-bold mb-3 md:mb-4 lg:mb-6 text-balance">
-                {"Salonunuzun Büyüme Potansiyelini"}
-                <span className="text-primary"> Ücretsiz Keşfedin</span>
+                {"15 Dakikada Salonunuzun"}
+                <span className="text-primary"> Büyüme Planını Alın</span>
               </h2>
 
               <p className="text-sm md:text-base lg:text-lg text-muted-foreground mb-4 md:mb-6 lg:mb-8">
-                15 dakikalık ücretsiz görüşmede salonunuzun durumunu analiz ediyor, size özel büyüme planı sunuyoruz.
+                Görüşmede size rakiplerinizin göremediği fırsatları gösteriyor, 50 başvuruya nasıl ulaşacağınızı somut rakamlarla anlatıyoruz.
               </p>
 
               <ul className="space-y-2 md:space-y-3 lg:space-y-4 mb-4 md:mb-6 lg:mb-8 text-left">
                 <li className="flex items-center gap-2 md:gap-3">
                   <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0" />
-                  <span className="text-xs md:text-sm lg:text-base">Mevcut pazarlama stratejinizin analizi</span>
+                  <span className="text-xs md:text-sm lg:text-base">Bölgenizdeki kaç kişi salon aradığını öğrenin</span>
                 </li>
                 <li className="flex items-center gap-2 md:gap-3">
                   <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0" />
-                  <span className="text-xs md:text-sm lg:text-base">Rakip analizi ve fırsat tespiti</span>
+                  <span className="text-xs md:text-sm lg:text-base">En yakın 3 rakibinizin reklam harcamasını görün</span>
                 </li>
                 <li className="flex items-center gap-2 md:gap-3">
                   <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0" />
-                  <span className="text-xs md:text-sm lg:text-base">Özelleştirilmiş büyüme yol haritası</span>
+                  <span className="text-xs md:text-sm lg:text-base">Size özel 50 başvuru planı ve bütçe hesabı</span>
                 </li>
                 <li className="flex items-center gap-2 md:gap-3">
                   <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0" />
-                  <span className="text-xs md:text-sm lg:text-base">ROI projeksiyonu ve bütçe önerisi</span>
+                  <span className="text-xs md:text-sm lg:text-base">7 günde kampanya başlatma takvimi</span>
                 </li>
               </ul>
 
@@ -172,7 +172,7 @@ export function CTA() {
                   </p>
                   <div className="inline-flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-primary/10 text-primary text-xs md:text-sm">
                     <Clock className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                    <span>Ortalama yanıt süresi: 2 saat</span>
+                    <span>24 saat içinde sizi arayacağız</span>
                   </div>
                 </div>
               )}

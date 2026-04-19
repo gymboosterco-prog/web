@@ -63,10 +63,10 @@ export function CaseStudies() {
       <div className="container px-4">
         <div className="text-center mb-8 md:mb-12 lg:mb-16">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-6 text-balance">
-            Gerçek Sonuçlar, <span className="text-primary">Gerçek Rakamlar</span>
+            Müşteri Başarıları
           </h2>
           <p className="text-sm md:text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
-            Müşterilerimizin başarı hikayeleri. Bunlar varsayım değil, kanıtlanmış sonuçlar.
+            87+ salondan derlenen gerçek veriler. Rakamlar müşterilerimize aittir.
           </p>
         </div>
 

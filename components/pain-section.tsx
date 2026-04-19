@@ -13,10 +13,10 @@ export function PainSection() {
       <div className="container px-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-10 md:mb-14">
-            <p className="text-sm font-semibold text-primary uppercase tracking-widest mb-3">Sizi Tanıyoruz</p>
+            <p className="text-sm font-semibold text-primary uppercase tracking-widest mb-3">Bu Size de Oluyor mu?</p>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-balance">
               Çoğu Salon Sahibinin{" "}
-              <span className="text-destructive">Yaşadığı Tablo</span>
+              <span className="text-destructive">Yaşadığı Sorun</span>
             </h2>
           </div>
 

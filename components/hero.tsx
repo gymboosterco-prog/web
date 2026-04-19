@@ -38,16 +38,16 @@ export function Hero() {
 
             {/* Main Headline */}
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4 md:mb-6 text-balance">
-              <span className="text-foreground">Türkiye'nin İlk ve Tek</span>
+              <span className="text-foreground">Her Ay 50+ Garantili Başvuru</span>
               <br />
-              <span className="text-primary">Yapay Zeka Destekli</span>
+              <span className="text-primary">Ya Getiririz,</span>
               <br />
-              <span className="text-foreground">Spor Salonlarına Özel Reklam Ajansı</span>
+              <span className="text-foreground">Ya Bedava Çalışırız.</span>
             </h1>
 
             {/* Sub-headline */}
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-4 md:mb-6 text-pretty">
-              Reklama para harcıyorsunuz ama telefon çalmıyor mu? Yapay zeka destekli sistemimiz salonunuzun çevresindeki aktif potansiyel üyeleri bulur, sizi onlarla tanıştırır.
+              2 yıldır yalnızca spor salonlarıyla çalışıyoruz. Reklam bütçenizi israf ettirmeden her ay 50+ nitelikli başvuru getiriyoruz — ya da tutturana kadar bedava çalışıyoruz.
             </p>
 
             {/* Trust indicators */}
