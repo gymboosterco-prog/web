@@ -10,7 +10,7 @@ export function PwaHandler() {
       const register = () => {
         navigator.serviceWorker
           .register("/sw.js")
-          .then((reg) => console.log("Service Worker registered:", reg))
+          .then(() => {})
           .catch((err) => console.error("Service Worker registration failed:", err))
       }
 

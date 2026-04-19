@@ -12,7 +12,6 @@ export function MetaPixelEvents() {
         (window as any).fbq('trackCustom', 'EngagedUser', {
           time_on_page: '30s'
         });
-        console.log("Meta Pixel: EngagedUser event tracked (30s)");
       }
     }, 30000);
 
@@ -33,7 +32,6 @@ export function MetaPixelEvents() {
           content_name: document.title
         });
         scroll50Tracked = true;
-        console.log("Meta Pixel: ScrollDepth 50% tracked");
       }
 
       if (scrollPercent >= 90 && !scroll90Tracked) {
@@ -42,7 +40,6 @@ export function MetaPixelEvents() {
           content_name: document.title
         });
         scroll90Tracked = true;
-        console.log("Meta Pixel: ScrollDepth 90% tracked");
       }
     };
 
