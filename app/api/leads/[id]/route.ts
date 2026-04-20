@@ -173,7 +173,7 @@ export async function PATCH(
         lead_id: id,
         old_status: existingStatus,
         new_status: status,
-        changed_by: existingAssignedTo ?? "Admin"
+        changed_by: user.email ?? existingAssignedTo ?? "Admin"
       })
     }
 

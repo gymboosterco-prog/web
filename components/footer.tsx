@@ -1,4 +1,5 @@
 import { Dumbbell, Phone, MapPin } from "lucide-react"
+import Link from "next/link"
 
 export function Footer() {
   return (
@@ -53,13 +54,13 @@ export function Footer() {
             <h4 className="font-semibold text-sm md:text-base mb-3 md:mb-4">Yasal</h4>
             <ul className="space-y-1.5 md:space-y-2 text-xs md:text-sm text-muted-foreground">
               <li>
-                <a href="#" className="hover:text-foreground transition-colors">Gizlilik Politikası</a>
+                <Link href="/gizlilik" className="hover:text-foreground transition-colors">Gizlilik Politikası</Link>
               </li>
               <li>
-                <a href="#" className="hover:text-foreground transition-colors">Kullanım Koşulları</a>
+                <Link href="/kullanim-kosullari" className="hover:text-foreground transition-colors">Kullanım Koşulları</Link>
               </li>
               <li>
-                <a href="#" className="hover:text-foreground transition-colors">KVKK</a>
+                <Link href="/gizlilik#kvkk" className="hover:text-foreground transition-colors">KVKK</Link>
               </li>
             </ul>
           </div>
