@@ -1,16 +1,19 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dumbbell, Lock, Mail, AlertCircle } from "lucide-react"
 
-export default function AdminLoginPage() {
+function LoginForm() {
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+  const [error, setError] = useState(
+    searchParams.get('reason') === 'expired' ? 'Oturumunuz sona erdi. Lütfen tekrar giriş yapın.' : ''
+  )
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
@@ -21,16 +24,11 @@ export default function AdminLoginPage() {
     setError("")
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) {
         setError("Geçersiz e-posta veya şifre")
         return
       }
-
       router.push("/admin")
       router.refresh()
     } finally {
@@ -103,5 +101,13 @@ export default function AdminLoginPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   )
 }

@@ -32,11 +32,26 @@ export async function POST(request: Request) {
     const safeName = escapeHtml(name.trim())
     const safeInstagram = escapeHtml(instagramUrl.trim().replace(/^@/, ''))
     const safeGymName = `@${safeInstagram}`
-    const safePhone = escapeHtml(phone.trim())
+    const normalizedPhone = phone.replace(/\D/g, '')
+    const safePhone = escapeHtml(normalizedPhone)
     const safeAdBudget = adBudget ? escapeHtml(String(adBudget)) : null
     const safeCallTime = preferredCallTime ? escapeHtml(String(preferredCallTime)) : null
 
     const supabase = await createClient()
+
+    const { data: existing } = await supabase
+      .from('leads')
+      .select('id')
+      .eq('phone', normalizedPhone)
+      .is('deleted_at', null)
+      .maybeSingle()
+
+    if (existing) {
+      return NextResponse.json(
+        { error: 'Bu telefon numarası daha önce başvurmuş. Ekibimiz en kısa sürede sizinle iletişime geçecek.' },
+        { status: 409 }
+      )
+    }
 
     const { error } = await supabase
       .from("leads")
