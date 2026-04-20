@@ -10,7 +10,7 @@ const pains = [
 export function PainSection() {
   return (
     <section className="py-16 md:py-24 bg-card border-y border-border">
-      <div className="container px-4">
+      <div className="container px-4 mx-auto">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-10 md:mb-14">
             <p className="text-sm font-semibold text-primary uppercase tracking-widest mb-3">Bu Size de Oluyor mu?</p>

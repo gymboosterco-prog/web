@@ -27,7 +27,7 @@ const guarantees = [
 export function Guarantee() {
   return (
     <section id="garantiler" className="py-16 md:py-24 lg:py-32 bg-background">
-      <div className="container px-4">
+      <div className="container px-4 mx-auto">
         <div className="max-w-4xl mx-auto">
 
           {/* Hero guarantee block */}

@@ -41,7 +41,7 @@ const included = [
 export function Services() {
   return (
     <section id="hizmetler" className="py-16 md:py-24 lg:py-32 bg-background">
-      <div className="container px-4">
+      <div className="container px-4 mx-auto">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10 md:mb-14">
             <p className="text-sm font-semibold text-primary uppercase tracking-widest mb-3">Tek Pakette Her Şey</p>

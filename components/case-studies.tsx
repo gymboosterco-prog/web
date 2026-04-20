@@ -60,7 +60,7 @@ const caseStudies = [
 export function CaseStudies() {
   return (
     <section className="py-12 md:py-20 lg:py-32 bg-background">
-      <div className="container px-4">
+      <div className="container px-4 mx-auto">
         <div className="text-center mb-8 md:mb-12 lg:mb-16">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-6 text-balance">
             Müşteri Başarıları

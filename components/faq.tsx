@@ -45,7 +45,7 @@ const faqs = [
 export function FAQ() {
   return (
     <section id="sss" className="py-12 md:py-20 lg:py-32 bg-secondary/30">
-      <div className="container px-4">
+      <div className="container px-4 mx-auto">
         <div className="text-center mb-8 md:mb-12 lg:mb-16">
           <p className="text-sm font-semibold text-primary uppercase tracking-widest mb-3">İtirazlar & Cevaplar</p>
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-6 text-balance">

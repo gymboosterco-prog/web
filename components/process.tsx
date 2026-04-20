@@ -30,7 +30,7 @@ const steps = [
 export function Process() {
   return (
     <section className="py-20 md:py-32 bg-secondary/30">
-      <div className="container px-4">
+      <div className="container px-4 mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-5xl font-bold mb-6 text-balance">
             Nasıl <span className="text-primary">Çalışıyoruz?</span>

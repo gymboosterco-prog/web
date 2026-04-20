@@ -48,7 +48,7 @@ const testimonials = [
 export function SocialProof() {
   return (
     <section id="sonuclar" className="py-16 md:py-24 lg:py-32 bg-secondary/30">
-      <div className="container px-4">
+      <div className="container px-4 mx-auto">
         <div className="text-center mb-10 md:mb-16">
           <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 text-balance">
             Spor Salonu Sahipleri <span className="text-primary">Ne Diyor?</span>
