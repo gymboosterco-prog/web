@@ -10,6 +10,7 @@ const Services = dynamic(() => import("@/components/services").then(m => ({ defa
 const CaseStudies = dynamic(() => import("@/components/case-studies").then(m => ({ default: m.CaseStudies })))
 const Comparison = dynamic(() => import("@/components/comparison").then(m => ({ default: m.Comparison })))
 const Guarantee = dynamic(() => import("@/components/guarantee").then(m => ({ default: m.Guarantee })))
+const Pricing = dynamic(() => import("@/components/pricing").then(m => ({ default: m.Pricing })))
 const ForWho = dynamic(() => import("@/components/for-who").then(m => ({ default: m.ForWho })))
 const Process = dynamic(() => import("@/components/process").then(m => ({ default: m.Process })))
 const FAQ = dynamic(() => import("@/components/faq").then(m => ({ default: m.FAQ })))
@@ -35,6 +36,7 @@ export default function Home() {
         <section id="garantiler">
           <Guarantee />
         </section>
+        <Pricing />
         <ForWho />
         <Process />
         <section id="sss">
