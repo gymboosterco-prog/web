@@ -56,7 +56,19 @@ export async function proxy(request: NextRequest) {
   )
 
   // Süresi dolmuş session'ı yeniler — Server Components için gerekli
-  await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // Admin route koruması (/admin/login hariç)
+  const pathname = request.nextUrl.pathname
+  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
+    if (!user) {
+      const loginUrl = request.nextUrl.clone()
+      loginUrl.pathname = '/admin/login'
+      const hadSession = request.cookies.getAll().some(c => c.name.startsWith('sb-'))
+      if (hadSession) loginUrl.searchParams.set('reason', 'expired')
+      return NextResponse.redirect(loginUrl)
+    }
+  }
 
   return response
 }
