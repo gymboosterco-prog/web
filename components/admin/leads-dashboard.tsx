@@ -260,7 +260,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
 
     if (response.ok) {
       // If it's a meeting planned, notify
-      if (updates.status === 'meeting_planned' && Notification.permission === "granted") {
+      if (updates.status === 'meeting_planned' && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
         new Notification("Yeni Toplantı Planlandı! 📅", {
           body: "Bir lead Admin'e devredildi.",
           icon: "/icon-192.png"
@@ -318,7 +318,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
   const sendDailySummarySummary = () => {
     const message = `📊 Günün Özeti: Bugün ${dailyStats.newCount} yeni lead geldi. ${dailyStats.calledCount} kişi arandı. ${dailyStats.meetingCount} toplantı set edildi. ${dailyStats.wonCount} satış kapatıldı. 🚀`
     
-    if (Notification.permission === "granted") {
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
       new Notification("Günün Performans Özeti! 📈", {
         body: message,
         icon: "/icon-192.png"
@@ -895,7 +895,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                 className="hidden md:flex border-primary/30 text-primary hover:bg-primary/10 animate-pulse"
               >
                 <Bell className="w-4 h-4 mr-2" />
-                {isMounted && Notification.permission === "denied" ? "Bildirim İzni Engellendi" : "Bildirimleri Aç"}
+                {isMounted && typeof Notification !== "undefined" && Notification.permission === "denied" ? "Bildirim İzni Engellendi" : "Bildirimleri Aç"}
               </Button>
             )}
             <Button variant="outline" size="sm" onClick={() => setIsEditingTemplate(true)} className="hidden md:flex border-[#f2ff00]/30 text-[#f2ff00] hover:bg-[#f2ff00]/10">
@@ -918,7 +918,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                 {!notificationsEnabled && (
                   <DropdownMenuItem onClick={requestNotificationPermission}>
                     <Bell className="w-4 h-4 mr-2" />
-                    {isMounted && Notification.permission === "denied" ? "Bildirim İzni Engellendi" : "Bildirimleri Aç"}
+                    {isMounted && typeof Notification !== "undefined" && Notification.permission === "denied" ? "Bildirim İzni Engellendi" : "Bildirimleri Aç"}
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem onClick={() => setIsEditingTemplate(true)}>
