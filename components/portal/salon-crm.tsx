@@ -86,15 +86,27 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   new:          { label: "Yeni",             color: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
   called:       { label: "Arandı",           color: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" },
   meeting_done: { label: "Görüşme Yapıldı",  color: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
+  thinking:     { label: "Düşünüyor",        color: "bg-orange-500/10 text-orange-400 border-orange-500/20" },
   won:          { label: "Üye Oldu",         color: "bg-green-500/10 text-green-400 border-green-500/20" },
   lost:         { label: "Kaybedildi",       color: "bg-red-500/10 text-red-400 border-red-500/20" },
 }
 
-const STATUS_ORDER = ["new", "called", "meeting_done", "won", "lost"]
+const STATUS_ORDER = ["new", "called", "meeting_done", "thinking", "won", "lost"]
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.gymbooster.tr"
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+function firstContactTime(lead: SalonLead): { text: string; color: string } | null {
+  if (!lead.called_at) return null
+  const ms = new Date(lead.called_at).getTime() - new Date(lead.created_at).getTime()
+  if (ms < 0) return null
+  const mins = Math.round(ms / 60000)
+  if (mins < 60)  return { text: `${mins}dk'da temas`,          color: mins <= 15 ? "text-green-400" : mins <= 60 ? "text-yellow-400" : "text-red-400" }
+  const hours = Math.round(ms / 3600000)
+  if (hours < 24) return { text: `${hours}sa'de temas`,          color: hours <= 2  ? "text-yellow-400" : "text-red-400" }
+  return           { text: `${Math.round(hours / 24)}g'de temas`, color: "text-red-400" }
+}
+
 function contactIndicator(lead: SalonLead): { color: string; title: string } {
   const ref = lead.called_at || lead.created_at
   const diffDays = (Date.now() - new Date(ref).getTime()) / (1000 * 60 * 60 * 24)
@@ -307,6 +319,17 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats, setupSt
     const totalRevenue = leads
       .filter(l => l.status === "won")
       .reduce((sum, l) => sum + (l.value || 0), 0)
+    const contacted = leads.filter(l => l.called_at)
+    const avgContactMins = contacted.length > 0
+      ? Math.round(contacted.reduce((sum, l) => {
+          const ms = new Date(l.called_at!).getTime() - new Date(l.created_at).getTime()
+          return sum + Math.max(0, ms) / 60000
+        }, 0) / contacted.length)
+      : null
+    const avgContactLabel = avgContactMins === null ? "—"
+      : avgContactMins < 60  ? `${avgContactMins}dk`
+      : avgContactMins < 1440 ? `${Math.round(avgContactMins / 60)}sa`
+      : `${Math.round(avgContactMins / 1440)}g`
     return {
       total,
       new: leads.filter(l => l.status === "new").length,
@@ -318,6 +341,7 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats, setupSt
       }).length,
       conversionRate: total > 0 ? Math.round((won / total) * 100) : 0,
       totalRevenue,
+      avgContactLabel,
     }
   }, [leads])
 
@@ -556,13 +580,14 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats, setupSt
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-4">
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 p-4">
         {[
-          { label: "Bu Ay",    value: stats.thisMonth,                                                            icon: Clock },
-          { label: "Toplam",   value: stats.total,                                                                icon: Users },
-          { label: "Üye Oldu", value: stats.won,                                                                  icon: CheckCircle2 },
-          { label: "Dönüşüm",  value: `%${stats.conversionRate}`,                                                 icon: TrendingUp },
-          { label: "Ciro",     value: stats.totalRevenue > 0 ? `₺${stats.totalRevenue.toLocaleString("tr-TR")}` : "—", icon: TrendingUp },
+          { label: "Bu Ay",       value: stats.thisMonth,                                                                 icon: Clock },
+          { label: "Toplam",      value: stats.total,                                                                     icon: Users },
+          { label: "Üye Oldu",    value: stats.won,                                                                       icon: CheckCircle2 },
+          { label: "Dönüşüm",     value: `%${stats.conversionRate}`,                                                      icon: TrendingUp },
+          { label: "Ciro",        value: stats.totalRevenue > 0 ? `₺${stats.totalRevenue.toLocaleString("tr-TR")}` : "—", icon: TrendingUp },
+          { label: "Ort. Temas",  value: stats.avgContactLabel,                                                           icon: Clock },
         ].map(({ label, value, icon: Icon }) => (
           <div key={label} className="bg-card border border-border rounded-xl p-3 text-center">
             <Icon className="w-4 h-4 text-primary mx-auto mb-1" />
@@ -690,6 +715,7 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats, setupSt
                       <p className="text-xs text-muted-foreground">
                         {new Date(lead.created_at).toLocaleDateString("tr-TR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                       </p>
+                      {(() => { const fc = firstContactTime(lead); return fc ? <span className={`text-xs font-medium ${fc.color}`}>⚡ {fc.text}</span> : null })()}
                       {lead.next_action_at && (
                         <p className="text-xs text-yellow-400 flex items-center gap-1">
                           <CalendarClock className="w-3 h-3" />
