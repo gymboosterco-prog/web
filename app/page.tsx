@@ -8,6 +8,7 @@ import { StickyCTA } from "@/components/sticky-cta"
 const PainSection = dynamic(() => import("@/components/pain-section").then(m => ({ default: m.PainSection })))
 const Services = dynamic(() => import("@/components/services").then(m => ({ default: m.Services })))
 const CaseStudies = dynamic(() => import("@/components/case-studies").then(m => ({ default: m.CaseStudies })))
+const Comparison = dynamic(() => import("@/components/comparison").then(m => ({ default: m.Comparison })))
 const Guarantee = dynamic(() => import("@/components/guarantee").then(m => ({ default: m.Guarantee })))
 const ForWho = dynamic(() => import("@/components/for-who").then(m => ({ default: m.ForWho })))
 const Process = dynamic(() => import("@/components/process").then(m => ({ default: m.Process })))
@@ -30,6 +31,7 @@ export default function Home() {
         <section id="sonuclar">
           <CaseStudies />
         </section>
+        <Comparison />
         <section id="garantiler">
           <Guarantee />
         </section>
