@@ -6,7 +6,7 @@ import { toast } from "sonner"
 import {
   Phone, Search, ChevronDown, LogOut, Users, CheckCircle2, Clock, X,
   MessageSquare, TrendingUp, LayoutList, Columns, Instagram, Mail,
-  Bell, CalendarClock, Copy, Check, ExternalLink, Settings,
+  Bell, CalendarClock, Copy, Check, ExternalLink, Settings, ListChecks,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -237,6 +237,57 @@ function OnboardingChecklist({ steps, salonSlug, salonId }: {
   )
 }
 
+function TaskLeadCard({ lead, onCall, onDetail, wsUrl }: {
+  lead: SalonLead
+  onCall: (l: SalonLead) => void
+  onDetail: (l: SalonLead) => void
+  wsUrl: string
+}) {
+  const fc = firstContactTime(lead)
+  return (
+    <div className="bg-card border border-border rounded-xl p-3 flex items-center justify-between gap-3">
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 mb-0.5">
+          <p className="font-semibold text-sm truncate">{lead.name}</p>
+          {lead.call_count > 0 && (
+            <span className="flex-shrink-0 flex items-center gap-0.5 text-xs text-muted-foreground bg-secondary rounded px-1 py-0.5">
+              <Phone className="w-2.5 h-2.5" />{lead.call_count}
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground">{lead.phone}</p>
+        {fc && <p className={`text-xs mt-0.5 ${fc.color}`}>⚡ {fc.text}</p>}
+        {lead.next_action_at && (
+          <p className="text-xs text-yellow-400 flex items-center gap-1 mt-0.5">
+            <CalendarClock className="w-3 h-3" />
+            {new Date(lead.next_action_at).toLocaleDateString("tr-TR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+          </p>
+        )}
+      </div>
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        <button
+          onClick={() => onCall(lead)}
+          className="flex items-center gap-1 px-2.5 h-8 rounded-lg bg-primary/10 border border-primary/20 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+        >
+          <Phone className="w-3.5 h-3.5" />
+          Ara
+        </button>
+        <a href={wsUrl} target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-1 px-2.5 h-8 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium hover:bg-green-500/20 transition-colors">
+          <MessageSquare className="w-3.5 h-3.5" />
+          WA
+        </a>
+        <button
+          onClick={() => onDetail(lead)}
+          className="px-2.5 h-8 rounded-lg bg-secondary border border-border text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Detay
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export function SalonCRM({ salon, initialLeads, initialTotal, pageStats, setupSteps }: {
   salon: Salon | null
@@ -251,7 +302,7 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats, setupSt
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
-  const [view, setView] = useState<"list" | "kanban">("list")
+  const [view, setView] = useState<"list" | "kanban" | "tasks">("list")
   const [selectedLead, setSelectedLead] = useState<SalonLead | null>(null)
   const [newNote, setNewNote] = useState("")
   const [nextActionValue, setNextActionValue] = useState("")
@@ -368,15 +419,40 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats, setupSt
     }))
   }, [leads])
 
+  const activeStatuses = ["new", "called", "meeting_done", "thinking"]
+
   const dueLeads = useMemo(() => {
     const endOfToday = new Date()
     endOfToday.setHours(23, 59, 59, 999)
     return leads.filter(l =>
       l.next_action_at &&
       new Date(l.next_action_at) <= endOfToday &&
-      ["new", "called", "meeting_done"].includes(l.status)
+      activeStatuses.includes(l.status)
     )
-  }, [leads])
+  }, [leads]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const taskLeads = useMemo(() => {
+    const now = new Date()
+    const startOfToday = new Date(now); startOfToday.setHours(0, 0, 0, 0)
+    const endOfToday   = new Date(now); endOfToday.setHours(23, 59, 59, 999)
+    const withActionIds = new Set<string>()
+    const overdue = leads.filter(l => {
+      if (!l.next_action_at || !activeStatuses.includes(l.status)) return false
+      const d = new Date(l.next_action_at)
+      if (d < startOfToday) { withActionIds.add(l.id); return true }
+      return false
+    })
+    const today = leads.filter(l => {
+      if (!l.next_action_at || !activeStatuses.includes(l.status)) return false
+      const d = new Date(l.next_action_at)
+      if (d >= startOfToday && d <= endOfToday) { withActionIds.add(l.id); return true }
+      return false
+    })
+    const uncalled = leads.filter(l =>
+      l.status === "new" && !l.called_at && !withActionIds.has(l.id)
+    )
+    return { overdue, today, uncalled, total: overdue.length + today.length + uncalled.length }
+  }, [leads]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateLead = async (id: string, updates: Partial<SalonLead>) => {
     const prevLeads = leads
@@ -510,6 +586,18 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats, setupSt
             Profil
           </Link>
           <div className="flex items-center bg-secondary rounded-lg p-0.5">
+            <button
+              onClick={() => setView("tasks")}
+              className={`relative p-1.5 rounded-md transition-colors ${view === "tasks" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
+              title="Görevler"
+            >
+              <ListChecks className="w-4 h-4" />
+              {taskLeads.total > 0 && (
+                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-destructive text-[9px] font-bold text-white flex items-center justify-center leading-none">
+                  {taskLeads.total > 9 ? "9+" : taskLeads.total}
+                </span>
+              )}
+            </button>
             <button
               onClick={() => setView("list")}
               className={`p-1.5 rounded-md transition-colors ${view === "list" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
@@ -709,6 +797,11 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats, setupSt
                     <div className="flex items-center gap-2">
                       {(() => { const ind = contactIndicator(lead); return <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${ind.color}`} title={ind.title} /> })()}
                       <p className="font-semibold truncate">{lead.name}</p>
+                      {lead.call_count > 0 && (
+                        <span className="flex-shrink-0 flex items-center gap-0.5 text-xs text-muted-foreground bg-secondary rounded px-1 py-0.5">
+                          <Phone className="w-2.5 h-2.5" />{lead.call_count}
+                        </span>
+                      )}
                     </div>
                     <p className="text-sm text-muted-foreground">{lead.phone}</p>
                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
@@ -846,6 +939,54 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats, setupSt
         </div>
       )}
 
+      {/* TASKS VIEW */}
+      {view === "tasks" && (
+        <div className="px-4 pb-20 space-y-4 pt-1">
+          {taskLeads.total === 0 ? (
+            <div className="text-center py-16 text-muted-foreground text-sm">
+              <ListChecks className="w-8 h-8 mx-auto mb-3 opacity-30" />
+              Bugün için bekleyen görev yok 🎉
+            </div>
+          ) : (
+            <>
+              {taskLeads.overdue.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-destructive mb-2 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-destructive inline-block" />
+                    Gecikmiş ({taskLeads.overdue.length})
+                  </p>
+                  <div className="space-y-2">
+                    {taskLeads.overdue.map(lead => <TaskLeadCard key={lead.id} lead={lead} onCall={handleCall} onDetail={openDetail} wsUrl={buildWaUrl(lead.phone, wsTemplate, lead.name, salon?.name || "")} />)}
+                  </div>
+                </div>
+              )}
+              {taskLeads.today.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-yellow-400 mb-2 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-yellow-400 inline-block" />
+                    Bugün Aranacak ({taskLeads.today.length})
+                  </p>
+                  <div className="space-y-2">
+                    {taskLeads.today.map(lead => <TaskLeadCard key={lead.id} lead={lead} onCall={handleCall} onDetail={openDetail} wsUrl={buildWaUrl(lead.phone, wsTemplate, lead.name, salon?.name || "")} />)}
+                  </div>
+                </div>
+              )}
+              {taskLeads.uncalled.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-blue-400 mb-2 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-blue-400 inline-block" />
+                    Yeni & Henüz Aranmadı ({taskLeads.uncalled.length})
+                  </p>
+                  <div className="space-y-2">
+                    {taskLeads.uncalled.map(lead => <TaskLeadCard key={lead.id} lead={lead} onCall={handleCall} onDetail={openDetail} wsUrl={buildWaUrl(lead.phone, wsTemplate, lead.name, salon?.name || "")} />)}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
       {/* WhatsApp Şablon Editörü */}
       {showWsEditor && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setShowWsEditor(false)}>
@@ -888,10 +1029,11 @@ export function SalonCRM({ salon, initialLeads, initialTotal, pageStats, setupSt
         </div>
       )}
 
-      {/* DETAY MODAL */}
+      {/* DETAY SIDEBAR */}
       {selectedLead && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-4" onClick={() => setSelectedLead(null)}>
-          <div className="bg-card border border-border rounded-2xl w-full max-w-md max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex" onClick={() => setSelectedLead(null)}>
+          <div className="flex-1 hidden sm:block bg-black/40" />
+          <div className="w-full sm:w-[420px] bg-card border-l border-border flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
 
             {/* Modal header */}
             <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-border flex-shrink-0">
