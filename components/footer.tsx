@@ -46,6 +46,9 @@ export function Footer() {
               <li>
                 <a href="#sss" className="hover:text-foreground transition-colors">SSS</a>
               </li>
+              <li>
+                <Link href="/fiyatlar" className="hover:text-foreground transition-colors">Fiyatlar</Link>
+              </li>
             </ul>
           </div>
 

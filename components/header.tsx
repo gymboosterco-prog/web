@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Menu, X, Dumbbell } from "lucide-react"
+import Link from "next/link"
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -47,12 +48,18 @@ export function Header() {
             >
               Garantiler
             </button>
-            <button 
+            <button
               onClick={() => scrollToSection("sss")}
               className="text-xs lg:text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               SSS
             </button>
+            <Link
+              href="/fiyatlar"
+              className="text-xs lg:text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Fiyatlar
+            </Link>
           </nav>
 
           {/* CTA Button */}
@@ -101,12 +108,19 @@ export function Header() {
               >
                 Garantiler
               </button>
-              <button 
+              <button
                 onClick={() => scrollToSection("sss")}
                 className="text-left py-2.5 px-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
               >
                 SSS
               </button>
+              <Link
+                href="/fiyatlar"
+                className="text-left py-2.5 px-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Fiyatlar
+              </Link>
               <Button 
                 onClick={() => scrollToSection("hero-form")}
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold mt-2 h-10"
