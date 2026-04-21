@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 
 export type LeadFormData = {
@@ -18,9 +18,20 @@ export function useLeadSubmission() {
     adBudget: "",
     preferredCallTime: "",
   })
+  const [utmParams, setUtmParams] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search)
+    const utm: Record<string, string> = {}
+    for (const k of ["utm_source", "utm_medium", "utm_campaign", "utm_content"]) {
+      const v = p.get(k)
+      if (v) utm[k] = v
+    }
+    if (Object.keys(utm).length > 0) setUtmParams(utm)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -52,7 +63,7 @@ export function useLeadSubmission() {
       const response = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({ ...formData, ...utmParams })
       })
       
       if (response.ok) {

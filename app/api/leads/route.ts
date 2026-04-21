@@ -5,7 +5,8 @@ import { Resend } from "resend"
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, phone, instagramUrl, adBudget, preferredCallTime } = body
+    const { name, phone, instagramUrl, adBudget, preferredCallTime,
+            utm_source, utm_medium, utm_campaign, utm_content } = body
 
     if (!name || !phone || !instagramUrl) {
       return NextResponse.json(
@@ -36,6 +37,10 @@ export async function POST(request: Request) {
     const safePhone = escapeHtml(normalizedPhone)
     const safeAdBudget = adBudget ? escapeHtml(String(adBudget)) : null
     const safeCallTime = preferredCallTime ? escapeHtml(String(preferredCallTime)) : null
+    const safeUtmSource   = utm_source   ? escapeHtml(String(utm_source).slice(0, 100))   : null
+    const safeUtmMedium   = utm_medium   ? escapeHtml(String(utm_medium).slice(0, 100))   : null
+    const safeUtmCampaign = utm_campaign ? escapeHtml(String(utm_campaign).slice(0, 200)) : null
+    const safeUtmContent  = utm_content  ? escapeHtml(String(utm_content).slice(0, 200))  : null
 
     const supabase = await createClient()
 
@@ -64,7 +69,11 @@ export async function POST(request: Request) {
           ad_budget: safeAdBudget,
           preferred_call_time: safeCallTime,
           status: "new",
-          source: "website"
+          source: "website",
+          utm_source: safeUtmSource,
+          utm_medium: safeUtmMedium,
+          utm_campaign: safeUtmCampaign,
+          utm_content: safeUtmContent,
         }
       ])
 
@@ -98,6 +107,9 @@ export async function POST(request: Request) {
                 <tr><td style="color:#888;padding:6px 0;">Telefon</td><td style="color:#f2ff00;font-weight:600;">${safePhone}</td></tr>
                 ${safeAdBudget ? `<tr><td style="color:#888;padding:6px 0;">Reklam Bütçesi</td><td style="color:#fff;font-weight:600;">₺${safeAdBudget.replace('-', ' – ₺')}</td></tr>` : ''}
                 ${safeCallTime ? `<tr><td style="color:#888;padding:6px 0;">Aranma Saati</td><td style="color:#fff;font-weight:600;">${safeCallTime}</td></tr>` : ''}
+                ${safeUtmCampaign ? `<tr><td style="color:#888;padding:6px 0;">📢 Kampanya</td><td style="color:#f2ff00;font-weight:600;">${safeUtmCampaign}</td></tr>` : ''}
+                ${safeUtmSource ? `<tr><td style="color:#888;padding:6px 0;">Kaynak</td><td style="color:#fff;font-weight:600;">${safeUtmSource}${safeUtmMedium ? ` / ${safeUtmMedium}` : ''}</td></tr>` : ''}
+                ${safeUtmContent ? `<tr><td style="color:#888;padding:6px 0;">Kreatif</td><td style="color:#fff;font-weight:600;">${safeUtmContent}</td></tr>` : ''}
               </table>
             </div>
             <div style="text-align:center;">

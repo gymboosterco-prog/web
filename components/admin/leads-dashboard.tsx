@@ -107,6 +107,10 @@ type Lead = {
   status: string
   notes: string | null
   source: string
+  utm_source: string | null
+  utm_medium: string | null
+  utm_campaign: string | null
+  utm_content: string | null
   meeting_date: string | null
   value: number
   assigned_to: string | null
@@ -405,7 +409,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
   }
 
   const exportToCSV = () => {
-    const headers = ["Ad Soyad", "Email", "Telefon", "Salon", "Durum", "Kaynak", "Tarih", "Notlar"]
+    const headers = ["Ad Soyad", "Email", "Telefon", "Salon", "Durum", "Kaynak", "Kampanya", "Medium", "Kreatif", "Tarih", "Notlar"]
     const csvContent = [
       headers.join(","),
       ...leads.map(lead => [
@@ -414,7 +418,10 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
         `"${lead.phone}"`,
         `"${lead.gym_name}"`,
         `"${statusConfig[lead.status]?.label || lead.status}"`,
-        `"${lead.source}"`,
+        `"${lead.utm_source || lead.source}"`,
+        `"${lead.utm_campaign || ''}"`,
+        `"${lead.utm_medium || ''}"`,
+        `"${lead.utm_content || ''}"`,
         `"${new Date(lead.created_at).toLocaleDateString('tr-TR')}"`,
         `"${(() => { const entries = parseNotes(lead.notes); return entries.map(e => e.text).join(" | ").replace(/"/g, '""') })()}"`
       ].join(","))
@@ -1498,7 +1505,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                                   <a href={`tel:${lead.phone}`} className="text-[10px] text-primary hover:underline">{lead.phone}</a>
                                   <a href={`mailto:${lead.email}`} className="text-[10px] text-muted-foreground hover:underline truncate max-w-[100px]">{lead.email}</a>
                                 </div>
-                                {(lead.ad_budget || lead.preferred_call_time) && (
+                                {(lead.ad_budget || lead.preferred_call_time || lead.utm_campaign) && (
                                   <div className="flex flex-wrap gap-1 mt-1.5">
                                     {lead.ad_budget && (
                                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-semibold">
@@ -1508,6 +1515,11 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                                     {lead.preferred_call_time && (
                                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-secondary text-muted-foreground font-medium">
                                         🕐 {lead.preferred_call_time}
+                                      </span>
+                                    )}
+                                    {lead.utm_campaign && (
+                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-500/10 text-yellow-400 font-medium border border-yellow-500/20">
+                                        📢 {lead.utm_campaign}
                                       </span>
                                     )}
                                   </div>
@@ -1831,6 +1843,29 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                         </span>
                       </div>
                     )}
+                  </div>
+                )}
+
+                {(selectedLead.utm_campaign || selectedLead.utm_source) && (
+                  <div className="pt-4 border-t border-border space-y-2">
+                    <span className="text-xs font-medium text-muted-foreground uppercase block">📢 Reklam Kaynağı</span>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedLead.utm_campaign && (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-yellow-500/10 text-yellow-400 text-xs font-semibold border border-yellow-500/20">
+                          Kampanya: {selectedLead.utm_campaign}
+                        </span>
+                      )}
+                      {selectedLead.utm_source && (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-secondary text-muted-foreground text-xs font-semibold">
+                          {selectedLead.utm_source}{selectedLead.utm_medium ? ` / ${selectedLead.utm_medium}` : ''}
+                        </span>
+                      )}
+                      {selectedLead.utm_content && (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-secondary text-muted-foreground text-xs font-semibold">
+                          {selectedLead.utm_content}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 )}
 
