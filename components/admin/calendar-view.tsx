@@ -27,6 +27,10 @@ type Lead = {
   status: string
   notes: string | null
   source: string
+  utm_source: string | null
+  utm_medium: string | null
+  utm_campaign: string | null
+  utm_content: string | null
   meeting_date: string | null
   value: number
   assigned_to: string | null
