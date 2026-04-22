@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Menu, X, Dumbbell } from "lucide-react"
+import { Menu, X } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -21,12 +22,16 @@ export function Header() {
       <div className="container px-4">
         <div className="flex items-center justify-between h-14 md:h-16 lg:h-20">
           {/* Logo */}
-          <div className="flex items-center gap-1.5 md:gap-2">
-            <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-primary flex items-center justify-center">
-              <Dumbbell className="w-4 h-4 md:w-5 md:h-5 text-primary-foreground" />
-            </div>
-            <span className="text-lg md:text-xl font-bold">Gymbooster</span>
-          </div>
+          <Link href="/">
+            <Image
+              src="/logo.png"
+              alt="Gymbooster"
+              width={400}
+              height={120}
+              className="h-8 md:h-9 w-auto"
+              priority
+            />
+          </Link>
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-4 lg:gap-8">
