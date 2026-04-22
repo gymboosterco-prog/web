@@ -38,16 +38,16 @@ export function Hero() {
 
             {/* Main Headline */}
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4 md:mb-6 text-balance">
-              <span className="text-foreground">Her Ay 50+ Garantili Başvuru</span>
+              <span className="text-foreground">Türkiye'nin İlk ve Tek</span>
               <br />
-              <span className="text-primary">Ya Getiririz,</span>
+              <span className="text-primary">Spor Salonlarına Özel</span>
               <br />
-              <span className="text-foreground">Ya Bedava Çalışırız.</span>
+              <span className="text-foreground">Ajansıyla Salonunuzu Doldurun.</span>
             </h1>
 
             {/* Sub-headline */}
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-4 md:mb-6 text-pretty">
-              2 yıldır yalnızca spor salonlarıyla çalışıyoruz. Reklam bütçenizi israf ettirmeden her ay 50+ nitelikli başvuru getiriyoruz — ya da tutturana kadar bedava çalışıyoruz.
+              2 yıldır sadece spor salonlarıyla çalışıyoruz. Sektörü biliyoruz, rakiplerinizi biliyoruz, üye nasıl kazanılır biliyoruz — reklam bütçenizi israf ettirmeden.
             </p>
 
             {/* Trust indicators */}
