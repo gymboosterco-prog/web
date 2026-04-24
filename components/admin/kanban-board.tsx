@@ -57,6 +57,7 @@ type Lead = {
   monthly_fee: number | null
   payment_day: number | null
   client_start_date: string | null
+  onboarding_steps: Record<string, string | null> | null
   member_count: number
   lead_goal: number
   call_count: number
