@@ -14,8 +14,11 @@ export function AcceptButton({ token }: { token: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "accept" }),
       })
-      if (res.ok) setState("done")
-      else {
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}))
+        if (data.emailError) console.error("Teklif kabul emaili gönderilemedi:", data.emailError)
+        setState("done")
+      } else {
         const data = await res.json().catch(() => ({}))
         alert(data.error || "Bir hata oluştu, lütfen tekrar deneyin.")
         setState("idle")

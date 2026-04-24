@@ -63,10 +63,12 @@ export async function PATCH(
     }
 
     // Notify admin team
+    let emailError: string | null = null
     try {
       const resend = new Resend(process.env.RESEND_API_KEY)
-      const lead = proposal.leads as { name: string; gym_name: string; phone: string } | null
-      await resend.emails.send({
+      const rawLead = proposal.leads
+      const lead = (Array.isArray(rawLead) ? rawLead[0] : rawLead) as { name: string; gym_name: string; phone: string } | null
+      const { error: sendError } = await resend.emails.send({
         from: "Gymbooster <onboarding@resend.dev>",
         to: ["gymboosterco@gmail.com", "furkantture@gmail.com"],
         subject: `✅ Teklif Kabul Edildi: ${lead?.name ?? ""} — ${lead?.gym_name ?? ""}`,
@@ -88,11 +90,16 @@ export async function PATCH(
           </div>
         `,
       })
-    } catch (e) {
+      if (sendError) {
+        emailError = sendError.message
+        console.error("Resend error:", sendError)
+      }
+    } catch (e: any) {
+      emailError = e?.message ?? "unknown"
       console.error("Email gönderilemedi:", e)
     }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, emailError })
   } catch (err) {
     console.error("API error:", err)
     return NextResponse.json({ error: "Bir hata oluştu" }, { status: 500 })
