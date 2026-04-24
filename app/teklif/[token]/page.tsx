@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { token } = await params
   const admin = createAdminClient()
   const { data } = await admin.from("proposals").select("leads(gym_name)").eq("token", token).maybeSingle()
-  const lead = data?.leads as { gym_name: string } | null
+  const lead = (Array.isArray(data?.leads) ? data.leads[0] : data?.leads) as { gym_name: string } | null
   return {
     title: `Gymbooster Teklifiniz${lead ? ` — ${lead.gym_name}` : ""}`,
     robots: { index: false, follow: false },
