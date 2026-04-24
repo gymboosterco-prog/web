@@ -63,17 +63,18 @@ export async function PATCH(
     }
 
     // Notify admin team
-    let emailError: string | null = null
+    const rawLead = proposal.leads
+    const lead = (Array.isArray(rawLead) ? rawLead[0] : rawLead) as { name: string; gym_name: string; phone: string } | null
+    console.log("[proposal-accept] lead data:", JSON.stringify(lead))
+    console.log("[proposal-accept] RESEND_API_KEY set:", !!process.env.RESEND_API_KEY)
+
     try {
       const resend = new Resend(process.env.RESEND_API_KEY)
-      const rawLead = proposal.leads
-      const lead = (Array.isArray(rawLead) ? rawLead[0] : rawLead) as { name: string; gym_name: string; phone: string } | null
-      const { error: sendError } = await resend.emails.send({
+      const result = await resend.emails.send({
         from: "Gymbooster <onboarding@resend.dev>",
-        to: ["gymboosterco@gmail.com", "furkantture@gmail.com"],
-        subject: `✅ Teklif Kabul Edildi: ${lead?.name ?? ""} — ${lead?.gym_name ?? ""}`,
-        html: `
-          <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#0a0a0a;color:#e5e5e5;border-radius:12px;">
+        to: "gymboosterco@gmail.com",
+        subject: `✅ Teklif Kabul Edildi: ${lead?.name ?? "-"} — ${lead?.gym_name ?? "-"}`,
+        html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#0a0a0a;color:#e5e5e5;border-radius:12px;">
             <h1 style="color:#f2ff00;font-size:22px;margin:0 0 16px;">✅ Teklif Kabul Edildi!</h1>
             <div style="background:#1a1a1a;border-radius:8px;padding:20px;">
               <table style="width:100%;border-collapse:collapse;">
@@ -87,19 +88,14 @@ export async function PATCH(
             <div style="text-align:center;margin-top:20px;">
               <a href="https://www.gymbooster.tr/admin" style="display:inline-block;background:#f2ff00;color:#000;font-weight:700;padding:12px 32px;border-radius:8px;text-decoration:none;">Admin Panele Git →</a>
             </div>
-          </div>
-        `,
+          </div>`,
       })
-      if (sendError) {
-        emailError = sendError.message
-        console.error("Resend error:", sendError)
-      }
+      console.log("[proposal-accept] resend result:", JSON.stringify(result))
     } catch (e: any) {
-      emailError = e?.message ?? "unknown"
-      console.error("Email gönderilemedi:", e)
+      console.error("[proposal-accept] email error:", e?.message ?? e)
     }
 
-    return NextResponse.json({ success: true, emailError })
+    return NextResponse.json({ success: true })
   } catch (err) {
     console.error("API error:", err)
     return NextResponse.json({ error: "Bir hata oluştu" }, { status: 500 })
