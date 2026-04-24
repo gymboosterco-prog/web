@@ -99,7 +99,7 @@ export function Hero() {
                   <div className="text-center mb-5 md:mb-6">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-destructive/10 border border-destructive/20 mb-4">
                       <Clock className="w-4 h-4 text-destructive animate-pulse" />
-                      <span className="text-sm font-medium text-destructive">Son 3 Kontenjan Kaldı</span>
+                      <span className="text-sm font-medium text-destructive">Son 1 Kontenjan Kaldı</span>
                     </div>
                     <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">
                       Ücretsiz Strateji Görüşmesi
