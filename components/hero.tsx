@@ -161,24 +161,11 @@ export function Hero() {
                           className="w-full h-11 md:h-12 rounded-md border border-white/10 px-3 text-sm md:text-base text-white focus:border-primary/50 focus:outline-none transition-colors appearance-none [color-scheme:dark]"
                           style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
                         >
-                          <option value="" disabled>Aylık Reklam Bütçeniz</option>
+                          <option value="" disabled>Aylık reklam bütçenizi seçiniz</option>
                           <option value="5000-10000">₺5.000 – ₺10.000</option>
                           <option value="10000-20000">₺10.000 – ₺20.000</option>
                           <option value="20000-30000">₺20.000 – ₺30.000</option>
                           <option value="50000+">₺50.000+</option>
-                        </select>
-                        <select
-                          value={formData.preferredCallTime}
-                          onChange={(e) => updateField("preferredCallTime", e.target.value)}
-                          tabIndex={formData.name.trim().length > 1 && formData.phone.replace(/\D/g, '').length >= 10 ? 0 : -1}
-                          className="w-full h-11 md:h-12 rounded-md border border-white/10 px-3 text-sm md:text-base text-white focus:border-primary/50 focus:outline-none transition-colors appearance-none [color-scheme:dark]"
-                          style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
-                        >
-                          <option value="" disabled>Hangi saatte aranmak istersiniz?</option>
-                          <option value="09:00-12:00">09:00 – 12:00 (Sabah)</option>
-                          <option value="12:00-15:00">12:00 – 15:00 (Öğle)</option>
-                          <option value="15:00-18:00">15:00 – 18:00 (Öğleden Sonra)</option>
-                          <option value="18:00-21:00">18:00 – 21:00 (Akşam)</option>
                         </select>
                       </div>
                     </div>

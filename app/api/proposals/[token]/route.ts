@@ -53,7 +53,8 @@ export async function PATCH(
       .from("proposals")
       .update({ status: "accepted", accepted_at: new Date().toISOString() })
       .eq("token", token)
-      .in("status", ["sent", "viewed"])
+      .not("status", "eq", "accepted")
+      .not("status", "eq", "rejected")
       .select("*, leads(name, gym_name, phone)")
       .maybeSingle()
 

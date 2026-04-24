@@ -26,12 +26,13 @@ const nextConfig = {
   async headers() {
     const csp = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.clarity.ms https://cdn.jsdelivr.net https://js.sentry-cdn.com https://browser.sentry-cdn.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.clarity.ms https://scripts.clarity.ms https://cdn.jsdelivr.net https://js.sentry-cdn.com https://browser.sentry-cdn.com https://connect.facebook.net",
+      "worker-src 'self' blob:",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://img.youtube.com https://www.clarity.ms",
+      "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://img.youtube.com https://www.clarity.ms https://www.facebook.com",
       "media-src 'self'",
-      "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co https://www.clarity.ms https://o4504960722419712.ingest.sentry.io https://api.resend.com",
+      "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co https://www.clarity.ms https://*.ingest.sentry.io https://*.ingest.de.sentry.io https://api.resend.com https://www.facebook.com https://connect.facebook.net",
       "frame-src 'self' https://www.youtube.com https://youtube.com",
       "object-src 'none'",
       "base-uri 'self'",

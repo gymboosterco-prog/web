@@ -6,7 +6,6 @@ export type LeadFormData = {
   phone: string
   instagramUrl: string
   adBudget: string
-  preferredCallTime: string
 }
 
 export function useLeadSubmission() {
@@ -16,7 +15,6 @@ export function useLeadSubmission() {
     phone: "",
     instagramUrl: "",
     adBudget: "",
-    preferredCallTime: "",
   })
   const [utmParams, setUtmParams] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -54,11 +52,7 @@ export function useLeadSubmission() {
       setIsSubmitting(false)
       return
     }
-    if (!formData.preferredCallTime) {
-      setError("Lütfen aranmak istediğiniz saati seçin")
-      setIsSubmitting(false)
-      return
-    }
+
     try {
       const response = await fetch("/api/leads", {
         method: "POST",
