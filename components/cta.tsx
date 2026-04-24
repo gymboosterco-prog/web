@@ -122,26 +122,11 @@ export function CTA() {
                         className="w-full h-10 md:h-11 lg:h-12 rounded-md border border-border px-3 text-sm md:text-base focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors appearance-none [color-scheme:dark]"
                         style={{ backgroundColor: 'hsl(var(--secondary))' }}
                       >
-                        <option value="" disabled>Aylık Reklam Bütçeniz</option>
+                        <option value="" disabled>Aylık reklam bütçenizi seçiniz</option>
                         <option value="5000-10000">₺5.000 – ₺10.000</option>
                         <option value="10000-20000">₺10.000 – ₺20.000</option>
                         <option value="20000-30000">₺20.000 – ₺30.000</option>
                         <option value="50000+">₺50.000+</option>
-                      </select>
-                    </div>
-                    <div>
-                      <select
-                        value={formData.preferredCallTime}
-                        onChange={(e) => updateField("preferredCallTime", e.target.value)}
-                        required
-                        className="w-full h-10 md:h-11 lg:h-12 rounded-md border border-border px-3 text-sm md:text-base focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors appearance-none [color-scheme:dark]"
-                        style={{ backgroundColor: 'hsl(var(--secondary))' }}
-                      >
-                        <option value="" disabled>Hangi saatte aranmak istersiniz?</option>
-                        <option value="09:00-12:00">09:00 – 12:00 (Sabah)</option>
-                        <option value="12:00-15:00">12:00 – 15:00 (Öğle)</option>
-                        <option value="15:00-18:00">15:00 – 18:00 (Öğleden Sonra)</option>
-                        <option value="18:00-21:00">18:00 – 21:00 (Akşam)</option>
                       </select>
                     </div>
 
