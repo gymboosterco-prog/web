@@ -132,9 +132,44 @@ type Lead = {
   monthly_fee: number | null
   payment_day: number | null
   client_start_date: string | null
+  onboarding_steps: Record<string, string | null> | null
   created_at: string
   updated_at: string
 }
+
+type ProposalRecord = {
+  id: string
+  lead_id: string
+  token: string
+  status: 'draft' | 'sent' | 'viewed' | 'accepted' | 'rejected'
+  services: string[]
+  monthly_fee: number
+  setup_fee: number
+  contract_months: number
+  valid_until: string | null
+  notes: string | null
+  sent_at: string | null
+  viewed_at: string | null
+  accepted_at: string | null
+  created_at: string
+}
+
+const GYMBOOSTER_SERVICES = [
+  "Meta Reklam Yönetimi",
+  "Landing Page Tasarımı",
+  "Aylık Performans Raporu",
+  "Kreatif (görsel/video) Üretimi",
+  "Google Ads Yönetimi",
+]
+
+const ONBOARDING_STEPS = [
+  { key: "meta_access",    label: "Meta reklam hesabına erişim alındı" },
+  { key: "pixel",          label: "Facebook Pixel kuruldu" },
+  { key: "ad_account",     label: "Reklam hesabı bağlandı" },
+  { key: "first_campaign", label: "İlk kampanya oluşturuldu" },
+  { key: "landing_page",   label: "Salon landing page aktifleştirildi" },
+  { key: "portal_invite",  label: "Salon sahibine portal daveti gönderildi" },
+]
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
   new: { label: "Yeni", color: "bg-blue-500/10 text-blue-500 border-blue-500/20", icon: Clock },
@@ -203,8 +238,96 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
   const [callLogNote, setCallLogNote] = useState("")
   const [callLogOutcome, setCallLogOutcome] = useState<CallEntry["outcome"] | "">("")
 
+  // Proposal state
+  const [proposalModalOpen, setProposalModalOpen] = useState(false)
+  const [currentProposal, setCurrentProposal] = useState<ProposalRecord | null>(null)
+  const [proposalLoading, setProposalLoading] = useState(false)
+  const [pServices, setPServices] = useState<string[]>(["Meta Reklam Yönetimi", "Landing Page Tasarımı"])
+  const [pMonthlyFee, setPMonthlyFee] = useState("")
+  const [pSetupFee, setPSetupFee] = useState("")
+  const [pMonths, setPMonths] = useState(3)
+  const [pValidUntil, setPValidUntil] = useState("")
+  const [pNotes, setPNotes] = useState("")
+  const [pSubmitting, setPSubmitting] = useState(false)
+  const [pSending, setPSending] = useState(false)
+  const [pCopied, setPCopied] = useState(false)
+
   const router = useRouter()
   const supabase = createClient()
+  const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.gymbooster.tr"
+
+  // Fetch proposal when lead detail opens (only for proposal/won status)
+  useEffect(() => {
+    if (!selectedLead || !['proposal', 'sent', 'won', 'accepted'].includes(selectedLead.status)) {
+      setCurrentProposal(null)
+      return
+    }
+    setProposalLoading(true)
+    fetch(`/api/proposals?lead_id=${selectedLead.id}`)
+      .then(r => r.json())
+      .then(d => setCurrentProposal(d.data?.[0] ?? null))
+      .catch(() => setCurrentProposal(null))
+      .finally(() => setProposalLoading(false))
+  }, [selectedLead?.id, selectedLead?.status])
+
+  const createProposal = async () => {
+    if (!selectedLead || !pMonthlyFee) return
+    setPSubmitting(true)
+    try {
+      const res = await fetch('/api/proposals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lead_id: selectedLead.id,
+          services: pServices,
+          monthly_fee: parseFloat(pMonthlyFee),
+          setup_fee: parseFloat(pSetupFee) || 0,
+          contract_months: pMonths,
+          valid_until: pValidUntil || null,
+          notes: pNotes || null,
+        }),
+      })
+      const data = await res.json()
+      if (data.proposal) {
+        setCurrentProposal(data.proposal)
+        setProposalModalOpen(false)
+        setPMonthlyFee(""); setPSetupFee(""); setPNotes(""); setPValidUntil("")
+        toast.success("Teklif oluşturuldu!")
+      } else {
+        toast.error(data.error || "Teklif oluşturulamadı")
+      }
+    } finally {
+      setPSubmitting(false)
+    }
+  }
+
+  const sendProposalEmail = async () => {
+    if (!currentProposal) return
+    setPSending(true)
+    try {
+      const res = await fetch(`/api/proposals/${currentProposal.token}/send`, { method: 'POST' })
+      if (res.ok) {
+        setCurrentProposal({ ...currentProposal, status: 'sent', sent_at: new Date().toISOString() })
+        toast.success("Teklif emaili gönderildi!")
+      } else toast.error("Email gönderilemedi")
+    } finally {
+      setPSending(false)
+    }
+  }
+
+  const copyProposalLink = async () => {
+    if (!currentProposal) return
+    await navigator.clipboard.writeText(`${BASE_URL}/teklif/${currentProposal.token}`)
+    setPCopied(true)
+    setTimeout(() => setPCopied(false), 2000)
+  }
+
+  const toggleOnboardingStep = (key: string) => {
+    if (!selectedLead) return
+    const current = selectedLead.onboarding_steps ?? {}
+    const newSteps = { ...current, [key]: current[key] ? null : new Date().toISOString() }
+    updateLead(selectedLead.id, { onboarding_steps: newSteps })
+  }
 
   const loadMore = async () => {
     if (isLoadingMore || leads.length >= totalLeads) return
@@ -1972,6 +2095,52 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                   </div>
                 )}
 
+                {/* ─── Teklif Bölümü ─────────────────────────────────────── */}
+                {(userRole === 'ADMIN' || userRole === 'STAFF') && (
+                  <div className="pt-4 border-t border-border space-y-3">
+                    <span className="text-xs font-medium text-muted-foreground uppercase flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Teklif
+                    </span>
+                    {proposalLoading ? (
+                      <div className="h-12 bg-secondary/30 rounded-xl animate-pulse" />
+                    ) : currentProposal ? (
+                      <div className="bg-secondary/30 border border-border rounded-xl p-3 space-y-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                            currentProposal.status === 'accepted' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                            currentProposal.status === 'viewed'   ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' :
+                            currentProposal.status === 'sent'     ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                            'bg-white/10 text-white/50'
+                          }`}>
+                            {currentProposal.status === 'draft' ? 'Taslak' :
+                             currentProposal.status === 'sent' ? 'Gönderildi' :
+                             currentProposal.status === 'viewed' ? 'Görüntülendi' :
+                             currentProposal.status === 'accepted' ? '✅ Kabul Edildi' : 'Reddedildi'}
+                          </span>
+                          <span className="text-xs text-muted-foreground">₺{Number(currentProposal.monthly_fee).toLocaleString("tr-TR")}/ay · {currentProposal.contract_months} ay</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={copyProposalLink}
+                            className="flex-1 h-8 text-xs rounded-lg bg-secondary border border-border hover:bg-secondary/80 transition-colors font-medium">
+                            {pCopied ? "✅ Kopyalandı" : "🔗 Linki Kopyala"}
+                          </button>
+                          {currentProposal.status === 'draft' && (
+                            <button onClick={sendProposalEmail} disabled={pSending}
+                              className="flex-1 h-8 text-xs rounded-lg bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-colors font-medium disabled:opacity-50">
+                              {pSending ? "Gönderiliyor..." : "📧 Email Gönder"}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <button onClick={() => setProposalModalOpen(true)}
+                        className="w-full h-10 rounded-xl border border-dashed border-border text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors">
+                        + Teklif Oluştur
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 {/* Arama Logu */}
                 <div className="pt-4 border-t border-border space-y-3">
                   <span className="text-xs font-medium text-muted-foreground uppercase flex items-center gap-1.5">
@@ -2111,10 +2280,131 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                     </div>
                   </div>
                 )}
+
+                {/* ─── Onboarding Checklist (sadece won statüsünde) ──────── */}
+                {selectedLead.status === 'won' && (
+                  <div className="pt-4 border-t border-border space-y-3">
+                    <span className="text-xs font-medium text-muted-foreground uppercase flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Onboarding Checklist
+                    </span>
+                    {(() => {
+                      const steps = selectedLead.onboarding_steps ?? {}
+                      const done = ONBOARDING_STEPS.filter(s => steps[s.key]).length
+                      const pct = Math.round((done / ONBOARDING_STEPS.length) * 100)
+                      return (
+                        <>
+                          <div className="space-y-1.5">
+                            {ONBOARDING_STEPS.map(({ key, label }) => {
+                              const ts = steps[key] as string | null | undefined
+                              return (
+                                <button key={key} onClick={() => toggleOnboardingStep(key)}
+                                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors text-xs ${
+                                    ts ? 'bg-green-500/5 border border-green-500/20' : 'bg-secondary/30 border border-transparent hover:border-border'
+                                  }`}>
+                                  <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 border ${
+                                    ts ? 'bg-green-500/20 border-green-500/40 text-green-400' : 'border-border'
+                                  }`}>
+                                    {ts && <CheckCircle2 className="w-3 h-3" />}
+                                  </div>
+                                  <span className={ts ? 'text-green-400 line-through' : 'text-muted-foreground'}>{label}</span>
+                                  {ts && (
+                                    <span className="ml-auto text-[10px] text-muted-foreground flex-shrink-0">
+                                      {new Date(ts).toLocaleDateString("tr-TR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                                    </span>
+                                  )}
+                                </button>
+                              )
+                            })}
+                          </div>
+                          <div className="flex items-center gap-2 pt-1">
+                            <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
+                              <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+                            </div>
+                            <span className="text-xs text-muted-foreground">{done}/{ONBOARDING_STEPS.length}</span>
+                          </div>
+                        </>
+                      )
+                    })()}
+                  </div>
+                )}
+
               </div>
             </div>
           </div>
         )}
+
+        {/* ─── Teklif Oluştur Modal ─────────────────────────────────────── */}
+        {proposalModalOpen && selectedLead && (
+          <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="bg-card border border-border rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+                <h3 className="font-bold text-lg">Teklif Oluştur</h3>
+                <button onClick={() => setProposalModalOpen(false)} className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground">✕</button>
+              </div>
+              <div className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
+                {/* Services */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase">Hizmetler</label>
+                  <div className="space-y-1.5">
+                    {GYMBOOSTER_SERVICES.map(svc => (
+                      <label key={svc} className="flex items-center gap-3 px-3 py-2 rounded-xl bg-secondary/30 border border-transparent hover:border-border cursor-pointer transition-colors">
+                        <input type="checkbox" checked={pServices.includes(svc)}
+                          onChange={e => setPServices(prev => e.target.checked ? [...prev, svc] : prev.filter(s => s !== svc))}
+                          className="accent-primary w-4 h-4" />
+                        <span className="text-sm">{svc}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                {/* Fees */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase">Aylık Ücret (₺) *</label>
+                    <input type="number" value={pMonthlyFee} onChange={e => setPMonthlyFee(e.target.value)} placeholder="8500"
+                      className="w-full h-10 bg-secondary/50 border border-border rounded-xl px-3 text-sm focus:outline-none focus:border-primary/50" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase">Kurulum (₺)</label>
+                    <input type="number" value={pSetupFee} onChange={e => setPSetupFee(e.target.value)} placeholder="2000"
+                      className="w-full h-10 bg-secondary/50 border border-border rounded-xl px-3 text-sm focus:outline-none focus:border-primary/50" />
+                  </div>
+                </div>
+                {/* Duration + Validity */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase">Süre</label>
+                    <select value={pMonths} onChange={e => setPMonths(Number(e.target.value))}
+                      className="w-full h-10 bg-secondary/50 border border-border rounded-xl px-3 text-sm focus:outline-none focus:border-primary/50 appearance-none [color-scheme:dark]">
+                      {[1,3,6,12].map(m => <option key={m} value={m}>{m} ay</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase">Geçerlilik</label>
+                    <input type="date" value={pValidUntil} onChange={e => setPValidUntil(e.target.value)}
+                      className="w-full h-10 bg-secondary/50 border border-border rounded-xl px-3 text-sm focus:outline-none focus:border-primary/50 [color-scheme:dark]" />
+                  </div>
+                </div>
+                {/* Notes */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase">Not (opsiyonel)</label>
+                  <textarea value={pNotes} onChange={e => setPNotes(e.target.value)} rows={2} placeholder="Eklemek istediğiniz notlar..."
+                    className="w-full bg-secondary/50 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-primary/50 resize-none" />
+                </div>
+              </div>
+              <div className="flex gap-3 px-6 py-4 border-t border-border">
+                <button onClick={() => setProposalModalOpen(false)}
+                  className="flex-1 h-10 rounded-xl border border-border text-sm font-medium hover:bg-secondary transition-colors">
+                  İptal
+                </button>
+                <button onClick={createProposal} disabled={pSubmitting || !pMonthlyFee}
+                  className="flex-1 h-10 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors disabled:opacity-50">
+                  {pSubmitting ? "Oluşturuluyor..." : "Teklif Oluştur →"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Follow-Up Action Modal */}
         {isFollowUpModalOpen && selectedTaskLead && (
           <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-background/95 backdrop-blur-md">

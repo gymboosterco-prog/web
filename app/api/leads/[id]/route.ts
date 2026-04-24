@@ -61,7 +61,8 @@ export async function PATCH(
       called_at,
       won_at,
       meeting_planned_at,
-      rejection_reason
+      rejection_reason,
+      onboarding_steps,
     } = body
 
     const supabase = await createClient()
@@ -154,6 +155,7 @@ export async function PATCH(
     if (won_at !== undefined) updateData.won_at = won_at
     if (meeting_planned_at !== undefined) updateData.meeting_planned_at = meeting_planned_at
     if (rejection_reason !== undefined) updateData.rejection_reason = rejection_reason
+    if (onboarding_steps !== undefined) updateData.onboarding_steps = onboarding_steps
 
     const { data, error } = await supabase
       .from("leads")
