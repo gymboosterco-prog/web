@@ -2,10 +2,15 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import Image from "next/image"
-import { CheckCircle2, Shield, Clock } from "lucide-react"
+import { CheckCircle2, XCircle, Shield, Clock } from "lucide-react"
 import { AcceptButton } from "./accept-button"
 
 export const dynamic = "force-dynamic"
+
+const NOT_INCLUDED = [
+  "Reklam bütçesi (sizin hesabınızdan harcanır)",
+  "Video çekimi (danışmanlık yapıyoruz, çekim yapmıyoruz)",
+]
 
 type Props = { params: Promise<{ token: string }> }
 
@@ -32,7 +37,6 @@ export default async function TeklifPage({ params }: Props) {
 
   if (!proposal) notFound()
 
-  // Mark as viewed (server-side, best-effort)
   if (proposal.status === "sent") {
     await admin
       .from("proposals")
@@ -43,10 +47,13 @@ export default async function TeklifPage({ params }: Props) {
   const lead = proposal.leads as { name: string; gym_name: string } | null
   const services = (proposal.services ?? []) as string[]
   const isAccepted = proposal.status === "accepted"
+  const originalPrice = proposal.original_price as number | null
+  const monthlyFee = Number(proposal.monthly_fee)
+  const hasDiscount = originalPrice && originalPrice > monthlyFee
+  const discountPct = hasDiscount ? Math.round((1 - monthlyFee / originalPrice) * 100) : 0
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
-      {/* Grid background */}
       <div className="fixed inset-0 pointer-events-none"
         style={{ backgroundImage: "linear-gradient(rgba(242,255,0,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(242,255,0,0.03) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
       <div className="fixed inset-0 pointer-events-none"
@@ -76,41 +83,75 @@ export default async function TeklifPage({ params }: Props) {
           </div>
         ) : (
           <>
-            {/* Services */}
+            {/* Included Services */}
             {services.length > 0 && (
               <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-6 mb-4">
-                <h2 className="text-sm font-bold uppercase tracking-wider text-white/50 mb-4">Hizmetler</h2>
-                <div className="space-y-3">
+                <h2 className="text-sm font-bold uppercase tracking-wider text-white/50 mb-4">✅ Pakete Dahil</h2>
+                <div className="space-y-2.5">
                   {services.map((s, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
                         style={{ background: "rgba(242,255,0,0.1)", border: "1px solid rgba(242,255,0,0.3)" }}>
-                        <CheckCircle2 className="w-3.5 h-3.5" style={{ color: "#f2ff00" }} />
+                        <CheckCircle2 className="w-3 h-3" style={{ color: "#f2ff00" }} />
                       </div>
-                      <span className="text-sm font-medium">{s}</span>
+                      <span className="text-sm leading-relaxed">{s}</span>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
+            {/* Not Included */}
+            <div className="bg-white/[0.02] border border-white/8 rounded-2xl p-6 mb-4">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-white/40 mb-4">❌ Dahil Olmayanlar</h2>
+              <div className="space-y-2.5">
+                {NOT_INCLUDED.map((s, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 bg-red-500/10 border border-red-500/20">
+                      <XCircle className="w-3 h-3 text-red-400" />
+                    </div>
+                    <span className="text-sm text-white/50 leading-relaxed">{s}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Pricing */}
             <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-6 mb-4">
-              <h2 className="text-sm font-bold uppercase tracking-wider text-white/50 mb-4">Fiyatlandırma</h2>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-white/60 text-sm">Aylık Ücret</span>
-                  <span className="text-2xl font-bold" style={{ color: "#f2ff00" }}>
-                    ₺{Number(proposal.monthly_fee).toLocaleString("tr-TR")}
+              <h2 className="text-sm font-bold uppercase tracking-wider text-white/50 mb-5">Fiyatlandırma</h2>
+
+              {hasDiscount && (
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-white/40 text-sm">Normal Fiyat</span>
+                  <span className="text-white/40 text-base line-through">
+                    ₺{Number(originalPrice).toLocaleString("tr-TR")}
                   </span>
                 </div>
+              )}
+
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <span className="text-white/60 text-sm">{hasDiscount ? "Özel Fiyat" : "Aylık Ücret"}</span>
+                  {hasDiscount && (
+                    <span className="ml-2 text-xs font-bold px-2 py-0.5 rounded-full"
+                      style={{ background: "rgba(242,255,0,0.15)", color: "#f2ff00", border: "1px solid rgba(242,255,0,0.3)" }}>
+                      %{discountPct} indirim
+                    </span>
+                  )}
+                </div>
+                <span className="text-3xl font-black" style={{ color: "#f2ff00" }}>
+                  ₺{monthlyFee.toLocaleString("tr-TR")}
+                </span>
+              </div>
+
+              <div className="space-y-2 pt-4 border-t border-white/10">
                 {proposal.setup_fee > 0 && (
                   <div className="flex justify-between items-center">
-                    <span className="text-white/60 text-sm">Kurulum Ücreti <span className="text-xs">(tek seferlik)</span></span>
-                    <span className="text-base font-semibold">₺{Number(proposal.setup_fee).toLocaleString("tr-TR")}</span>
+                    <span className="text-white/60 text-sm">Kurulum Ücreti <span className="text-xs text-white/40">(tek seferlik)</span></span>
+                    <span className="text-sm font-semibold">₺{Number(proposal.setup_fee).toLocaleString("tr-TR")}</span>
                   </div>
                 )}
-                <div className="flex justify-between items-center pt-3 border-t border-white/10">
+                <div className="flex justify-between items-center">
                   <span className="text-white/60 text-sm">Sözleşme Süresi</span>
                   <span className="text-sm font-semibold">{proposal.contract_months} ay</span>
                 </div>

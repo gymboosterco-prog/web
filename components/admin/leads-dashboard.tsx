@@ -144,6 +144,7 @@ type ProposalRecord = {
   status: 'draft' | 'sent' | 'viewed' | 'accepted' | 'rejected'
   services: string[]
   monthly_fee: number
+  original_price: number | null
   setup_fee: number
   contract_months: number
   valid_until: string | null
@@ -155,11 +156,14 @@ type ProposalRecord = {
 }
 
 const GYMBOOSTER_SERVICES = [
-  "Meta Reklam Yönetimi",
-  "Landing Page Tasarımı",
-  "Aylık Performans Raporu",
-  "Kreatif (görsel/video) Üretimi",
-  "Google Ads Yönetimi",
+  "Meta & Google reklam yönetimi (7/24 aktif optimizasyon)",
+  "50 garantili nitelikli başvuru/ay",
+  "Video kreatif danışmanlık",
+  "Statik reklam görselleri üretimi",
+  "Landing page & CRM sistemi",
+  "Haftalık birebir strateji görüşmesi",
+  "Hiperlokal hedefleme (5 km)",
+  "Rakip analizi raporu",
 ]
 
 const ONBOARDING_STEPS = [
@@ -242,7 +246,8 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
   const [proposalModalOpen, setProposalModalOpen] = useState(false)
   const [currentProposal, setCurrentProposal] = useState<ProposalRecord | null>(null)
   const [proposalLoading, setProposalLoading] = useState(false)
-  const [pServices, setPServices] = useState<string[]>(["Meta Reklam Yönetimi", "Landing Page Tasarımı"])
+  const [pServices, setPServices] = useState<string[]>(GYMBOOSTER_SERVICES.slice(0, 5))
+  const [pOriginalPrice, setPOriginalPrice] = useState("")
   const [pMonthlyFee, setPMonthlyFee] = useState("")
   const [pSetupFee, setPSetupFee] = useState("")
   const [pMonths, setPMonths] = useState(3)
@@ -281,6 +286,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
           lead_id: selectedLead.id,
           services: pServices,
           monthly_fee: parseFloat(pMonthlyFee),
+          original_price: parseFloat(pOriginalPrice) || null,
           setup_fee: parseFloat(pSetupFee) || 0,
           contract_months: pMonths,
           valid_until: pValidUntil || null,
@@ -291,7 +297,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
       if (data.proposal) {
         setCurrentProposal(data.proposal)
         setProposalModalOpen(false)
-        setPMonthlyFee(""); setPSetupFee(""); setPNotes(""); setPValidUntil("")
+        setPMonthlyFee(""); setPOriginalPrice(""); setPSetupFee(""); setPNotes(""); setPValidUntil("")
         toast.success("Teklif oluşturuldu!")
       } else {
         toast.error(data.error || "Teklif oluşturulamadı")
@@ -2359,18 +2365,22 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                 {/* Fees */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-muted-foreground uppercase">Aylık Ücret (₺) *</label>
-                    <input type="number" value={pMonthlyFee} onChange={e => setPMonthlyFee(e.target.value)} placeholder="8500"
+                    <label className="text-xs font-semibold text-muted-foreground uppercase">Normal Fiyat (₺)</label>
+                    <input type="number" value={pOriginalPrice} onChange={e => setPOriginalPrice(e.target.value)} placeholder="12000"
                       className="w-full h-10 bg-secondary/50 border border-border rounded-xl px-3 text-sm focus:outline-none focus:border-primary/50" />
                   </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-primary uppercase">İndirimli Fiyat (₺) *</label>
+                    <input type="number" value={pMonthlyFee} onChange={e => setPMonthlyFee(e.target.value)} placeholder="8500"
+                      className="w-full h-10 bg-primary/5 border border-primary/30 rounded-xl px-3 text-sm focus:outline-none focus:border-primary/50" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground uppercase">Kurulum (₺)</label>
                     <input type="number" value={pSetupFee} onChange={e => setPSetupFee(e.target.value)} placeholder="2000"
                       className="w-full h-10 bg-secondary/50 border border-border rounded-xl px-3 text-sm focus:outline-none focus:border-primary/50" />
                   </div>
-                </div>
-                {/* Duration + Validity */}
-                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground uppercase">Süre</label>
                     <select value={pMonths} onChange={e => setPMonths(Number(e.target.value))}
@@ -2378,11 +2388,12 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                       {[1,3,6,12].map(m => <option key={m} value={m}>{m} ay</option>)}
                     </select>
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-muted-foreground uppercase">Geçerlilik</label>
-                    <input type="date" value={pValidUntil} onChange={e => setPValidUntil(e.target.value)}
-                      className="w-full h-10 bg-secondary/50 border border-border rounded-xl px-3 text-sm focus:outline-none focus:border-primary/50 [color-scheme:dark]" />
-                  </div>
+                </div>
+                {/* Validity */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase">Geçerlilik Tarihi</label>
+                  <input type="date" value={pValidUntil} onChange={e => setPValidUntil(e.target.value)}
+                    className="w-full h-10 bg-secondary/50 border border-border rounded-xl px-3 text-sm focus:outline-none focus:border-primary/50 [color-scheme:dark]" />
                 </div>
                 {/* Notes */}
                 <div className="space-y-1.5">
