@@ -14,6 +14,8 @@ const OWNER_ALLOWED_FIELDS = [
   "guarantee_text",
   "pain_points",
   "packages",
+  "google_ads_id",
+  "google_ads_label",
 ]
 
 async function requireSalonOwner(): Promise<string | null> {

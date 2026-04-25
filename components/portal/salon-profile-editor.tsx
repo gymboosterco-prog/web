@@ -32,6 +32,8 @@ type SalonData = {
   guarantee_text: string | null
   pain_points: string[] | null
   packages: Package[] | null
+  google_ads_id: string | null
+  google_ads_label: string | null
 }
 
 type Package = { title: string; price: number; installments: number; popular: boolean; features: string[] }
@@ -72,6 +74,8 @@ export function SalonProfileEditor({ salon }: { salon: SalonData }) {
     guarantee_text: salon.guarantee_text || "",
     pain_points: salon.pain_points || [] as string[],
     packages: salon.packages || [] as Package[],
+    google_ads_id: salon.google_ads_id || "",
+    google_ads_label: salon.google_ads_label || "",
   })
   const [logoUrl, setLogoUrl] = useState<string | null>(salon.logo_url || null)
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
@@ -171,7 +175,7 @@ export function SalonProfileEditor({ salon }: { salon: SalonData }) {
     }
   }
 
-  const field = (label: string, key: "hero_headline" | "hero_sub" | "tagline" | "offer" | "urgency_text" | "cta_text" | "phone" | "video_url" | "meta_pixel_id", placeholder = "") => (
+  const field = (label: string, key: "hero_headline" | "hero_sub" | "tagline" | "offer" | "urgency_text" | "cta_text" | "phone" | "video_url" | "meta_pixel_id" | "google_ads_id" | "google_ads_label", placeholder = "") => (
     <div>
       <label className="text-xs font-medium text-muted-foreground mb-1.5 block">{label}</label>
       <Input
@@ -319,6 +323,8 @@ export function SalonProfileEditor({ salon }: { salon: SalonData }) {
           {field("Video URL (YouTube — opsiyonel)", "video_url", "https://youtu.be/...")}
           <div>
             {field("Meta Pixel ID (opsiyonel)", "meta_pixel_id", "796159073358189")}
+            {field("Google Ads ID (opsiyonel)", "google_ads_id", "AW-1234567890")}
+            {field("Google Ads Dönüşüm Etiketi (opsiyonel)", "google_ads_label", "AbCdEfGhIjKlMnOpQr")}
             <p className="text-xs text-muted-foreground mt-1">Facebook Ads Manager → Events Manager'dan alın</p>
           </div>
           <div>

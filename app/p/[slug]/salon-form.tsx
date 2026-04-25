@@ -10,12 +10,16 @@ export function SalonForm({
   ctaText,
   primaryColor = "#f2ff00",
   instagramUrl,
+  googleAdsId,
+  googleAdsLabel,
 }: {
   salonId: string
   salonName: string
   ctaText?: string
   primaryColor?: string
   instagramUrl?: string | null
+  googleAdsId?: string | null
+  googleAdsLabel?: string | null
 }) {
   const [formData, setFormData] = useState({ name: "", phone: "" })
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -53,6 +57,13 @@ export function SalonForm({
       if (!res.ok) { setError(data.error || "Bir hata oluştu"); return }
 
       setIsSubmitted(true)
+
+      // Google Ads conversion
+      if (googleAdsId && typeof window !== "undefined" && (window as any).gtag) {
+        ;(window as any).gtag("event", "conversion", {
+          send_to: googleAdsLabel ? `${googleAdsId}/${googleAdsLabel}` : googleAdsId,
+        })
+      }
 
       // Meta Pixel Lead event (salon's own pixel)
       if (typeof window !== "undefined" && (window as any).fbq) {

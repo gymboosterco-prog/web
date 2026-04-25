@@ -6,6 +6,7 @@ export const dynamic = "force-dynamic"
 export const revalidate = 0
 import { SalonForm } from "./salon-form"
 import { SalonPixel } from "./salon-pixel"
+import { SalonGoogleAds } from "./salon-google-ads"
 import { StickyCTA } from "./sticky-cta"
 import { PageTracker } from "./page-tracker"
 import { YouTubeEmbed } from "./youtube-embed"
@@ -39,7 +40,7 @@ export default async function SalonLandingPage({ params }: Props) {
 
   const { data: salon } = await supabase
     .from("salons")
-    .select("id, name, slug, salon_type, city, tagline, offer, hero_headline, hero_sub, urgency_text, cta_text, features, stats, testimonial, testimonial_author, testimonials, video_url, faq, meta_pixel_id, active, phone, packages")
+    .select("id, name, slug, salon_type, city, tagline, offer, hero_headline, hero_sub, urgency_text, cta_text, features, stats, testimonial, testimonial_author, testimonials, video_url, faq, meta_pixel_id, active, phone, packages, google_ads_id, google_ads_label")
     .eq("slug", slug).eq("active", true).maybeSingle()
 
   if (!salon) notFound()
@@ -99,6 +100,7 @@ export default async function SalonLandingPage({ params }: Props) {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       <SalonPixel pixelId={(salon.meta_pixel_id as string | null) ?? null} />
+      <SalonGoogleAds adsId={(salon.google_ads_id as string | null) ?? null} />
       <style>{`
         :root {
           --salon-primary: ${primaryColor};
@@ -171,7 +173,7 @@ export default async function SalonLandingPage({ params }: Props) {
           <div id="form-section" className="bg-white/[0.04] border border-white/10 rounded-2xl p-6 sm:p-8 mb-12">
             <h2 className="text-xl font-bold text-center mb-2">{ctaText}</h2>
             <p className="text-center text-white/50 text-sm mb-6">Formu doldurun, sizi arayalım.</p>
-            <SalonForm salonId={salon.id} salonName={salon.name} ctaText={ctaText} primaryColor={primaryColor} instagramUrl={(salon as any).instagram_url ?? null} />
+            <SalonForm salonId={salon.id} salonName={salon.name} ctaText={ctaText} primaryColor={primaryColor} instagramUrl={(salon as any).instagram_url ?? null} googleAdsId={(salon.google_ads_id as string | null) ?? null} googleAdsLabel={(salon.google_ads_label as string | null) ?? null} />
             {waUrl && (
               <p className="text-center mt-5 text-sm text-white/40">
                 ya da{" "}

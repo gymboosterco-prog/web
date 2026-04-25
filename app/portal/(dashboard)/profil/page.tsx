@@ -24,7 +24,7 @@ export default async function ProfilPage() {
   const { data: salon } = profile?.salon_id
     ? await adminClient
         .from("salons")
-        .select("id, name, slug, tagline, offer, hero_headline, hero_sub, urgency_text, cta_text, primary_color, phone, video_url, testimonials, faq, meta_pixel_id, logo_url, gallery_images, whatsapp_template, guarantee_text, pain_points, packages")
+        .select("id, name, slug, tagline, offer, hero_headline, hero_sub, urgency_text, cta_text, primary_color, phone, video_url, testimonials, faq, meta_pixel_id, logo_url, gallery_images, whatsapp_template, guarantee_text, pain_points, packages, google_ads_id, google_ads_label")
         .eq("id", profile.salon_id)
         .maybeSingle()
     : { data: null }
