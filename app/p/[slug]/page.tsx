@@ -173,7 +173,7 @@ export default async function SalonLandingPage({ params }: Props) {
           <div id="form-section" className="bg-white/[0.04] border border-white/10 rounded-2xl p-6 sm:p-8 mb-12">
             <h2 className="text-xl font-bold text-center mb-2">{ctaText}</h2>
             <p className="text-center text-white/50 text-sm mb-6">Formu doldurun, sizi arayalım.</p>
-            <SalonForm salonId={salon.id} salonName={salon.name} ctaText={ctaText} primaryColor={primaryColor} instagramUrl={(salon as any).instagram_url ?? null} googleAdsId={(salon.google_ads_id as string | null) ?? null} googleAdsLabel={(salon.google_ads_label as string | null) ?? null} />
+            <SalonForm salonId={salon.id} salonName={salon.name} slug={slug} ctaText={ctaText} primaryColor={primaryColor} instagramUrl={(salon as any).instagram_url ?? null} googleAdsId={(salon.google_ads_id as string | null) ?? null} googleAdsLabel={(salon.google_ads_label as string | null) ?? null} />
             {waUrl && (
               <p className="text-center mt-5 text-sm text-white/40">
                 ya da{" "}
