@@ -64,7 +64,7 @@ export default async function SalonLandingPage({ params }: Props) {
   const features: { title: string; description: string }[] = salon.features?.length ? salon.features : preset.features
   const stats: { value: string; label: string }[] = salon.stats?.length ? salon.stats : preset.stats
   const painPoints: string[] = (branding?.pain_points as string[] | null)?.length ? (branding!.pain_points as string[]) : preset.pain_points
-  const guaranteeText: string = branding?.guarantee_text || preset.guarantee_text
+  const guaranteeText: string | null = branding?.guarantee_text || null
   const logoUrl: string | null = branding?.logo_url || null
   const galleryImages: string[] = (branding?.gallery_images as string[] | null) || []
 
