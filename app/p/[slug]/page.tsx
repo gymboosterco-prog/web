@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .eq("slug", slug).eq("active", true).maybeSingle()
 
   if (!salon) return { title: "Salon Bulunamadı" }
-  const preset = SALON_PRESETS[(salon.salon_type as SalonType) || "fitness"]
+  const preset = SALON_PRESETS[(salon.salon_type as SalonType) || "fitness"] || SALON_PRESETS["fitness"]
 
   return {
     title: `${salon.name} — ${preset.cta_text}`,
@@ -54,7 +54,7 @@ export default async function SalonLandingPage({ params }: Props) {
   const branding = brandingResult.error ? null : brandingResult.data
 
   const salonType = (salon.salon_type as SalonType) || "fitness"
-  const preset = SALON_PRESETS[salonType]
+  const preset = SALON_PRESETS[salonType] || SALON_PRESETS["fitness"]
 
   const primaryColor: string = branding?.primary_color || preset.primary_color
   const accentColor: string = branding?.accent_color || preset.accent_color
@@ -62,26 +62,26 @@ export default async function SalonLandingPage({ params }: Props) {
   const headline = salon.hero_headline || preset.hero_headline
   const subheadline = salon.hero_sub || preset.hero_sub
   const ctaText = salon.cta_text || preset.cta_text
-  const features: { title: string; description: string }[] = salon.features?.length ? salon.features : preset.features
-  const stats: { value: string; label: string }[] = salon.stats?.length ? salon.stats : preset.stats
-  const painPoints: string[] = (branding?.pain_points as string[] | null)?.length ? (branding!.pain_points as string[]) : preset.pain_points
+  const features: { title: string; description: string }[] = Array.isArray(salon.features) && salon.features.length > 0 ? salon.features : preset.features
+  const stats: { value: string; label: string }[] = Array.isArray(salon.stats) && salon.stats.length > 0 ? salon.stats : preset.stats
+  const painPoints: string[] = Array.isArray(branding?.pain_points) && (branding?.pain_points as string[]).length > 0 ? (branding!.pain_points as string[]) : preset.pain_points
   const guaranteeText: string | null = branding?.guarantee_text || null
   const logoUrl: string | null = branding?.logo_url || null
-  const galleryImages: string[] = (branding?.gallery_images as string[] | null) || []
+  const galleryImages: string[] = Array.isArray(branding?.gallery_images) ? (branding!.gallery_images as string[]) : []
 
   type Testimonial = { text: string; author: string }
   const testimonials: Testimonial[] =
-    (salon.testimonials as Testimonial[] | null)?.length
+    Array.isArray(salon.testimonials) && salon.testimonials.length > 0
       ? (salon.testimonials as Testimonial[])
       : salon.testimonial
         ? [{ text: salon.testimonial, author: salon.testimonial_author || "" }]
         : []
 
   type FaqItem = { q: string; a: string }
-  const faqItems: FaqItem[] = (salon.faq as FaqItem[] | null) || []
+  const faqItems: FaqItem[] = Array.isArray(salon.faq) ? salon.faq : []
 
   type Package = { title: string; price: number; installments?: number; popular?: boolean; features: string[] }
-  const packages: Package[] = (salon.packages as Package[] | null) || []
+  const packages: Package[] = Array.isArray(salon.packages) ? salon.packages : []
 
   function getYouTubeId(url: string): string | null {
     const m = url.match(/(?:youtu\.be\/|[?&]v=|\/embed\/)([A-Za-z0-9_-]{11})/)
@@ -305,7 +305,7 @@ export default async function SalonLandingPage({ params }: Props) {
                         <p className="text-xs text-center text-white/40 mb-4">{pkg.installments} Taksit</p>
                       )}
                       <div className="space-y-2 flex-1 mb-5">
-                        {pkg.features.map((f, fi) => (
+                        {(Array.isArray(pkg.features) ? pkg.features : []).map((f, fi) => (
                           <div key={fi} className="flex items-center gap-2 text-xs text-white/70">
                             <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" style={{ color: primaryColor }} />
                             {f}
