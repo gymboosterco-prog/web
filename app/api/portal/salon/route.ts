@@ -13,6 +13,7 @@ const OWNER_ALLOWED_FIELDS = [
   "whatsapp_template",
   "guarantee_text",
   "pain_points",
+  "packages",
 ]
 
 async function requireSalonOwner(): Promise<string | null> {

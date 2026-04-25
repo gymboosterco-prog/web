@@ -31,7 +31,10 @@ type SalonData = {
   gallery_images: string[] | null
   guarantee_text: string | null
   pain_points: string[] | null
+  packages: Package[] | null
 }
+
+type Package = { title: string; price: number; installments: number; popular: boolean; features: string[] }
 
 async function resizeImage(file: File, maxPx = 512): Promise<File> {
   if (file.type === "image/svg+xml") return file
@@ -68,6 +71,7 @@ export function SalonProfileEditor({ salon }: { salon: SalonData }) {
     meta_pixel_id: salon.meta_pixel_id || "",
     guarantee_text: salon.guarantee_text || "",
     pain_points: salon.pain_points || [] as string[],
+    packages: salon.packages || [] as Package[],
   })
   const [logoUrl, setLogoUrl] = useState<string | null>(salon.logo_url || null)
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
@@ -464,6 +468,76 @@ export function SalonProfileEditor({ salon }: { salon: SalonData }) {
             rows={3}
             className="w-full bg-secondary border border-border rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:border-primary/50"
           />
+        </div>
+
+        {/* Üyelik Paketleri */}
+        <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold">Üyelik Paketleri</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">Fiyatlandırma tablosu (3/6/12 aylık gibi)</p>
+            </div>
+            <button type="button"
+              onClick={() => setForm(p => ({ ...p, packages: [...p.packages, { title: "", price: 0, installments: 1, popular: false, features: [""] }] }))}
+              className="text-xs text-primary hover:underline flex-shrink-0"
+            >+ Paket Ekle</button>
+          </div>
+          {form.packages.length === 0 && (
+            <p className="text-xs text-muted-foreground">Henüz paket eklenmedi.</p>
+          )}
+          {form.packages.map((pkg, i) => (
+            <div key={i} className="bg-secondary/50 border border-border rounded-xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-muted-foreground">Paket {i + 1}</span>
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-1.5 text-xs text-primary cursor-pointer">
+                    <input type="checkbox" checked={pkg.popular}
+                      onChange={e => setForm(p => ({ ...p, packages: p.packages.map((pp, idx) => idx === i ? { ...pp, popular: e.target.checked } : { ...pp, popular: false }) }))}
+                      className="accent-primary" />
+                    En Popüler
+                  </label>
+                  <button type="button" onClick={() => setForm(p => ({ ...p, packages: p.packages.filter((_, idx) => idx !== i) }))}
+                    className="text-muted-foreground hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></button>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">Başlık</label>
+                  <Input value={pkg.title} onChange={e => setForm(p => ({ ...p, packages: p.packages.map((pp, idx) => idx === i ? { ...pp, title: e.target.value } : pp) }))}
+                    placeholder="6 AYLIK" className="bg-secondary border-border text-sm h-9" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">Fiyat (₺)</label>
+                  <Input type="number" value={pkg.price || ""}
+                    onChange={e => setForm(p => ({ ...p, packages: p.packages.map((pp, idx) => idx === i ? { ...pp, price: Number(e.target.value) } : pp) }))}
+                    placeholder="18000" className="bg-secondary border-border text-sm h-9" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">Taksit</label>
+                  <Input type="number" value={pkg.installments || ""}
+                    onChange={e => setForm(p => ({ ...p, packages: p.packages.map((pp, idx) => idx === i ? { ...pp, installments: Number(e.target.value) } : pp) }))}
+                    placeholder="6" className="bg-secondary border-border text-sm h-9" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs text-muted-foreground block">Özellikler</label>
+                {pkg.features.map((f, fi) => (
+                  <div key={fi} className="flex gap-2">
+                    <Input value={f}
+                      onChange={e => setForm(p => ({ ...p, packages: p.packages.map((pp, idx) => idx === i ? { ...pp, features: pp.features.map((ff, ffi) => ffi === fi ? e.target.value : ff) } : pp) }))}
+                      placeholder="InBody - Detaylı Vücut Analizi"
+                      className="bg-secondary border-border text-xs h-8 flex-1" />
+                    <button type="button"
+                      onClick={() => setForm(p => ({ ...p, packages: p.packages.map((pp, idx) => idx === i ? { ...pp, features: pp.features.filter((_, ffi) => ffi !== fi) } : pp) }))}
+                      className="text-muted-foreground hover:text-destructive p-1"><Trash2 className="w-3 h-3" /></button>
+                  </div>
+                ))}
+                <button type="button"
+                  onClick={() => setForm(p => ({ ...p, packages: p.packages.map((pp, idx) => idx === i ? { ...pp, features: [...pp.features, ""] } : pp) }))}
+                  className="text-xs text-primary hover:underline">+ Özellik Ekle</button>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Önizleme linki */}

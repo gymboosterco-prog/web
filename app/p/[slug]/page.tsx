@@ -39,7 +39,7 @@ export default async function SalonLandingPage({ params }: Props) {
 
   const { data: salon } = await supabase
     .from("salons")
-    .select("id, name, slug, salon_type, city, tagline, offer, hero_headline, hero_sub, urgency_text, cta_text, features, stats, testimonial, testimonial_author, testimonials, video_url, faq, meta_pixel_id, active, phone")
+    .select("id, name, slug, salon_type, city, tagline, offer, hero_headline, hero_sub, urgency_text, cta_text, features, stats, testimonial, testimonial_author, testimonials, video_url, faq, meta_pixel_id, active, phone, packages")
     .eq("slug", slug).eq("active", true).maybeSingle()
 
   if (!salon) notFound()
@@ -78,6 +78,9 @@ export default async function SalonLandingPage({ params }: Props) {
 
   type FaqItem = { q: string; a: string }
   const faqItems: FaqItem[] = (salon.faq as FaqItem[] | null) || []
+
+  type Package = { title: string; price: number; installments?: number; popular?: boolean; features: string[] }
+  const packages: Package[] = (salon.packages as Package[] | null) || []
 
   function getYouTubeId(url: string): string | null {
     const m = url.match(/(?:youtu\.be\/|[?&]v=|\/embed\/)([A-Za-z0-9_-]{11})/)
@@ -270,6 +273,56 @@ export default async function SalonLandingPage({ params }: Props) {
               </div>
               <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: primaryColor }}>GARANTİMİZ</p>
               <p className="text-white font-semibold text-base sm:text-lg leading-relaxed">{guaranteeText}</p>
+            </div>
+          )}
+
+          {/* Üyelik Paketleri */}
+          {packages.length > 0 && (
+            <div className="mb-12">
+              <h2 className="text-lg font-bold text-center mb-6 text-white/80">Üyelik Paketlerimiz</h2>
+              <div className={`grid gap-4 ${packages.length === 2 ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-3"}`}>
+                {packages.map((pkg, i) => (
+                  <div key={i} className={`relative flex flex-col rounded-2xl overflow-hidden transition-all ${
+                    pkg.popular
+                      ? "scale-[1.03] shadow-2xl"
+                      : "bg-white/[0.04] border border-white/10"
+                  }`}
+                    style={pkg.popular ? { background: "rgba(255,255,255,0.06)", border: `2px solid ${primaryColor}` } : {}}
+                  >
+                    {pkg.popular && (
+                      <div className="text-center py-1.5 text-xs font-bold text-black" style={{ background: primaryColor }}>
+                        EN POPÜLER
+                      </div>
+                    )}
+                    <div className="p-5 flex flex-col flex-1">
+                      <p className="text-sm font-bold text-center text-white/60 mb-1">{pkg.title}</p>
+                      <p className="text-3xl font-black text-center mb-1" style={{ color: primaryColor }}>
+                        ₺{Number(pkg.price).toLocaleString("tr-TR")}
+                      </p>
+                      {pkg.installments && (
+                        <p className="text-xs text-center text-white/40 mb-4">{pkg.installments} Taksit</p>
+                      )}
+                      <div className="space-y-2 flex-1 mb-5">
+                        {pkg.features.map((f, fi) => (
+                          <div key={fi} className="flex items-center gap-2 text-xs text-white/70">
+                            <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" style={{ color: primaryColor }} />
+                            {f}
+                          </div>
+                        ))}
+                      </div>
+                      <a href="#form-section"
+                        className="block text-center py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-80"
+                        style={pkg.popular
+                          ? { background: primaryColor, color: "#000" }
+                          : { background: `${primaryColor}18`, color: primaryColor, border: `1px solid ${primaryColor}33` }
+                        }
+                      >
+                        Hemen Başla →
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
