@@ -11,6 +11,8 @@ const OWNER_ALLOWED_FIELDS = [
   "logo_url",
   "gallery_images",
   "whatsapp_template",
+  "guarantee_text",
+  "pain_points",
 ]
 
 async function requireSalonOwner(): Promise<string | null> {

@@ -29,6 +29,8 @@ type SalonData = {
   meta_pixel_id: string | null
   logo_url: string | null
   gallery_images: string[] | null
+  guarantee_text: string | null
+  pain_points: string[] | null
 }
 
 async function resizeImage(file: File, maxPx = 512): Promise<File> {
@@ -64,6 +66,8 @@ export function SalonProfileEditor({ salon }: { salon: SalonData }) {
     testimonials: salon.testimonials || [] as Testimonial[],
     faq: salon.faq || [] as FaqItem[],
     meta_pixel_id: salon.meta_pixel_id || "",
+    guarantee_text: salon.guarantee_text || "",
+    pain_points: salon.pain_points || [] as string[],
   })
   const [logoUrl, setLogoUrl] = useState<string | null>(salon.logo_url || null)
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
@@ -408,6 +412,58 @@ export function SalonProfileEditor({ salon }: { salon: SalonData }) {
               />
             </div>
           ))}
+        </div>
+
+        {/* Sorun Noktaları (Pain Points) */}
+        <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold">Sorun Noktaları</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">Üyelerinizin yaşadığı problemler ("Hâlâ bunlarla mı boğuşuyorsunuz?" bölümü)</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setForm(p => ({ ...p, pain_points: [...p.pain_points, ""] }))}
+              className="text-xs text-primary hover:underline flex-shrink-0"
+            >
+              + Ekle
+            </button>
+          </div>
+          {form.pain_points.length === 0 && (
+            <p className="text-xs text-muted-foreground">Henüz sorun noktası eklenmedi.</p>
+          )}
+          {form.pain_points.map((point, i) => (
+            <div key={i} className="flex gap-2">
+              <Input
+                value={point}
+                onChange={e => setForm(p => ({ ...p, pain_points: p.pain_points.map((pp, idx) => idx === i ? e.target.value : pp) }))}
+                placeholder="Kilo vermek istiyorsunuz ama bir türlü başlayamıyorsunuz"
+                className="bg-secondary border-border text-sm flex-1"
+              />
+              <button
+                type="button"
+                onClick={() => setForm(p => ({ ...p, pain_points: p.pain_points.filter((_, idx) => idx !== i) }))}
+                className="text-muted-foreground hover:text-destructive p-2"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Garanti Metni */}
+        <div className="bg-card border border-border rounded-2xl p-5 space-y-3">
+          <div>
+            <h2 className="text-sm font-semibold">Garanti Metni</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Landing page'deki "GARANTİMİZ" bölümünde gösterilir</p>
+          </div>
+          <textarea
+            value={form.guarantee_text}
+            onChange={e => setForm(p => ({ ...p, guarantee_text: e.target.value }))}
+            placeholder="İlk ayın sonunda gözle görülür bir değişim yaşamazsanız paranızı iade ediyoruz — hiçbir soru sormadan."
+            rows={3}
+            className="w-full bg-secondary border border-border rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:border-primary/50"
+          />
         </div>
 
         {/* Önizleme linki */}
