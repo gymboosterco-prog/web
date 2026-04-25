@@ -11,7 +11,7 @@ import { StickyCTA } from "./sticky-cta"
 import { PageTracker } from "./page-tracker"
 import { YouTubeEmbed } from "./youtube-embed"
 import { SALON_PRESETS, type SalonType } from "@/lib/salon-presets"
-import { CheckCircle2, ChevronDown, Clock, Phone, Quote, Shield, XCircle, Zap } from "lucide-react"
+import { CheckCircle2, ChevronDown, Clock, MapPin, Navigation, Phone, Quote, Shield, XCircle, Zap } from "lucide-react"
 import Image from "next/image"
 
 type Props = { params: Promise<{ slug: string }> }
@@ -40,7 +40,7 @@ export default async function SalonLandingPage({ params }: Props) {
 
   const { data: salon } = await supabase
     .from("salons")
-    .select("id, name, slug, salon_type, city, tagline, offer, hero_headline, hero_sub, urgency_text, cta_text, features, stats, testimonial, testimonial_author, testimonials, video_url, faq, meta_pixel_id, active, phone, packages, google_ads_id, google_ads_label")
+    .select("id, name, slug, salon_type, city, tagline, offer, hero_headline, hero_sub, urgency_text, cta_text, features, stats, testimonial, testimonial_author, testimonials, video_url, faq, meta_pixel_id, active, phone, packages, google_ads_id, google_ads_label, address, maps_url")
     .eq("slug", slug).eq("active", true).maybeSingle()
 
   if (!salon) notFound()
@@ -357,6 +357,51 @@ export default async function SalonLandingPage({ params }: Props) {
                   {t.author && <p className="text-xs font-semibold text-white/40">{t.author}</p>}
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Konum */}
+          {(salon.address || salon.maps_url) && (
+            <div className="mb-12">
+              <h2 className="text-lg font-bold text-center mb-5 text-white/80">Bizi Bulun</h2>
+              {salon.address && (
+                <div className="bg-white/[0.04] border border-white/10 rounded-2xl overflow-hidden">
+                  <iframe
+                    title="Konum"
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(salon.address as string)}&output=embed&z=15`}
+                    width="100%"
+                    height="220"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                  <div className="p-4 flex items-center justify-between gap-4">
+                    <div className="flex items-start gap-2 min-w-0">
+                      <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: primaryColor }} />
+                      <span className="text-sm text-white/70 leading-snug">{salon.address as string}</span>
+                    </div>
+                    {salon.maps_url && (
+                      <a href={salon.maps_url as string} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold flex-shrink-0 transition-opacity hover:opacity-80"
+                        style={{ background: `${primaryColor}18`, color: primaryColor, border: `1px solid ${primaryColor}33` }}>
+                        <Navigation className="w-3.5 h-3.5" />
+                        Yol Tarifi
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+              {!salon.address && salon.maps_url && (
+                <div className="text-center">
+                  <a href={salon.maps_url as string} target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-opacity hover:opacity-80"
+                    style={{ background: `${primaryColor}18`, color: primaryColor, border: `1px solid ${primaryColor}33` }}>
+                    <Navigation className="w-4 h-4" />
+                    Haritada Görüntüle →
+                  </a>
+                </div>
+              )}
             </div>
           )}
 

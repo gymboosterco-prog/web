@@ -33,7 +33,7 @@ const nextConfig = {
       "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://img.youtube.com https://www.clarity.ms https://www.facebook.com",
       "media-src 'self'",
       "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co https://www.clarity.ms https://*.ingest.sentry.io https://*.ingest.de.sentry.io https://api.resend.com https://www.facebook.com https://connect.facebook.net https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.google.com",
-      "frame-src 'self' https://www.youtube.com https://youtube.com",
+      "frame-src 'self' https://www.youtube.com https://youtube.com https://maps.google.com https://www.google.com",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",

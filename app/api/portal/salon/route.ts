@@ -16,6 +16,8 @@ const OWNER_ALLOWED_FIELDS = [
   "packages",
   "google_ads_id",
   "google_ads_label",
+  "address",
+  "maps_url",
 ]
 
 async function requireSalonOwner(): Promise<string | null> {
