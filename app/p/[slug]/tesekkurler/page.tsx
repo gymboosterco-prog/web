@@ -4,7 +4,6 @@ import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
 import { CheckCircle2, MessageCircle, ArrowLeft, Instagram } from "lucide-react"
-import { ConversionEvents } from "./conversion-events"
 import { SalonPixel } from "../salon-pixel"
 import { SalonGoogleAds } from "../salon-google-ads"
 
@@ -56,11 +55,6 @@ export default async function TesekkurlerPage({ params }: Props) {
     <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center px-4">
       <SalonPixel pixelId={(salon.meta_pixel_id as string | null) ?? null} />
       <SalonGoogleAds adsId={(salon.google_ads_id as string | null) ?? null} />
-      <ConversionEvents
-        pixelId={salon.meta_pixel_id as string | null}
-        googleAdsId={salon.google_ads_id as string | null}
-        googleAdsLabel={salon.google_ads_label as string | null}
-      />
 
       {/* Grid background */}
       <div className="fixed inset-0 pointer-events-none"
