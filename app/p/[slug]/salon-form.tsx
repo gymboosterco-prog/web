@@ -95,6 +95,31 @@ export function SalonForm({
     }
   }
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value
+    if (!raw || raw === '+9' || raw === '+90' || raw === '+90 ') {
+      setFormData(p => ({ ...p, phone: "" }))
+      return
+    }
+
+    let digits = raw.replace(/\D/g, '')
+    if (digits.startsWith('90')) {
+      digits = digits.substring(2)
+    } else if (digits.startsWith('0')) {
+      digits = digits.substring(1)
+    }
+    
+    digits = digits.substring(0, 10)
+
+    let formatted = '+90 '
+    if (digits.length > 0) formatted += digits.substring(0, 3)
+    if (digits.length > 3) formatted += ' ' + digits.substring(3, 6)
+    if (digits.length > 6) formatted += ' ' + digits.substring(6, 8)
+    if (digits.length > 8) formatted += ' ' + digits.substring(8, 10)
+
+    setFormData(p => ({ ...p, phone: formatted }))
+  }
+
   return (
     <>
       {error && (
@@ -114,12 +139,13 @@ export function SalonForm({
           style={{ ['--tw-ring-color' as string]: `${primaryColor}80` }}
         />
         <Input
-          placeholder="Telefon Numaranız"
+          placeholder="+90 5XX XXX XX XX"
           type="tel"
           value={formData.phone}
-          onChange={e => setFormData(p => ({ ...p, phone: e.target.value }))}
+          onChange={handlePhoneChange}
           required
           className="h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30"
+          style={{ ['--tw-ring-color' as string]: `${primaryColor}80` }}
         />
         <button
           type="submit"
