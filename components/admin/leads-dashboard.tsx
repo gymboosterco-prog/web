@@ -143,6 +143,7 @@ type ProposalRecord = {
   token: string
   status: 'draft' | 'sent' | 'viewed' | 'accepted' | 'rejected'
   services: string[]
+  not_included: string[]
   monthly_fee: number
   original_price: number | null
   setup_fee: number
@@ -247,6 +248,12 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
   const [currentProposal, setCurrentProposal] = useState<ProposalRecord | null>(null)
   const [proposalLoading, setProposalLoading] = useState(false)
   const [pServices, setPServices] = useState<string[]>(GYMBOOSTER_SERVICES.slice(0, 5))
+  const [pCustomService, setPCustomService] = useState("")
+  const [pNotIncluded, setPNotIncluded] = useState<string[]>([
+    "Reklam bütçesi (sizin hesabınızdan harcanır)",
+    "Video çekimi (danışmanlık yapıyoruz, çekim yapmıyoruz)",
+  ])
+  const [pNotIncludedInput, setPNotIncludedInput] = useState("")
   const [pOriginalPrice, setPOriginalPrice] = useState("")
   const [pMonthlyFee, setPMonthlyFee] = useState("")
   const [pSetupFee, setPSetupFee] = useState("")
@@ -285,6 +292,7 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
         body: JSON.stringify({
           lead_id: selectedLead.id,
           services: pServices,
+          not_included: pNotIncluded,
           monthly_fee: parseFloat(pMonthlyFee),
           original_price: parseFloat(pOriginalPrice) || null,
           setup_fee: parseFloat(pSetupFee) || 0,
@@ -298,6 +306,8 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
         setCurrentProposal(data.proposal)
         setProposalModalOpen(false)
         setPMonthlyFee(""); setPOriginalPrice(""); setPSetupFee(""); setPNotes(""); setPValidUntil("")
+        setPCustomService(""); setPNotIncludedInput("")
+        setPNotIncluded(["Reklam bütçesi (sizin hesabınızdan harcanır)", "Video çekimi (danışmanlık yapıyoruz, çekim yapmıyoruz)"])
         toast.success("Teklif oluşturuldu!")
       } else {
         toast.error(data.error || "Teklif oluşturulamadı")
@@ -2348,9 +2358,9 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                 <button onClick={() => setProposalModalOpen(false)} className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground">✕</button>
               </div>
               <div className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
-                {/* Services */}
+                {/* Dahil Olanlar */}
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase">Hizmetler</label>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase">✅ Dahil Olanlar</label>
                   <div className="space-y-1.5">
                     {GYMBOOSTER_SERVICES.map(svc => (
                       <label key={svc} className="flex items-center gap-3 px-3 py-2 rounded-xl bg-secondary/30 border border-transparent hover:border-border cursor-pointer transition-colors">
@@ -2360,6 +2370,71 @@ export function LeadsDashboard({ initialLeads, initialTotal, userRole }: { initi
                         <span className="text-sm">{svc}</span>
                       </label>
                     ))}
+                  </div>
+                  {/* Özel hizmet ekle */}
+                  <div className="flex gap-2 mt-2">
+                    <input
+                      value={pCustomService}
+                      onChange={e => setPCustomService(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && pCustomService.trim()) {
+                          e.preventDefault()
+                          setPServices(prev => [...prev, pCustomService.trim()])
+                          setPCustomService("")
+                        }
+                      }}
+                      placeholder="Özel hizmet ekle..."
+                      className="flex-1 h-9 bg-secondary/50 border border-border rounded-xl px-3 text-sm focus:outline-none focus:border-primary/50"
+                    />
+                    <button type="button"
+                      onClick={() => { if (pCustomService.trim()) { setPServices(prev => [...prev, pCustomService.trim()]); setPCustomService("") } }}
+                      className="h-9 px-3 rounded-xl bg-primary/10 border border-primary/20 text-primary text-sm font-semibold hover:bg-primary/20 transition-colors">
+                      + Ekle
+                    </button>
+                  </div>
+                  {/* Özel eklenenler */}
+                  {pServices.filter(s => !GYMBOOSTER_SERVICES.includes(s)).length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {pServices.filter(s => !GYMBOOSTER_SERVICES.includes(s)).map(s => (
+                        <span key={s} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs bg-primary/10 text-primary border border-primary/20">
+                          {s}
+                          <button type="button" onClick={() => setPServices(prev => prev.filter(p => p !== s))} className="hover:text-red-400 transition-colors">✕</button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {/* Dahil Olmayanlar */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase">❌ Dahil Olmayanlar</label>
+                  <div className="space-y-1.5">
+                    {pNotIncluded.map((item, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <span className="flex-1 text-sm px-3 py-2 rounded-xl bg-secondary/30 text-muted-foreground">{item}</span>
+                        <button type="button" onClick={() => setPNotIncluded(prev => prev.filter((_, idx) => idx !== i))}
+                          className="text-muted-foreground hover:text-destructive p-1 transition-colors text-sm">✕</button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      value={pNotIncludedInput}
+                      onChange={e => setPNotIncludedInput(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && pNotIncludedInput.trim()) {
+                          e.preventDefault()
+                          setPNotIncluded(prev => [...prev, pNotIncludedInput.trim()])
+                          setPNotIncludedInput("")
+                        }
+                      }}
+                      placeholder="Dahil olmayan madde ekle..."
+                      className="flex-1 h-9 bg-secondary/50 border border-border rounded-xl px-3 text-sm focus:outline-none focus:border-primary/50"
+                    />
+                    <button type="button"
+                      onClick={() => { if (pNotIncludedInput.trim()) { setPNotIncluded(prev => [...prev, pNotIncludedInput.trim()]); setPNotIncludedInput("") } }}
+                      className="h-9 px-3 rounded-xl bg-secondary border border-border text-sm font-semibold hover:bg-secondary/80 transition-colors">
+                      + Ekle
+                    </button>
                   </div>
                 </div>
                 {/* Fees */}

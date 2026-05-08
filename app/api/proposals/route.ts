@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { lead_id, services, monthly_fee, original_price, setup_fee, contract_months, valid_until, notes } = body
+    const { lead_id, services, not_included, monthly_fee, original_price, setup_fee, contract_months, valid_until, notes } = body
 
     if (!lead_id || !monthly_fee) {
       return NextResponse.json({ error: "lead_id ve monthly_fee zorunlu" }, { status: 400 })
@@ -29,6 +29,7 @@ export async function POST(request: Request) {
       .insert({
         lead_id,
         services: services ?? [],
+        not_included: Array.isArray(not_included) ? not_included : [],
         monthly_fee,
         original_price: original_price ?? null,
         setup_fee: setup_fee ?? 0,

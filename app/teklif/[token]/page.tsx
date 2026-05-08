@@ -7,10 +7,6 @@ import { AcceptButton } from "./accept-button"
 
 export const dynamic = "force-dynamic"
 
-const NOT_INCLUDED = [
-  "Reklam bütçesi (sizin hesabınızdan harcanır)",
-  "Video çekimi (danışmanlık yapıyoruz, çekim yapmıyoruz)",
-]
 
 type Props = { params: Promise<{ token: string }> }
 
@@ -46,6 +42,7 @@ export default async function TeklifPage({ params }: Props) {
 
   const lead = proposal.leads as { name: string; gym_name: string } | null
   const services = (proposal.services ?? []) as string[]
+  const notIncluded = (proposal.not_included ?? []) as string[]
   const isAccepted = proposal.status === "accepted"
   const originalPrice = proposal.original_price as number | null
   const monthlyFee = Number(proposal.monthly_fee)
@@ -102,19 +99,21 @@ export default async function TeklifPage({ params }: Props) {
             )}
 
             {/* Not Included */}
-            <div className="bg-white/[0.02] border border-white/8 rounded-2xl p-6 mb-4">
-              <h2 className="text-sm font-bold uppercase tracking-wider text-white/40 mb-4">❌ Dahil Olmayanlar</h2>
-              <div className="space-y-2.5">
-                {NOT_INCLUDED.map((s, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 bg-red-500/10 border border-red-500/20">
-                      <XCircle className="w-3 h-3 text-red-400" />
+            {notIncluded.length > 0 && (
+              <div className="bg-white/[0.02] border border-white/8 rounded-2xl p-6 mb-4">
+                <h2 className="text-sm font-bold uppercase tracking-wider text-white/40 mb-4">❌ Dahil Olmayanlar</h2>
+                <div className="space-y-2.5">
+                  {notIncluded.map((s, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 bg-red-500/10 border border-red-500/20">
+                        <XCircle className="w-3 h-3 text-red-400" />
+                      </div>
+                      <span className="text-sm text-white/50 leading-relaxed">{s}</span>
                     </div>
-                    <span className="text-sm text-white/50 leading-relaxed">{s}</span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Pricing */}
             <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-6 mb-4">
